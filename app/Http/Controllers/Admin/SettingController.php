@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\BlockedIp;
+use App\Models\LoginLog;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
@@ -61,7 +64,7 @@ class SettingController extends Controller
 
         Setting::setMany($data);
 
-        return back()->with('status', 'General settings updated successfully.')->with('tab', 'general');
+        return back()->with('status', 'General settings updated successfully.');
     }
 
     public function generalRemoveLogo()
@@ -72,7 +75,7 @@ class SettingController extends Controller
         }
         Setting::set('site_logo', null);
 
-        return back()->with('status', 'Logo removed.')->with('tab', 'general');
+        return back()->with('status', 'Logo removed.');
     }
 
     public function generalRemoveFavicon()
@@ -83,7 +86,7 @@ class SettingController extends Controller
         }
         Setting::set('site_favicon', null);
 
-        return back()->with('status', 'Favicon removed.')->with('tab', 'general');
+        return back()->with('status', 'Favicon removed.');
     }
 
     public function contact()
@@ -126,17 +129,213 @@ class SettingController extends Controller
 
     public function seo()
     {
-        return view('admin.settings.seo');
+        $keys = [
+            'meta_title',
+            'meta_description',
+            'meta_keywords',
+            'og_image',
+            'google_analytics_id',
+            'google_tag_manager_id',
+            'facebook_pixel_id',
+            'google_verification',
+            'robots_index',
+            'robots_txt',
+        ];
+
+        $settings = Setting::getMany($keys);
+
+        return view('admin.settings.seo', compact('settings'));
+    }
+
+    public function seoUpdate(Request $request)
+    {
+        $data = $request->validate([
+            'meta_title' => ['nullable', 'string', 'max:200'],
+            'meta_description' => ['nullable', 'string', 'max:300'],
+            'meta_keywords' => ['nullable', 'string', 'max:500'],
+            'og_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'google_analytics_id' => ['nullable', 'string', 'max:50'],
+            'google_tag_manager_id' => ['nullable', 'string', 'max:50'],
+            'facebook_pixel_id' => ['nullable', 'string', 'max:50'],
+            'google_verification' => ['nullable', 'string', 'max:255'],
+            'robots_txt' => ['nullable', 'string', 'max:5000'],
+        ]);
+
+        $data['robots_index'] = $request->boolean('robots_index') ? '1' : '0';
+
+        if ($request->hasFile('og_image')) {
+            $old = Setting::get('og_image');
+            if ($old && !str_starts_with($old, 'http')) {
+                Storage::disk('public')->delete($old);
+            }
+            $data['og_image'] = $request->file('og_image')->store('settings', 'public');
+        }
+
+        Setting::setMany($data);
+
+        return back()->with('status', 'SEO settings updated.');
+    }
+
+    public function seoRemoveOg()
+    {
+        $old = Setting::get('og_image');
+        if ($old && !str_starts_with($old, 'http')) {
+            Storage::disk('public')->delete($old);
+        }
+        Setting::set('og_image', null);
+
+        return back()->with('status', 'OG image removed.');
     }
 
     public function homepage()
     {
-        return view('admin.settings.homepage');
+        $keys = [
+            'hero_title',
+            'hero_subtitle',
+            'hero_description',
+            'hero_btn1_text',
+            'hero_btn1_link',
+            'hero_btn2_text',
+            'hero_btn2_link',
+            'hero_image',
+            'stat1_label', 'stat1_value',
+            'stat2_label', 'stat2_value',
+            'stat3_label', 'stat3_value',
+            'stat4_label', 'stat4_value',
+            'announcement_enabled',
+            'announcement_text',
+            'announcement_link',
+        ];
+
+        $settings = Setting::getMany($keys);
+
+        return view('admin.settings.homepage', compact('settings'));
+    }
+
+    public function homepageUpdate(Request $request)
+    {
+        $data = $request->validate([
+            'hero_title' => ['nullable', 'string', 'max:200'],
+            'hero_subtitle' => ['nullable', 'string', 'max:200'],
+            'hero_description' => ['nullable', 'string', 'max:500'],
+            'hero_btn1_text' => ['nullable', 'string', 'max:50'],
+            'hero_btn1_link' => ['nullable', 'string', 'max:255'],
+            'hero_btn2_text' => ['nullable', 'string', 'max:50'],
+            'hero_btn2_link' => ['nullable', 'string', 'max:255'],
+            'hero_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:5120'],
+            'stat1_label' => ['nullable', 'string', 'max:50'],
+            'stat1_value' => ['nullable', 'string', 'max:20'],
+            'stat2_label' => ['nullable', 'string', 'max:50'],
+            'stat2_value' => ['nullable', 'string', 'max:20'],
+            'stat3_label' => ['nullable', 'string', 'max:50'],
+            'stat3_value' => ['nullable', 'string', 'max:20'],
+            'stat4_label' => ['nullable', 'string', 'max:50'],
+            'stat4_value' => ['nullable', 'string', 'max:20'],
+            'announcement_text' => ['nullable', 'string', 'max:200'],
+            'announcement_link' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $data['announcement_enabled'] = $request->boolean('announcement_enabled') ? '1' : '0';
+
+        if ($request->hasFile('hero_image')) {
+            $old = Setting::get('hero_image');
+            if ($old && !str_starts_with($old, 'http')) {
+                Storage::disk('public')->delete($old);
+            }
+            $data['hero_image'] = $request->file('hero_image')->store('settings', 'public');
+        }
+
+        Setting::setMany($data);
+
+        return back()->with('status', 'Homepage settings updated.');
+    }
+
+    public function homepageRemoveHero()
+    {
+        $old = Setting::get('hero_image');
+        if ($old && !str_starts_with($old, 'http')) {
+            Storage::disk('public')->delete($old);
+        }
+        Setting::set('hero_image', null);
+
+        return back()->with('status', 'Hero image removed.');
     }
 
     public function smtp()
     {
-        return view('admin.settings.smtp');
+        $keys = [
+            'mail_mailer',
+            'mail_host',
+            'mail_port',
+            'mail_username',
+            'mail_password',
+            'mail_encryption',
+            'mail_from_address',
+            'mail_from_name',
+        ];
+
+        $settings = Setting::getMany($keys);
+
+        return view('admin.settings.smtp', compact('settings'));
+    }
+
+    public function smtpUpdate(Request $request)
+    {
+        $data = $request->validate([
+            'mail_mailer' => ['required', 'string', 'max:20'],
+            'mail_host' => ['nullable', 'string', 'max:255'],
+            'mail_port' => ['nullable', 'string', 'max:10'],
+            'mail_username' => ['nullable', 'string', 'max:255'],
+            'mail_password' => ['nullable', 'string', 'max:255'],
+            'mail_encryption' => ['nullable', 'string', 'max:10'],
+            'mail_from_address' => ['nullable', 'email', 'max:150'],
+            'mail_from_name' => ['nullable', 'string', 'max:150'],
+        ]);
+
+        Setting::setMany($data);
+
+        return back()->with('status', 'SMTP settings updated.');
+    }
+
+    public function smtpTest(Request $request)
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        try {
+            $settings = Setting::getMany([
+                'mail_mailer', 'mail_host', 'mail_port', 'mail_username',
+                'mail_password', 'mail_encryption', 'mail_from_address', 'mail_from_name',
+            ]);
+
+            config([
+                'mail.default' => $settings['mail_mailer'] ?: config('mail.default'),
+                'mail.mailers.smtp.host' => $settings['mail_host'] ?: config('mail.mailers.smtp.host'),
+                'mail.mailers.smtp.port' => $settings['mail_port'] ?: config('mail.mailers.smtp.port'),
+                'mail.mailers.smtp.username' => $settings['mail_username'] ?: config('mail.mailers.smtp.username'),
+                'mail.mailers.smtp.password' => $settings['mail_password'] ?: config('mail.mailers.smtp.password'),
+                'mail.mailers.smtp.encryption' => $settings['mail_encryption'] ?: config('mail.mailers.smtp.encryption'),
+                'mail.from.address' => $settings['mail_from_address'] ?: config('mail.from.address'),
+                'mail.from.name' => $settings['mail_from_name'] ?: config('mail.from.name'),
+            ]);
+
+            Mail::raw('This is a test email from RJ SHOP. If you received this, your SMTP configuration is working correctly.', function ($message) use ($request) {
+                $message->to($request->input('email'))
+                        ->subject('RJ SHOP — SMTP Test');
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Test email sent successfully to ' . $request->input('email'),
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send: ' . $e->getMessage(),
+            ]);
+        }
     }
 
     public function system()
@@ -192,7 +391,14 @@ class SettingController extends Controller
 
     public function maintenance()
     {
-        $keys = ['maintenance_mode', 'maintenance_message'];
+        $keys = [
+            'maintenance_mode',
+            'maintenance_message',
+            'maintenance_start_at',
+            'maintenance_end_at',
+            'maintenance_auto_disable',
+            'maintenance_allowed_ips',
+        ];
         $settings = Setting::getMany($keys);
 
         return view('admin.settings.maintenance', compact('settings'));
@@ -202,9 +408,13 @@ class SettingController extends Controller
     {
         $data = $request->validate([
             'maintenance_message' => ['nullable', 'string', 'max:500'],
+            'maintenance_start_at' => ['nullable', 'date'],
+            'maintenance_end_at' => ['nullable', 'date'],
+            'maintenance_allowed_ips' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $data['maintenance_mode'] = $request->boolean('maintenance_mode') ? '1' : '0';
+        $data['maintenance_auto_disable'] = $request->boolean('maintenance_auto_disable') ? '1' : '0';
 
         Setting::setMany($data);
 
@@ -213,20 +423,41 @@ class SettingController extends Controller
 
     public function security()
     {
-        $logs = \App\Models\LoginLog::latest()->limit(50)->get();
-        $blockedIps = \App\Models\BlockedIp::latest()->get();
+        $logs = LoginLog::latest()->limit(50)->get();
+        $blockedIps = BlockedIp::latest()->get();
 
         return view('admin.settings.security', compact('logs', 'blockedIps'));
+    }
+
+    public function blockIp(Request $request)
+    {
+        $data = $request->validate([
+            'ip_address' => ['required', 'ip'],
+            'reason' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        BlockedIp::updateOrCreate(
+            ['ip_address' => $data['ip_address']],
+            [
+                'reason' => $data['reason'] ?? 'Manually blocked by admin',
+                'blocked_by' => auth()->id(),
+                'blocked_until' => null,
+            ]
+        );
+
+        return back()->with('status', 'IP address blocked successfully.');
+    }
+
+    public function unblockIp(BlockedIp $blockedIp)
+    {
+        $blockedIp->delete();
+
+        return back()->with('status', 'IP address unblocked.');
     }
 
     public function update()
     {
         return view('admin.settings.update');
-    }
-
-    public function backup()
-    {
-        return view('admin.settings.backup');
     }
 
     public function cache()
