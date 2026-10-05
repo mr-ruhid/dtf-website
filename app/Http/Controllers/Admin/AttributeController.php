@@ -73,12 +73,14 @@ class AttributeController extends Controller
         $data = $request->validate([
             'value' => ['required', 'string', 'max:100'],
             'color_code' => ['nullable', 'string', 'max:20'],
+            'price_adjustment' => ['nullable', 'numeric', 'min:0'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'status' => ['nullable', 'boolean'],
         ]);
 
         $data['status'] = $request->boolean('status', true);
         $data['sort_order'] = $data['sort_order'] ?? ($attribute->values()->max('sort_order') + 1);
+        $data['price_adjustment'] = $data['price_adjustment'] ?? 0;
 
         if ($attribute->type === 'color' && empty($data['color_code'])) {
             return back()->withErrors(['color_code' => 'Color code is required for color attributes.']);
@@ -98,12 +100,14 @@ class AttributeController extends Controller
         $data = $request->validate([
             'value' => ['required', 'string', 'max:100'],
             'color_code' => ['nullable', 'string', 'max:20'],
+            'price_adjustment' => ['nullable', 'numeric', 'min:0'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'status' => ['nullable', 'boolean'],
         ]);
 
         $data['status'] = $request->boolean('status');
         $data['sort_order'] = $data['sort_order'] ?? 0;
+        $data['price_adjustment'] = $data['price_adjustment'] ?? 0;
 
         $value->update($data);
 
