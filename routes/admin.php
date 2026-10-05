@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\DeliveryZoneController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\ModelController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\PrintZoneController;
 use App\Http\Controllers\Admin\ProductController;
@@ -134,6 +135,14 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::delete('delivery-rates/{rate}', [DeliveryRateController::class, 'destroy'])->name('delivery-rates.destroy');
         Route::put('delivery-rates/{rate}/toggle', [DeliveryRateController::class, 'toggleStatus'])->name('delivery-rates.toggle');
 
+        Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('orders/api-docs', [OrderController::class, 'apiDocs'])->name('orders.api-docs');
+        Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::put('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
+        Route::put('orders/{order}/payment', [OrderController::class, 'updatePayment'])->name('orders.payment');
+        Route::delete('orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
+        Route::delete('orders/{order}/designs/{design}', [OrderController::class, 'deleteDesign'])->name('orders.designs.destroy');
+
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::get('settings/general', [SettingController::class, 'general'])->name('settings.general');
         Route::post('settings/general', [SettingController::class, 'generalUpdate'])->name('settings.general.update');
@@ -148,9 +157,6 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         $placeholder = function (string $title) {
             return view('admin.placeholder', compact('title'));
         };
-
-        Route::get('orders', fn() => $placeholder('Orders'))->name('orders.index');
-        Route::get('orders/{id}', fn() => $placeholder('Order Details'))->name('orders.show');
 
         Route::get('pages', fn() => $placeholder('Pages'))->name('pages.index');
         Route::get('pages/create', fn() => $placeholder('Create Page'))->name('pages.create');
