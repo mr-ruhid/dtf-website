@@ -77,22 +77,23 @@
                     <span x-show="sidebarOpen" class="text-[13px] font-medium">Dashboard</span>
                 </a>
 
-                <div x-data="{ open: {{ request()->routeIs('admin.product*', 'admin.category*', 'admin.model*', 'admin.attribute*') ? 'true' : 'false' }} }">
+                <div x-data="{ open: {{ request()->routeIs('admin.products*', 'admin.categories*', 'admin.models*', 'admin.attributes*') ? 'true' : 'false' }} }">
                     <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true"
-                            class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.product*', 'admin.category*', 'admin.model*', 'admin.attribute*') ? 'active' : '' }}">
+                            class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.products*', 'admin.categories*', 'admin.models*', 'admin.attributes*') ? 'active' : '' }}">
                         <div class="icon-box"><i class="fa-solid fa-cube"></i></div>
                         <span x-show="sidebarOpen" class="text-[13px] font-medium flex-1 text-left">Products</span>
                         <i x-show="sidebarOpen" :class="open ? 'rotate-180' : ''" class="fa-solid fa-chevron-down text-[9px] transition-transform"></i>
                     </button>
                     <div x-show="open && sidebarOpen" x-collapse class="mt-1 ml-5 pl-5 border-l border-slate-800/60 space-y-0.5">
-                        <a href="#" class="block py-1.5 px-3 text-[12px] rounded-lg text-slate-500 hover:text-white hover:bg-slate-800/50 transition">All Products</a>
-                        <a href="#" class="block py-1.5 px-3 text-[12px] rounded-lg text-slate-500 hover:text-white hover:bg-slate-800/50 transition">Models</a>
-                        <a href="#" class="block py-1.5 px-3 text-[12px] rounded-lg text-slate-500 hover:text-white hover:bg-slate-800/50 transition">Categories</a>
-                        <a href="#" class="block py-1.5 px-3 text-[12px] rounded-lg text-slate-500 hover:text-white hover:bg-slate-800/50 transition">Attributes</a>
+                        <a href="{{ route('admin.products.index') }}" class="block py-1.5 px-3 text-[12px] rounded-lg transition {{ request()->routeIs('admin.products*') ? 'text-white bg-slate-800/60' : 'text-slate-500 hover:text-white hover:bg-slate-800/50' }}">All Products</a>
+                        <a href="{{ route('admin.models.index') }}" class="block py-1.5 px-3 text-[12px] rounded-lg transition {{ request()->routeIs('admin.models*') ? 'text-white bg-slate-800/60' : 'text-slate-500 hover:text-white hover:bg-slate-800/50' }}">Models</a>
+                        <a href="{{ route('admin.categories.index') }}" class="block py-1.5 px-3 text-[12px] rounded-lg transition {{ request()->routeIs('admin.categories*') ? 'text-white bg-slate-800/60' : 'text-slate-500 hover:text-white hover:bg-slate-800/50' }}">Categories</a>
+                        <a href="{{ route('admin.attributes.index') }}" class="block py-1.5 px-3 text-[12px] rounded-lg transition {{ request()->routeIs('admin.attributes*') ? 'text-white bg-slate-800/60' : 'text-slate-500 hover:text-white hover:bg-slate-800/50' }}">Attributes</a>
                     </div>
                 </div>
 
-                <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl">
+                <a href="{{ route('admin.orders.index') }}"
+                   class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.orders*') ? 'active' : '' }}">
                     <div class="icon-box"><i class="fa-solid fa-receipt"></i></div>
                     <span x-show="sidebarOpen" class="text-[13px] font-medium flex-1">Orders</span>
                     <span x-show="sidebarOpen" class="text-[10px] bg-indigo-500/20 text-indigo-300 font-semibold px-2 py-0.5 rounded-full">0</span>
@@ -103,17 +104,20 @@
                     <div class="flex-1 glow-line"></div>
                 </div>
 
-                <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl">
+                <a href="{{ route('admin.blog.index') }}"
+                   class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.blog*') ? 'active' : '' }}">
                     <div class="icon-box"><i class="fa-solid fa-newspaper"></i></div>
                     <span x-show="sidebarOpen" class="text-[13px] font-medium">Blog</span>
                 </a>
 
-                <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl">
+                <a href="{{ route('admin.pages.index') }}"
+                   class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.pages*') ? 'active' : '' }}">
                     <div class="icon-box"><i class="fa-solid fa-file-lines"></i></div>
                     <span x-show="sidebarOpen" class="text-[13px] font-medium">Pages</span>
                 </a>
 
-                <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl">
+                <a href="{{ route('admin.gallery.index') }}"
+                   class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.gallery*') ? 'active' : '' }}">
                     <div class="icon-box"><i class="fa-solid fa-images"></i></div>
                     <span x-show="sidebarOpen" class="text-[13px] font-medium">Gallery</span>
                 </a>
@@ -135,13 +139,15 @@
                     <div class="flex-1 glow-line"></div>
                 </div>
 
-                <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl">
+                <a href="{{ route('admin.support.index') }}"
+                   class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.support*') ? 'active' : '' }}">
                     <div class="icon-box"><i class="fa-solid fa-headset"></i></div>
                     <span x-show="sidebarOpen" class="text-[13px] font-medium flex-1">Technical Support</span>
                     <span x-show="sidebarOpen" class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
                 </a>
 
-                <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl">
+                <a href="{{ route('admin.settings.index') }}"
+                   class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings*') ? 'active' : '' }}">
                     <div class="icon-box"><i class="fa-solid fa-sliders"></i></div>
                     <span x-show="sidebarOpen" class="text-[13px] font-medium">Settings</span>
                 </a>
@@ -252,11 +258,11 @@
                 <div class="icon-box"><i class="fa-solid fa-gauge-high"></i></div>
                 <span class="text-[13px] font-medium">Dashboard</span>
             </a>
-            <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl">
+            <a href="{{ route('admin.products.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.products*') ? 'active' : '' }}">
                 <div class="icon-box"><i class="fa-solid fa-cube"></i></div>
                 <span class="text-[13px] font-medium">Products</span>
             </a>
-            <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl">
+            <a href="{{ route('admin.orders.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.orders*') ? 'active' : '' }}">
                 <div class="icon-box"><i class="fa-solid fa-receipt"></i></div>
                 <span class="text-[13px] font-medium">Orders</span>
             </a>
@@ -265,15 +271,15 @@
                 <span class="text-[9px] uppercase tracking-[0.15em] text-slate-600 font-bold">Content</span>
                 <div class="flex-1 glow-line"></div>
             </div>
-            <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl">
+            <a href="{{ route('admin.blog.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.blog*') ? 'active' : '' }}">
                 <div class="icon-box"><i class="fa-solid fa-newspaper"></i></div>
                 <span class="text-[13px] font-medium">Blog</span>
             </a>
-            <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl">
+            <a href="{{ route('admin.pages.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.pages*') ? 'active' : '' }}">
                 <div class="icon-box"><i class="fa-solid fa-file-lines"></i></div>
                 <span class="text-[13px] font-medium">Pages</span>
             </a>
-            <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl">
+            <a href="{{ route('admin.gallery.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.gallery*') ? 'active' : '' }}">
                 <div class="icon-box"><i class="fa-solid fa-images"></i></div>
                 <span class="text-[13px] font-medium">Gallery</span>
             </a>
@@ -290,11 +296,11 @@
                 <span class="text-[9px] uppercase tracking-[0.15em] text-slate-600 font-bold">System</span>
                 <div class="flex-1 glow-line"></div>
             </div>
-            <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl">
+            <a href="{{ route('admin.support.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.support*') ? 'active' : '' }}">
                 <div class="icon-box"><i class="fa-solid fa-headset"></i></div>
                 <span class="text-[13px] font-medium">Technical Support</span>
             </a>
-            <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl">
+            <a href="{{ route('admin.settings.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings*') ? 'active' : '' }}">
                 <div class="icon-box"><i class="fa-solid fa-sliders"></i></div>
                 <span class="text-[13px] font-medium">Settings</span>
             </a>
