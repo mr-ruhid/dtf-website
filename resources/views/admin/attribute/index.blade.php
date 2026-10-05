@@ -4,16 +4,56 @@
 
 @section('content')
 
+@php
+    $attributesData = $attributes->map(fn($a) => [
+        'id' => $a->id,
+        'name' => $a->name,
+        'slug' => $a->slug,
+        'type' => $a->type,
+        'sort_order' => $a->sort_order,
+        'status' => (bool) $a->status,
+        'meta_title' => $a->meta_title,
+        'meta_description' => $a->meta_description,
+        'meta_keywords' => $a->meta_keywords,
+    ])->values();
+
+    $valuesData = $attributes->flatMap(fn($a) => $a->values->map(fn($v) => [
+        'id' => $v->id,
+        'attribute_id' => $v->attribute_id,
+        'value' => $v->value,
+        'color_code' => $v->color_code,
+        'price_adjustment' => $v->price_adjustment,
+        'sort_order' => $v->sort_order,
+        'status' => (bool) $v->status,
+    ]))->values();
+@endphp
+
 <div x-data="{
+    attributes: @js($attributesData),
+    attributeValues: @js($valuesData),
     selectedId: {{ $attributes->first()?->id ?? 'null' }},
     showAttrModal: false,
     editingAttr: null,
-    attrFormAction: '{{ route('admin.attributes.store') }}',
+    attrFormAction: '',
     attrFormMethod: 'POST',
     showValueModal: false,
     editingValue: null,
     valueFormAction: '',
-    valueFormMethod: 'POST'
+    valueFormMethod: 'POST',
+
+    openAttrModal(attr, action, method) {
+        this.editingAttr = attr;
+        this.attrFormAction = action;
+        this.attrFormMethod = method;
+        this.showAttrModal = true;
+    },
+
+    openValueModal(value, action, method) {
+        this.editingValue = value;
+        this.valueFormAction = action;
+        this.valueFormMethod = method;
+        this.showValueModal = true;
+    }
 }">
 
     <div class="flex items-center justify-between mb-6">
@@ -21,7 +61,7 @@
             <h2 class="text-xl font-semibold text-gray-800">Attributes</h2>
             <p class="text-sm text-gray-500 mt-1">Manage product attributes like Size, Color and custom ones</p>
         </div>
-        <button @click="showAttrModal = true; editingAttr = null; attrFormAction = '{{ route('admin.attributes.store') }}'; attrFormMethod = 'POST'"
+        <button @click="openAttrModal(null, '{{ route('admin.attributes.store') }}', 'POST')"
                 class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition flex items-center gap-2">
             <i class="fa-solid fa-plus text-xs"></i> New Attribute
         </button>
@@ -87,7 +127,7 @@
                                     </div>
                                 </button>
                                 <div class="flex items-center gap-1 pr-2 opacity-0 group-hover:opacity-100 transition">
-                                    <button @click="showAttrModal = true; editingAttr = @json($attr); attrFormAction = '{{ route('admin.attributes.update', $attr) }}'; attrFormMethod = 'PUT'"
+                                    <button @click="openAttrModal(attributes.find(a => a.id === {{ $attr->id }}), '{{ route('admin.attributes.update', $attr) }}', 'PUT')"
                                             class="w-7 h-7 flex items-center justify-center rounded hover:bg-indigo-50 text-indigo-600">
                                         <i class="fa-solid fa-pen text-[10px]"></i>
                                     </button>
@@ -142,7 +182,7 @@
                                     <i class="fa-solid {{ $attr->status ? 'fa-toggle-on' : 'fa-toggle-off' }} text-lg"></i>
                                 </button>
                             </form>
-                            <button @click="showAttrModal = true; editingAttr = @json($attr); attrFormAction = '{{ route('admin.attributes.update', $attr) }}'; attrFormMethod = 'PUT'"
+                            <button @click="openAttrModal(attributes.find(a => a.id === {{ $attr->id }}), '{{ route('admin.attributes.update', $attr) }}', 'PUT')"
                                     class="w-8 h-8 flex items-center justify-center rounded hover:bg-indigo-50 text-indigo-600 transition">
                                 <i class="fa-solid fa-pen text-xs"></i>
                             </button>
@@ -152,7 +192,7 @@
                     <div class="p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="text-sm font-medium text-gray-700">Values ({{ $attr->values->count() }})</h4>
-                            <button @click="showValueModal = true; editingValue = null; valueFormAction = '{{ route('admin.attributes.values.store', $attr) }}'; valueFormMethod = 'POST'"
+                            <button @click="openValueModal(null, '{{ route('admin.attributes.values.store', $attr) }}', 'POST')"
                                     class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium px-3 py-1.5 rounded-lg transition">
                                 <i class="fa-solid fa-plus text-[10px] mr-1"></i> Add Value
                             </button>
@@ -182,7 +222,7 @@
                                                         <i class="fa-solid {{ $value->status ? 'fa-toggle-on' : 'fa-toggle-off' }}"></i>
                                                     </button>
                                                 </form>
-                                                <button @click="showValueModal = true; editingValue = @json($value); valueFormAction = '{{ route('admin.attributes.values.update', [$attr, $value]) }}'; valueFormMethod = 'PUT'"
+                                                <button @click="openValueModal(attributeValues.find(v => v.id === {{ $value->id }}), '{{ route('admin.attributes.values.update', [$attr, $value]) }}', 'PUT')"
                                                         class="flex-1 text-[10px] text-indigo-600 hover:bg-indigo-50 py-1 rounded">
                                                     <i class="fa-solid fa-pen"></i>
                                                 </button>
@@ -213,7 +253,7 @@
                                                         <i class="fa-solid {{ $value->status ? 'fa-toggle-on' : 'fa-toggle-off' }} text-sm"></i>
                                                     </button>
                                                 </form>
-                                                <button @click="showValueModal = true; editingValue = @json($value); valueFormAction = '{{ route('admin.attributes.values.update', [$attr, $value]) }}'; valueFormMethod = 'PUT'"
+                                                <button @click="openValueModal(attributeValues.find(v => v.id === {{ $value->id }}), '{{ route('admin.attributes.values.update', [$attr, $value]) }}', 'PUT')"
                                                         class="w-7 h-7 flex items-center justify-center rounded hover:bg-indigo-50 text-indigo-600">
                                                     <i class="fa-solid fa-pen text-[10px]"></i>
                                                 </button>
@@ -355,7 +395,9 @@
                 </button>
             </div>
 
-            <form method="POST" :action="valueFormAction" class="p-6 space-y-4" x-data="{ colorCode: '' }" x-init="$watch('editingValue', v => colorCode = v?.color_code || '')">
+            <form method="POST" :action="valueFormAction" class="p-6 space-y-4"
+                  x-data="{ colorCode: '' }"
+                  x-init="$watch('editingValue', v => colorCode = v?.color_code || '')">
                 @csrf
                 <template x-if="valueFormMethod === 'PUT'">
                     <input type="hidden" name="_method" value="PUT">
@@ -367,7 +409,7 @@
                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                 </div>
 
-                <div x-show="['color'].includes(editingAttr?.type) || @json($attributes->pluck('type', 'id'))[selectedId] === 'color'">
+                <div x-show="attributes.find(a => a.id === selectedId)?.type === 'color'">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Color</label>
                     <div class="flex items-center gap-3">
                         <input type="color" x-model="colorCode" @input="$el.nextElementSibling.value = colorCode"
