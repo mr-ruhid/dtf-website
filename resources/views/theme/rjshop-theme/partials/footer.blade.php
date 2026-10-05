@@ -172,12 +172,3 @@
 
     <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-pink-500/40 to-transparent"></div>
 </footer>
-
-@push('styles')
-<style>
-@keyframes orbit-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes orbit-reverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
-.animate-orbit-slow { animation: orbit-slow 20s linear infinite; }
-.animate-orbit-reverse { animation: orbit-reverse 14s linear infinite; }
-</style>
-@endpush
