@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>[x-cloak]{display:none!important;}</style>
 </head>
 <body class="bg-gray-100 text-gray-800" x-data="{ sidebarOpen: true, mobileOpen: false }">
 
@@ -23,12 +24,13 @@
 
             <nav class="flex-1 overflow-y-auto py-4 space-y-1">
 
-                <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 hover:text-white transition">
+                <a href="{{ route('admin.dashboard') }}"
+                   class="flex items-center gap-3 px-4 py-3 transition {{ request()->routeIs('admin.dashboard') ? 'bg-slate-800 text-white border-l-4 border-indigo-500' : 'hover:bg-slate-800 hover:text-white' }}">
                     <i class="fa-solid fa-gauge-high w-5 text-center"></i>
                     <span x-show="sidebarOpen" class="text-sm">Dashboard</span>
                 </a>
 
-                <div x-data="{ open: false }">
+                <div x-data="{ open: {{ request()->routeIs('admin.product*', 'admin.category*', 'admin.brand*', 'admin.attribute*') ? 'true' : 'false' }} }">
                     <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-800 hover:text-white transition">
                         <div class="flex items-center gap-3">
                             <i class="fa-solid fa-box w-5 text-center"></i>
@@ -108,13 +110,16 @@
                     </a>
                     <div x-data="{ open: false }" class="relative">
                         <button @click="open = !open" class="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-100 transition">
-                            <div class="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-semibold">A</div>
-                            <span class="hidden md:block text-sm">Admin</span>
+                            <div class="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-semibold">
+                                {{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}
+                            </div>
+                            <span class="hidden md:block text-sm">{{ auth()->user()->name ?? 'Admin' }}</span>
                             <i class="fa-solid fa-chevron-down text-xs"></i>
                         </button>
                         <div x-show="open" @click.outside="open = false" x-collapse class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
-                            <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-50">Profile</a>
-                            <form method="POST" action="#">
+                            <a href="{{ route('admin.profile.edit') }}" class="block px-4 py-2 text-sm hover:bg-gray-50">Profile</a>
+                            <form method="POST" action="{{ route('admin.logout') }}">
+                                @csrf
                                 <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Logout</button>
                             </form>
                         </div>
@@ -144,7 +149,7 @@
             <span class="text-white font-bold text-lg">RJ SHOP <span class="text-indigo-400">lite</span></span>
         </div>
         <nav class="py-4 space-y-1">
-            <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-gauge-high w-5"></i><span class="text-sm">Dashboard</span></a>
+            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-gauge-high w-5"></i><span class="text-sm">Dashboard</span></a>
             <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-box w-5"></i><span class="text-sm">Products</span></a>
             <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-cart-shopping w-5"></i><span class="text-sm">Orders</span></a>
             <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-users w-5"></i><span class="text-sm">Customers</span></a>
