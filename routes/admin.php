@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SliderController;
 use App\Http\Controllers\Admin\TwoFactorController;
@@ -37,10 +38,15 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::put('profile/two-factor', [ProfileController::class, 'toggleTwoFactor'])->name('profile.two-factor');
 
         Route::resource('sliders', SliderController::class)->except(['show']);
-
         Route::post('sliders/{slider}/items', [SliderController::class, 'storeItem'])->name('sliders.items.store');
         Route::put('sliders/{slider}/items/{item}', [SliderController::class, 'updateItem'])->name('sliders.items.update');
         Route::delete('sliders/{slider}/items/{item}', [SliderController::class, 'destroyItem'])->name('sliders.items.destroy');
+
+        Route::get('faqs', [FaqController::class, 'index'])->name('faqs.index');
+        Route::post('faqs', [FaqController::class, 'store'])->name('faqs.store');
+        Route::put('faqs/{faq}', [FaqController::class, 'update'])->name('faqs.update');
+        Route::delete('faqs/{faq}', [FaqController::class, 'destroy'])->name('faqs.destroy');
+        Route::put('faqs/{faq}/toggle', [FaqController::class, 'toggleStatus'])->name('faqs.toggle');
     });
 
 });
