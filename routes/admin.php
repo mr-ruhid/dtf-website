@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\ModelController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\PrintZoneController;
+use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SliderController;
@@ -101,6 +102,16 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::delete('print-zones/{zone}', [PrintZoneController::class, 'destroy'])->name('print-zones.destroy');
         Route::put('print-zones/{zone}/toggle', [PrintZoneController::class, 'toggleStatus'])->name('print-zones.toggle');
 
+        Route::get('products', [ProductController::class, 'index'])->name('products.index');
+        Route::get('products/create', [ProductController::class, 'create'])->name('products.create');
+        Route::post('products', [ProductController::class, 'store'])->name('products.store');
+        Route::get('products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
+        Route::put('products/{product}', [ProductController::class, 'update'])->name('products.update');
+        Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+        Route::put('products/{product}/toggle', [ProductController::class, 'toggleStatus'])->name('products.toggle');
+        Route::put('products/{product}/featured', [ProductController::class, 'toggleFeatured'])->name('products.featured');
+        Route::delete('products/{product}/images/{image}', [ProductController::class, 'deleteImage'])->name('products.images.destroy');
+
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::get('settings/general', [SettingController::class, 'general'])->name('settings.general');
         Route::post('settings/general', [SettingController::class, 'generalUpdate'])->name('settings.general.update');
@@ -115,10 +126,6 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         $placeholder = function (string $title) {
             return view('admin.placeholder', compact('title'));
         };
-
-        Route::get('products', fn() => $placeholder('All Products'))->name('products.index');
-        Route::get('products/create', fn() => $placeholder('Create Product'))->name('products.create');
-        Route::get('products/{id}/edit', fn() => $placeholder('Edit Product'))->name('products.edit');
 
         Route::get('orders', fn() => $placeholder('Orders'))->name('orders.index');
         Route::get('orders/{id}', fn() => $placeholder('Order Details'))->name('orders.show');
