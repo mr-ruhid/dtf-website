@@ -29,7 +29,7 @@ class ProfileController extends Controller
 
         $user->update($data);
 
-        return back()->with('status', 'Profile updated successfully.');
+        return back()->with('status', 'Profile updated successfully.')->with('tab', 'profile');
     }
 
     public function updatePassword(Request $request)
@@ -52,5 +52,28 @@ class ProfileController extends Controller
         LoginLog::log('password', 'success', $user->email);
 
         return back()->with('status', 'Password updated successfully.')->with('tab', 'password');
+    }
+
+    public function toggleTwoFactor(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'password' => ['required'],
+        ]);
+
+        if (!Hash::check($request->input('password'), $user->password)) {
+            return back()->withErrors(['password' => 'Password is incorrect.'])->with('tab', 'security');
+        }
+
+        $user->update([
+            'two_factor_enabled' => !$user->two_factor_enabled,
+        ]);
+
+        $message = $user->two_factor_enabled
+            ? 'Two-factor authentication enabled.'
+            : 'Two-factor authentication disabled.';
+
+        return back()->with('status', $message)->with('tab', 'security');
     }
 }
