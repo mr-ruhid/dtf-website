@@ -77,9 +77,9 @@
                     <span x-show="sidebarOpen" class="text-[13px] font-medium">Dashboard</span>
                 </a>
 
-                <div x-data="{ open: {{ request()->routeIs('admin.products*', 'admin.categories*', 'admin.models*', 'admin.attributes*') ? 'true' : 'false' }} }">
+                <div x-data="{ open: {{ request()->routeIs('admin.products*', 'admin.categories*', 'admin.models*', 'admin.attributes*', 'admin.print-zones*') ? 'true' : 'false' }} }">
                     <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true"
-                            class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.products*', 'admin.categories*', 'admin.models*', 'admin.attributes*') ? 'active' : '' }}">
+                            class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.products*', 'admin.categories*', 'admin.models*', 'admin.attributes*', 'admin.print-zones*') ? 'active' : '' }}">
                         <div class="icon-box"><i class="fa-solid fa-cube"></i></div>
                         <span x-show="sidebarOpen" class="text-[13px] font-medium flex-1 text-left">Products</span>
                         <i x-show="sidebarOpen" :class="open ? 'rotate-180' : ''" class="fa-solid fa-chevron-down text-[9px] transition-transform"></i>
@@ -89,6 +89,7 @@
                         <a href="{{ route('admin.models.index') }}" class="block py-1.5 px-3 text-[12px] rounded-lg transition {{ request()->routeIs('admin.models*') ? 'text-white bg-slate-800/60' : 'text-slate-500 hover:text-white hover:bg-slate-800/50' }}">Models</a>
                         <a href="{{ route('admin.categories.index') }}" class="block py-1.5 px-3 text-[12px] rounded-lg transition {{ request()->routeIs('admin.categories*') ? 'text-white bg-slate-800/60' : 'text-slate-500 hover:text-white hover:bg-slate-800/50' }}">Categories</a>
                         <a href="{{ route('admin.attributes.index') }}" class="block py-1.5 px-3 text-[12px] rounded-lg transition {{ request()->routeIs('admin.attributes*') ? 'text-white bg-slate-800/60' : 'text-slate-500 hover:text-white hover:bg-slate-800/50' }}">Attributes</a>
+                        <a href="{{ route('admin.print-zones.index') }}" class="block py-1.5 px-3 text-[12px] rounded-lg transition {{ request()->routeIs('admin.print-zones*') ? 'text-white bg-slate-800/60' : 'text-slate-500 hover:text-white hover:bg-slate-800/50' }}">Print Zones</a>
                     </div>
                 </div>
 
