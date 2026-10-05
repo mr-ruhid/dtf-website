@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\GalleryController;
+use App\Http\Controllers\Admin\ModelController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SettingController;
@@ -66,6 +67,14 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::delete('blog/{post}', [PostController::class, 'destroy'])->name('blog.destroy');
         Route::put('blog/{post}/toggle', [PostController::class, 'toggleStatus'])->name('blog.toggle');
 
+        Route::get('models', [ModelController::class, 'index'])->name('models.index');
+        Route::get('models/create', [ModelController::class, 'create'])->name('models.create');
+        Route::post('models', [ModelController::class, 'store'])->name('models.store');
+        Route::get('models/{model}/edit', [ModelController::class, 'edit'])->name('models.edit');
+        Route::put('models/{model}', [ModelController::class, 'update'])->name('models.update');
+        Route::delete('models/{model}', [ModelController::class, 'destroy'])->name('models.destroy');
+        Route::put('models/{model}/toggle', [ModelController::class, 'toggleStatus'])->name('models.toggle');
+
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::get('settings/general', [SettingController::class, 'general'])->name('settings.general');
         Route::post('settings/general', [SettingController::class, 'generalUpdate'])->name('settings.general.update');
@@ -84,10 +93,6 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::get('products', fn() => $placeholder('All Products'))->name('products.index');
         Route::get('products/create', fn() => $placeholder('Create Product'))->name('products.create');
         Route::get('products/{id}/edit', fn() => $placeholder('Edit Product'))->name('products.edit');
-
-        Route::get('models', fn() => $placeholder('Models'))->name('models.index');
-        Route::get('models/create', fn() => $placeholder('Create Model'))->name('models.create');
-        Route::get('models/{id}/edit', fn() => $placeholder('Edit Model'))->name('models.edit');
 
         Route::get('categories', fn() => $placeholder('Categories'))->name('categories.index');
         Route::get('categories/create', fn() => $placeholder('Create Category'))->name('categories.create');
