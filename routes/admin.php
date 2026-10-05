@@ -68,6 +68,9 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
 
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::get('settings/general', [SettingController::class, 'general'])->name('settings.general');
+        Route::post('settings/general', [SettingController::class, 'generalUpdate'])->name('settings.general.update');
+        Route::delete('settings/general/logo', [SettingController::class, 'generalRemoveLogo'])->name('settings.general.remove-logo');
+        Route::delete('settings/general/favicon', [SettingController::class, 'generalRemoveFavicon'])->name('settings.general.remove-favicon');
         Route::get('settings/about', [SettingController::class, 'about'])->name('settings.about');
         Route::get('settings/update', [SettingController::class, 'update'])->name('settings.update');
         Route::get('settings/backup', [SettingController::class, 'backup'])->name('settings.backup');
