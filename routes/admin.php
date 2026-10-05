@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\GalleryController;
+use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SliderController;
 use App\Http\Controllers\Admin\TwoFactorController;
@@ -56,6 +57,14 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::delete('gallery/{item}', [GalleryController::class, 'destroy'])->name('gallery.destroy');
         Route::put('gallery/{item}/toggle', [GalleryController::class, 'toggleStatus'])->name('gallery.toggle');
 
+        Route::get('blog', [PostController::class, 'index'])->name('blog.index');
+        Route::get('blog/create', [PostController::class, 'create'])->name('blog.create');
+        Route::post('blog', [PostController::class, 'store'])->name('blog.store');
+        Route::get('blog/{post}/edit', [PostController::class, 'edit'])->name('blog.edit');
+        Route::put('blog/{post}', [PostController::class, 'update'])->name('blog.update');
+        Route::delete('blog/{post}', [PostController::class, 'destroy'])->name('blog.destroy');
+        Route::put('blog/{post}/toggle', [PostController::class, 'toggleStatus'])->name('blog.toggle');
+
         $placeholder = function (string $title) {
             return view('admin.placeholder', compact('title'));
         };
@@ -78,10 +87,6 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
 
         Route::get('orders', fn() => $placeholder('Orders'))->name('orders.index');
         Route::get('orders/{id}', fn() => $placeholder('Order Details'))->name('orders.show');
-
-        Route::get('blog', fn() => $placeholder('Blog'))->name('blog.index');
-        Route::get('blog/create', fn() => $placeholder('Create Post'))->name('blog.create');
-        Route::get('blog/{id}/edit', fn() => $placeholder('Edit Post'))->name('blog.edit');
 
         Route::get('pages', fn() => $placeholder('Pages'))->name('pages.index');
         Route::get('pages/create', fn() => $placeholder('Create Page'))->name('pages.create');
