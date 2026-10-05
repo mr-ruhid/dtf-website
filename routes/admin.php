@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -165,6 +166,7 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::delete('support/{ticket}/attachments/{attachment}', [SupportController::class, 'deleteAttachment'])->name('support.attachments.destroy');
 
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+
         Route::get('settings/general', [SettingController::class, 'general'])->name('settings.general');
         Route::post('settings/general', [SettingController::class, 'generalUpdate'])->name('settings.general.update');
         Route::delete('settings/general/logo', [SettingController::class, 'generalRemoveLogo'])->name('settings.general.remove-logo');
@@ -175,9 +177,11 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
 
         Route::get('settings/seo', [SettingController::class, 'seo'])->name('settings.seo');
         Route::post('settings/seo', [SettingController::class, 'seoUpdate'])->name('settings.seo.update');
+        Route::delete('settings/seo/og', [SettingController::class, 'seoRemoveOg'])->name('settings.seo.remove-og');
 
         Route::get('settings/homepage', [SettingController::class, 'homepage'])->name('settings.homepage');
         Route::post('settings/homepage', [SettingController::class, 'homepageUpdate'])->name('settings.homepage.update');
+        Route::delete('settings/homepage/hero-image', [SettingController::class, 'homepageRemoveHero'])->name('settings.homepage.remove-image');
 
         Route::get('settings/smtp', [SettingController::class, 'smtp'])->name('settings.smtp');
         Route::post('settings/smtp', [SettingController::class, 'smtpUpdate'])->name('settings.smtp.update');
@@ -195,7 +199,11 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::get('settings/update', [SettingController::class, 'update'])->name('settings.update');
         Route::post('settings/update/install', [UpdateController::class, 'install'])->name('settings.update.install');
 
-        Route::get('settings/backup', [SettingController::class, 'backup'])->name('settings.backup');
+        Route::get('settings/backup', [BackupController::class, 'index'])->name('settings.backup');
+        Route::post('settings/backup', [BackupController::class, 'create'])->name('settings.backup.create');
+        Route::get('settings/backup/download/{fileName}', [BackupController::class, 'download'])->name('settings.backup.download');
+        Route::post('settings/backup/restore/{fileName}', [BackupController::class, 'restore'])->name('settings.backup.restore');
+        Route::delete('settings/backup/{fileName}', [BackupController::class, 'destroy'])->name('settings.backup.destroy');
 
         Route::get('settings/cache', [SettingController::class, 'cache'])->name('settings.cache');
         Route::post('settings/cache/clear/{type}', [SettingController::class, 'clearCache'])->name('settings.cache.clear');
