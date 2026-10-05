@@ -5,6 +5,9 @@
 
 @php
     $isActive = ($settings['maintenance_mode'] ?? '0') === '1';
+    $startAt = $settings['maintenance_start_at'] ?? null;
+    $endAt = $settings['maintenance_end_at'] ?? null;
+    $autoDisable = ($settings['maintenance_auto_disable'] ?? '0') === '1';
 @endphp
 
 <form method="POST" action="{{ route('admin.settings.maintenance.update') }}" class="space-y-6">
@@ -73,6 +76,72 @@
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
             <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <i class="fa-solid fa-clock text-sm"></i>
+            </div>
+            <div>
+                <h3 class="font-semibold text-gray-800 text-sm">Schedule & Timer</h3>
+                <p class="text-xs text-gray-500">Set when maintenance starts and ends</p>
+            </div>
+        </div>
+
+        <div class="p-6 space-y-4">
+
+            <label class="flex items-start gap-3 cursor-pointer p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition">
+                <input type="checkbox" name="maintenance_auto_disable" value="1"
+                       {{ $autoDisable ? 'checked' : '' }}
+                       class="mt-0.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 w-5 h-5">
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-800">Auto-disable when end time reached</p>
+                    <p class="text-xs text-gray-500">Site will automatically go live when the end time passes. No need to manually disable.</p>
+                </div>
+            </label>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                    <input type="datetime-local" name="maintenance_start_at"
+                           value="{{ old('maintenance_start_at', $startAt ? \Carbon\Carbon::parse($startAt)->format('Y-m-d\TH:i') : '') }}"
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">When maintenance begins (display purpose)</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                    <input type="datetime-local" name="maintenance_end_at"
+                           value="{{ old('maintenance_end_at', $endAt ? \Carbon\Carbon::parse($endAt)->format('Y-m-d\TH:i') : '') }}"
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">When maintenance ends — used for countdown</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+                <button type="button" onclick="setDuration(1)"
+                        class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-1.5 rounded-lg transition">
+                    +1 hour
+                </button>
+                <button type="button" onclick="setDuration(6)"
+                        class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-1.5 rounded-lg transition">
+                    +6 hours
+                </button>
+                <button type="button" onclick="setDuration(24)"
+                        class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-1.5 rounded-lg transition">
+                    +1 day
+                </button>
+                <button type="button" onclick="setDuration(72)"
+                        class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-1.5 rounded-lg transition">
+                    +3 days
+                </button>
+                <button type="button" onclick="clearDuration()"
+                        class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium px-3 py-1.5 rounded-lg transition ml-auto">
+                    <i class="fa-solid fa-xmark text-[10px] mr-1"></i> Clear Times
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
                 <i class="fa-solid fa-eye text-sm"></i>
             </div>
             <div>
@@ -90,6 +159,17 @@
                 <p class="text-sm text-gray-600 max-w-md mx-auto">
                     {{ $settings['maintenance_message'] ?? "We'll be back soon! Our team is making improvements to serve you better." }}
                 </p>
+
+                @if ($endAt && \Carbon\Carbon::parse($endAt)->isFuture())
+                    <div class="mt-5 inline-flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200">
+                        <i class="fa-solid fa-clock text-amber-600 text-sm"></i>
+                        <span class="text-xs text-gray-500">Back in:</span>
+                        <span class="text-sm font-mono font-bold text-gray-800">
+                            {{ \Carbon\Carbon::parse($endAt)->diffForHumans(null, true) }}
+                        </span>
+                    </div>
+                @endif
+
                 <p class="text-xs text-gray-400 mt-4">RJ SHOP &copy; {{ date('Y') }}</p>
             </div>
         </div>
@@ -106,14 +186,12 @@
             </div>
         </div>
 
-        <div class="p-6 space-y-3">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Bypass IP Addresses</label>
-                <textarea name="maintenance_allowed_ips" rows="3"
-                          placeholder="One IP per line&#10;192.168.1.1&#10;10.0.0.5"
-                          class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">{{ old('maintenance_allowed_ips', $settings['maintenance_allowed_ips'] ?? '') }}</textarea>
-                <p class="text-xs text-gray-500 mt-1">Admin panel is always accessible. Use this for testing IPs.</p>
-            </div>
+        <div class="p-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Bypass IP Addresses</label>
+            <textarea name="maintenance_allowed_ips" rows="3"
+                      placeholder="One IP per line&#10;192.168.1.1&#10;10.0.0.5"
+                      class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">{{ old('maintenance_allowed_ips', $settings['maintenance_allowed_ips'] ?? '') }}</textarea>
+            <p class="text-xs text-gray-500 mt-1">Admin panel is always accessible. Use this for testing IPs.</p>
         </div>
     </div>
 
@@ -133,5 +211,25 @@
     </div>
 
 </form>
+
+<script>
+function setDuration(hours) {
+    const now = new Date();
+    const end = new Date(now.getTime() + hours * 60 * 60 * 1000);
+
+    const format = (d) => {
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+
+    document.querySelector('[name="maintenance_start_at"]').value = format(now);
+    document.querySelector('[name="maintenance_end_at"]').value = format(end);
+}
+
+function clearDuration() {
+    document.querySelector('[name="maintenance_start_at"]').value = '';
+    document.querySelector('[name="maintenance_end_at"]').value = '';
+}
+</script>
 
 @endsection
