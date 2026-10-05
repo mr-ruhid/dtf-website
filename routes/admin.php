@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\DeliveryRateController;
+use App\Http\Controllers\Admin\DeliveryZoneController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\ModelController;
@@ -111,6 +114,25 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::put('products/{product}/toggle', [ProductController::class, 'toggleStatus'])->name('products.toggle');
         Route::put('products/{product}/featured', [ProductController::class, 'toggleFeatured'])->name('products.featured');
         Route::delete('products/{product}/images/{image}', [ProductController::class, 'deleteImage'])->name('products.images.destroy');
+
+        Route::get('branches', [BranchController::class, 'index'])->name('branches.index');
+        Route::post('branches', [BranchController::class, 'store'])->name('branches.store');
+        Route::put('branches/{branch}', [BranchController::class, 'update'])->name('branches.update');
+        Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
+        Route::put('branches/{branch}/toggle', [BranchController::class, 'toggleStatus'])->name('branches.toggle');
+        Route::put('branches/{branch}/default', [BranchController::class, 'setDefault'])->name('branches.default');
+
+        Route::get('delivery-zones', [DeliveryZoneController::class, 'index'])->name('delivery-zones.index');
+        Route::post('delivery-zones', [DeliveryZoneController::class, 'store'])->name('delivery-zones.store');
+        Route::put('delivery-zones/{zone}', [DeliveryZoneController::class, 'update'])->name('delivery-zones.update');
+        Route::delete('delivery-zones/{zone}', [DeliveryZoneController::class, 'destroy'])->name('delivery-zones.destroy');
+        Route::put('delivery-zones/{zone}/toggle', [DeliveryZoneController::class, 'toggleStatus'])->name('delivery-zones.toggle');
+
+        Route::get('delivery-rates', [DeliveryRateController::class, 'index'])->name('delivery-rates.index');
+        Route::post('delivery-rates', [DeliveryRateController::class, 'store'])->name('delivery-rates.store');
+        Route::put('delivery-rates/{rate}', [DeliveryRateController::class, 'update'])->name('delivery-rates.update');
+        Route::delete('delivery-rates/{rate}', [DeliveryRateController::class, 'destroy'])->name('delivery-rates.destroy');
+        Route::put('delivery-rates/{rate}/toggle', [DeliveryRateController::class, 'toggleStatus'])->name('delivery-rates.toggle');
 
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::get('settings/general', [SettingController::class, 'general'])->name('settings.general');
