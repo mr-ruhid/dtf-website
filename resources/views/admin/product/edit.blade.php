@@ -132,7 +132,7 @@
                                           class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700">
+                                        <button type="button" onclick="this.closest('form').submit()" class="w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700">
                                             <i class="fa-solid fa-trash text-[10px]"></i>
                                         </button>
                                     </form>
@@ -159,7 +159,6 @@
                             <i class="fa-solid fa-plus text-[10px] mr-1"></i> Add Tier
                         </button>
                     </div>
-                    <p class="text-xs text-gray-500">Alibaba-style pricing — different price per quantity</p>
 
                     <div class="space-y-2">
                         <template x-for="(tier, index) in tiers" :key="index">
@@ -171,7 +170,7 @@
                                 </div>
                                 <span class="text-gray-400 text-xs">—</span>
                                 <div class="relative flex-1">
-                                    <input type="number" :name="`tiers[${index}][max_qty]`" x-model="tier.max_qty" min="1" placeholder="Max (empty = +)"
+                                    <input type="number" :name="`tiers[${index}][max_qty]`" x-model="tier.max_qty" min="1" placeholder="Max (+)"
                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                     <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">pcs</span>
                                 </div>
@@ -193,7 +192,7 @@
                     <h3 class="font-semibold text-gray-800 text-sm flex items-center gap-2">
                         <i class="fa-solid fa-tags text-indigo-500"></i> Attributes
                     </h3>
-                    <p class="text-xs text-gray-500">Selected values are enabled for this product</p>
+                    <p class="text-xs text-gray-500">Select which values are enabled for this product. Prices come from attribute defaults unless you customize them.</p>
 
                     @foreach ($attributes as $attribute)
                         @php
@@ -209,7 +208,7 @@
                                     <div class="text-left">
                                         <p class="text-sm font-medium text-gray-800">{{ $attribute->name }}</p>
                                         <p class="text-[10px] text-gray-400">
-                                            {{ count($selectedIds) }} selected
+                                            <span x-text="Object.keys(selectedAttributeValues['{{ $attribute->id }}'] || {}).length"></span> selected
                                         </p>
                                     </div>
                                 </div>
@@ -222,18 +221,13 @@
                                         @foreach ($attribute->activeValues as $value)
                                             @php
                                                 $pav = $product->attributeValues->where('attribute_id', $attribute->id)->where('attribute_value_id', $value->id)->first();
-                                                $isSelected = (bool) $pav;
-                                                $override = $pav?->price_override;
+                                                $hasImage = $pav?->image_url;
                                             @endphp
                                             <div class="border rounded-lg p-3 transition"
                                                  :class="selectedAttributeValues['{{ $attribute->id }}']?.['{{ $value->id }}'] ? 'border-indigo-500 bg-indigo-50/50' : 'border-gray-200'">
                                                 <label class="cursor-pointer block">
                                                     <input type="checkbox" class="sr-only"
-                                                           data-attr="{{ $attribute->id }}" data-value="{{ $value->id }}"
-                                                           data-name="{{ $value->value }}"
-                                                           data-override="{{ $override }}"
-                                                           @change="toggleAttributeValue({{ $attribute->id }}, {{ $value->id }}, '{{ $value->value }}')"
-                                                           {{ $isSelected ? 'checked' : '' }}>
+                                                           @change="toggleAttributeValue({{ $attribute->id }}, {{ $value->id }}, '{{ $value->value }}', {{ $value->price_adjustment }})">
 
                                                     <div class="aspect-square rounded-md mb-2 border border-gray-100 relative" style="background-color: {{ $value->color_code }}">
                                                         <div x-show="selectedAttributeValues['{{ $attribute->id }}']?.['{{ $value->id }}']"
@@ -246,23 +240,62 @@
 
                                                 <template x-if="selectedAttributeValues['{{ $attribute->id }}']?.['{{ $value->id }}']">
                                                     <div class="mt-2 space-y-2">
-                                                        <div>
-                                                            <label class="block text-[10px] text-gray-500 mb-0.5">Price (+$)</label>
-                                                            <input type="number" step="0.01" min="0"
-                                                                   :name="`attribute_values[{{ $attribute->id }}][${selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].index}][price_override]`"
-                                                                   x-model="selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].price_override"
-                                                                   :placeholder="{{ $value->price_adjustment }}"
-                                                                   class="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                                        <div x-show="!selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].editing">
+                                                            <div class="flex items-center justify-between gap-1">
+                                                                <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                                                                      :class="selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].price_override !== null ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-50 text-indigo-600'">
+                                                                    +$<span x-text="formatPrice(selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].price_override !== null ? selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].price_override : {{ $value->price_adjustment }})"></span>
+                                                                </span>
+                                                                <button type="button" @click.prevent="startEditPrice({{ $attribute->id }}, {{ $value->id }})"
+                                                                        class="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-100 text-gray-500 transition" title="Customize price">
+                                                                    <i class="fa-solid fa-pen text-[9px]"></i>
+                                                                </button>
+                                                            </div>
+                                                            <p x-show="selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].price_override !== null"
+                                                               class="text-[9px] text-emerald-600 font-medium mt-0.5">custom</p>
                                                         </div>
+
+                                                        <div x-show="selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].editing" class="space-y-1">
+                                                            <div class="relative">
+                                                                <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-[10px]">$</span>
+                                                                <input type="number" step="0.01" min="0"
+                                                                       x-model="selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].temp_override"
+                                                                       class="w-full pl-6 pr-2 py-1 border border-indigo-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                                                       @keydown.enter.prevent="savePrice({{ $attribute->id }}, {{ $value->id }})">
+                                                            </div>
+                                                            <div class="flex items-center gap-1">
+                                                                <button type="button" @click.prevent="savePrice({{ $attribute->id }}, {{ $value->id }})"
+                                                                        class="flex-1 text-[10px] bg-indigo-600 text-white py-1 rounded hover:bg-indigo-700 transition">
+                                                                    <i class="fa-solid fa-check"></i>
+                                                                </button>
+                                                                <button type="button" @click.prevent="cancelEditPrice({{ $attribute->id }}, {{ $value->id }})"
+                                                                        class="flex-1 text-[10px] bg-gray-100 text-gray-700 py-1 rounded hover:bg-gray-200 transition">
+                                                                    <i class="fa-solid fa-xmark"></i>
+                                                                </button>
+                                                                <button type="button" @click.prevent="resetPrice({{ $attribute->id }}, {{ $value->id }})"
+                                                                        class="text-[10px] text-red-600 hover:bg-red-50 px-1.5 py-1 rounded transition"
+                                                                        title="Reset to default">
+                                                                    <i class="fa-solid fa-rotate-left"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
                                                         <div>
                                                             <label class="block text-[10px] text-gray-500 mb-0.5">Image</label>
-                                                            @if ($pav?->image)
-                                                                <img src="{{ $pav->image_url }}" class="mb-1 h-12 rounded border">
+                                                            @if ($hasImage)
+                                                                <img src="{{ $hasImage }}" class="mb-1 h-12 w-full object-cover rounded border">
                                                             @endif
                                                             <input type="file" accept="image/*"
                                                                    :name="`attribute_images[{{ $attribute->id }}][{{ $value->id }}]`"
                                                                    class="w-full text-[10px] file:mr-1 file:py-1 file:px-2 file:border-0 file:bg-indigo-100 file:text-indigo-700 file:text-[10px] file:rounded">
                                                         </div>
+
+                                                        <input type="hidden"
+                                                               :name="`attribute_values[{{ $attribute->id }}][${selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].index}][value_id]`"
+                                                               :value="{{ $value->id }}">
+                                                        <input type="hidden"
+                                                               :name="`attribute_values[{{ $attribute->id }}][${selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].index}][price_override]`"
+                                                               :value="selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].price_override ?? ''">
                                                     </div>
                                                 </template>
                                             </div>
@@ -273,32 +306,71 @@
                                         @foreach ($attribute->activeValues as $value)
                                             @php
                                                 $pav = $product->attributeValues->where('attribute_id', $attribute->id)->where('attribute_value_id', $value->id)->first();
-                                                $isSelected = (bool) $pav;
-                                                $override = $pav?->price_override;
+                                                $hasImage = $pav?->image_url;
                                             @endphp
-                                            <label class="flex items-center gap-3 p-3 rounded-lg border transition cursor-pointer"
-                                                   :class="selectedAttributeValues['{{ $attribute->id }}']?.['{{ $value->id }}'] ? 'border-indigo-500 bg-indigo-50/50' : 'border-gray-200 hover:bg-gray-50'">
-                                                <input type="checkbox"
-                                                       data-attr="{{ $attribute->id }}" data-value="{{ $value->id }}"
-                                                       data-name="{{ $value->value }}"
-                                                       data-override="{{ $override }}"
-                                                       @change="toggleAttributeValue({{ $attribute->id }}, {{ $value->id }}, '{{ $value->value }}')"
-                                                       {{ $isSelected ? 'checked' : '' }}
-                                                       class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                                                <span class="flex-1 text-sm text-gray-800">{{ $value->value }}</span>
-                                                <span class="text-[10px] text-indigo-600 font-medium bg-indigo-50 px-2 py-0.5 rounded">default +${{ number_format($value->price_adjustment, 2) }}</span>
+                                            <div class="rounded-lg border transition"
+                                                 :class="selectedAttributeValues['{{ $attribute->id }}']?.['{{ $value->id }}'] ? 'border-indigo-500 bg-indigo-50/50' : 'border-gray-200'">
+                                                <label class="flex items-center gap-3 p-3 cursor-pointer">
+                                                    <input type="checkbox"
+                                                           @change="toggleAttributeValue({{ $attribute->id }}, {{ $value->id }}, '{{ $value->value }}', {{ $value->price_adjustment }})"
+                                                           :checked="selectedAttributeValues['{{ $attribute->id }}']?.['{{ $value->id }}']"
+                                                           class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                                    <span class="flex-1 text-sm text-gray-800">{{ $value->value }}</span>
+
+                                                    <template x-if="!selectedAttributeValues['{{ $attribute->id }}']?.['{{ $value->id }}']">
+                                                        <span class="text-[10px] text-gray-400 font-medium">default +${{ number_format($value->price_adjustment, 2) }}</span>
+                                                    </template>
+                                                </label>
 
                                                 <template x-if="selectedAttributeValues['{{ $attribute->id }}']?.['{{ $value->id }}']">
-                                                    <div class="relative" @click.stop>
-                                                        <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">+$</span>
-                                                        <input type="number" step="0.01" min="0"
-                                                               :name="`attribute_values[{{ $attribute->id }}][${selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].index}][price_override]`"
-                                                               x-model="selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].price_override"
-                                                               :placeholder="{{ $value->price_adjustment }}"
-                                                               class="w-20 pl-6 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                                    <div class="px-3 pb-3 flex items-center justify-between gap-2 border-t border-indigo-100 pt-2">
+                                                        <div x-show="!selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].editing" class="flex items-center gap-2">
+                                                            <span class="text-[10px] font-semibold px-2 py-0.5 rounded"
+                                                                  :class="selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].price_override !== null ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-50 text-indigo-600'">
+                                                                +$<span x-text="formatPrice(selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].price_override !== null ? selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].price_override : {{ $value->price_adjustment }})"></span>
+                                                            </span>
+                                                            <span x-show="selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].price_override !== null" class="text-[9px] text-emerald-600 font-medium">custom</span>
+                                                            <button type="button" @click.prevent="startEditPrice({{ $attribute->id }}, {{ $value->id }})"
+                                                                    class="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-gray-500 transition" title="Customize price">
+                                                                <i class="fa-solid fa-pen text-[9px]"></i>
+                                                            </button>
+                                                        </div>
+
+                                                        <div x-show="selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].editing" class="flex items-center gap-1 flex-1">
+                                                            <div class="relative flex-1">
+                                                                <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-[10px]">$</span>
+                                                                <input type="number" step="0.01" min="0"
+                                                                       x-model="selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].temp_override"
+                                                                       class="w-full pl-6 pr-2 py-1 border border-indigo-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                                                       @keydown.enter.prevent="savePrice({{ $attribute->id }}, {{ $value->id }})">
+                                                            </div>
+                                                            <button type="button" @click.prevent="savePrice({{ $attribute->id }}, {{ $value->id }})"
+                                                                    class="w-7 h-7 flex items-center justify-center bg-indigo-600 text-white rounded hover:bg-indigo-700 text-[10px]">
+                                                                <i class="fa-solid fa-check"></i>
+                                                            </button>
+                                                            <button type="button" @click.prevent="cancelEditPrice({{ $attribute->id }}, {{ $value->id }})"
+                                                                    class="w-7 h-7 flex items-center justify-center bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-[10px]">
+                                                                <i class="fa-solid fa-xmark"></i>
+                                                            </button>
+                                                            <button type="button" @click.prevent="resetPrice({{ $attribute->id }}, {{ $value->id }})"
+                                                                    class="w-7 h-7 flex items-center justify-center text-red-600 rounded hover:bg-red-50 text-[10px]">
+                                                                <i class="fa-solid fa-rotate-left"></i>
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </template>
-                                            </label>
+
+                                                <template x-if="selectedAttributeValues['{{ $attribute->id }}']?.['{{ $value->id }}']">
+                                                    <div class="px-3 pb-3">
+                                                        <input type="hidden"
+                                                               :name="`attribute_values[{{ $attribute->id }}][${selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].index}][value_id]`"
+                                                               :value="{{ $value->id }}">
+                                                        <input type="hidden"
+                                                               :name="`attribute_values[{{ $attribute->id }}][${selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].index}][price_override]`"
+                                                               :value="selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].price_override ?? ''">
+                                                    </div>
+                                                </template>
+                                            </div>
                                         @endforeach
                                     </div>
                                 @endif
@@ -446,7 +518,7 @@
                     </h3>
                     <p class="text-xs text-gray-500">Product-specific selections like Length, Custom Size (W×H)</p>
                     <div class="bg-gray-50 rounded-lg p-4 text-center">
-                        <p class="text-xs text-gray-400">Options will be available after saving</p>
+                        <p class="text-xs text-gray-400">Options available in next step</p>
                     </div>
                 </div>
 
@@ -481,7 +553,16 @@ function productForm() {
                 this.tiers = [{min_qty: 1, max_qty: 11, price: ''}];
             }
 
+            const dbAttributeValues = @json($product->attributeValues->map(fn($pav) => [
+                'attribute_id' => $pav->attribute_id,
+                'value_id' => $pav->attribute_value_id,
+                'price_override' => $pav->price_override,
+            ])->values());
+
+            const defaultPrices = @json($attributes->flatMap(fn($a) => $a->activeValues->mapWithKeys(fn($v) => [$v->id => (float) $v->price_adjustment])));
+
             const oldAttrValues = @json(old('attribute_values'));
+
             if (oldAttrValues) {
                 Object.keys(oldAttrValues).forEach(attrId => {
                     this.selectedAttributeValues[attrId] = {};
@@ -489,29 +570,31 @@ function productForm() {
                         if (v.value_id) {
                             this.selectedAttributeValues[attrId][v.value_id] = {
                                 index: idx,
-                                price_override: v.price_override || ''
+                                value_id: v.value_id,
+                                price_override: (v.price_override !== undefined && v.price_override !== '') ? parseFloat(v.price_override) : null,
+                                temp_override: '',
+                                editing: false
                             };
                         }
                     });
                 });
             } else {
-                document.querySelectorAll('[data-attr][data-value]').forEach(el => {
-                    if (el.checked) {
-                        const attrId = el.dataset.attr;
-                        const valueId = el.dataset.value;
-                        const override = el.dataset.override;
-
-                        if (!this.selectedAttributeValues[attrId]) {
-                            this.selectedAttributeValues[attrId] = {};
-                        }
-
-                        const index = Object.keys(this.selectedAttributeValues[attrId]).length;
-                        this.selectedAttributeValues[attrId][valueId] = {
-                            index: index,
-                            value_id: valueId,
-                            price_override: (override && override !== '') ? override : ''
-                        };
+                let attrIndexMap = {};
+                dbAttributeValues.forEach(pav => {
+                    const attrId = pav.attribute_id;
+                    if (!this.selectedAttributeValues[attrId]) {
+                        this.selectedAttributeValues[attrId] = {};
+                        attrIndexMap[attrId] = 0;
                     }
+                    const idx = attrIndexMap[attrId]++;
+                    this.selectedAttributeValues[attrId][pav.value_id] = {
+                        index: idx,
+                        value_id: pav.value_id,
+                        price_override: pav.price_override !== null ? parseFloat(pav.price_override) : null,
+                        temp_override: '',
+                        editing: false,
+                        default_price: defaultPrices[pav.value_id] || 0
+                    };
                 });
             }
         },
@@ -532,7 +615,7 @@ function productForm() {
             this.tiers.push({min_qty: nextMin, max_qty: '', price: ''});
         },
 
-        toggleAttributeValue(attrId, valueId, valueName) {
+        toggleAttributeValue(attrId, valueId, valueName, defaultPrice) {
             if (!this.selectedAttributeValues[attrId]) {
                 this.selectedAttributeValues[attrId] = {};
             }
@@ -549,9 +632,44 @@ function productForm() {
                     index: index,
                     value_id: valueId,
                     value_name: valueName,
-                    price_override: ''
+                    default_price: defaultPrice,
+                    price_override: null,
+                    temp_override: '',
+                    editing: false
                 };
             }
+        },
+
+        startEditPrice(attrId, valueId) {
+            const v = this.selectedAttributeValues[attrId][valueId];
+            v.temp_override = v.price_override !== null ? v.price_override : v.default_price;
+            v.editing = true;
+        },
+
+        savePrice(attrId, valueId) {
+            const v = this.selectedAttributeValues[attrId][valueId];
+            if (v.temp_override !== '' && v.temp_override !== null) {
+                v.price_override = parseFloat(v.temp_override);
+            }
+            v.editing = false;
+            v.temp_override = '';
+        },
+
+        cancelEditPrice(attrId, valueId) {
+            const v = this.selectedAttributeValues[attrId][valueId];
+            v.editing = false;
+            v.temp_override = '';
+        },
+
+        resetPrice(attrId, valueId) {
+            const v = this.selectedAttributeValues[attrId][valueId];
+            v.price_override = null;
+            v.editing = false;
+            v.temp_override = '';
+        },
+
+        formatPrice(value) {
+            return parseFloat(value || 0).toFixed(2);
         }
     }
 }
@@ -561,7 +679,7 @@ tinymce.init({
     height: 400,
     menubar: false,
     plugins: 'lists link image code table preview',
-    toolbar: 'undo redo | blocks | bold italic underline | alignleft aligncenter alignright | bullist numlist | link image table | code preview',
+    toolbar: 'undo redo | blocks | bold italic underline | alignleft aligncenter alignright | bullist numlist | link image table code preview',
     branding: false,
     promotion: false,
 });
