@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Admin Login - RJ SHOP lite</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body class="bg-slate-900 min-h-screen flex items-center justify-center p-4">
@@ -42,9 +43,9 @@
                     </div>
                 </div>
 
-                <div>
+                <div x-data="{ show: false }">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                    <div class="relative" x-data="{ show: false }">
+                    <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                             <i class="fa-solid fa-lock text-sm"></i>
                         </span>
@@ -59,14 +60,14 @@
 
                 <div class="flex items-center justify-between">
                     <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                        <input type="checkbox" name="remember" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                        <input type="checkbox" name="remember" value="1" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                         Remember me
                     </label>
                 </div>
 
                 <button type="submit"
                         class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition text-sm">
-                    Sign in
+                    Continue
                 </button>
             </form>
 
@@ -76,6 +77,5 @@
 
     </div>
 
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
 </html>
