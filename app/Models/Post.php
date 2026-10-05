@@ -12,6 +12,9 @@ class Post extends Model
         'slug',
         'excerpt',
         'content',
+        'meta_title',
+        'meta_description',
+        'meta_keywords',
         'image',
         'status',
         'published_at',
@@ -60,5 +63,21 @@ class Post extends Model
             return $this->image;
         }
         return asset('storage/' . $this->image);
+    }
+
+    public function getSeoTitleAttribute(): string
+    {
+        return $this->meta_title ?: $this->title;
+    }
+
+    public function getSeoDescriptionAttribute(): string
+    {
+        if ($this->meta_description) {
+            return $this->meta_description;
+        }
+        if ($this->excerpt) {
+            return $this->excerpt;
+        }
+        return Str::limit(strip_tags($this->content ?? ''), 160);
     }
 }
