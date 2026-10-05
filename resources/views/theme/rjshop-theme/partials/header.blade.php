@@ -127,18 +127,3 @@
         </nav>
     </div>
 </header>
-
-@push('styles')
-<style>
-@keyframes orbit-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes orbit-reverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
-.animate-orbit-slow { animation: orbit-slow 20s linear infinite; }
-.animate-orbit-reverse { animation: orbit-reverse 14s linear infinite; }
-
-@keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-}
-.animate-shimmer { animation: shimmer 3s ease-in-out infinite; }
-</style>
-@endpush
