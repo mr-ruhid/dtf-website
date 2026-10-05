@@ -243,8 +243,8 @@ bootstrap/
 
 ```bash
 # Clone the repository
-git clone https://github.com/mr-ruhid/devspork.git
-cd devspork
+git clone https://github.com/mr-ruhid/dtf-website.git
+cd dtf-website
 
 # Install dependencies
 composer install
@@ -315,7 +315,7 @@ The next phase focuses on the customer-facing storefront:
 
 ## Links
 
-- Repository — [github.com/mr-ruhid/devspork](https://github.com/mr-ruhid/devspork)
+- Repository — [github.com/mr-ruhid/dtf-website](https://github.com/mr-ruhid/dtf-website)
 - Website — [ruhidjavadov.site](https://www.ruhidjavadov.site)
 - Author — [@mr-ruhid](https://github.com/mr-ruhid)
 
