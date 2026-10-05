@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SliderController;
+use App\Http\Controllers\Admin\SupportController;
 use App\Http\Controllers\Admin\TwoFactorController;
 use Illuminate\Support\Facades\Route;
 
@@ -143,6 +144,17 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::delete('orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
         Route::delete('orders/{order}/designs/{design}', [OrderController::class, 'deleteDesign'])->name('orders.designs.destroy');
 
+        Route::get('support', [SupportController::class, 'index'])->name('support.index');
+        Route::get('support/{ticket}', [SupportController::class, 'show'])->name('support.show');
+        Route::put('support/{ticket}/status', [SupportController::class, 'updateStatus'])->name('support.status');
+        Route::put('support/{ticket}/priority', [SupportController::class, 'updatePriority'])->name('support.priority');
+        Route::put('support/{ticket}/category', [SupportController::class, 'updateCategory'])->name('support.category');
+        Route::put('support/{ticket}/assign', [SupportController::class, 'assign'])->name('support.assign');
+        Route::put('support/{ticket}/admin-note', [SupportController::class, 'updateAdminNote'])->name('support.admin-note');
+        Route::post('support/{ticket}/reply', [SupportController::class, 'reply'])->name('support.reply');
+        Route::delete('support/{ticket}', [SupportController::class, 'destroy'])->name('support.destroy');
+        Route::delete('support/{ticket}/attachments/{attachment}', [SupportController::class, 'deleteAttachment'])->name('support.attachments.destroy');
+
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::get('settings/general', [SettingController::class, 'general'])->name('settings.general');
         Route::post('settings/general', [SettingController::class, 'generalUpdate'])->name('settings.general.update');
@@ -161,9 +173,6 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::get('pages', fn() => $placeholder('Pages'))->name('pages.index');
         Route::get('pages/create', fn() => $placeholder('Create Page'))->name('pages.create');
         Route::get('pages/{id}/edit', fn() => $placeholder('Edit Page'))->name('pages.edit');
-
-        Route::get('support', fn() => $placeholder('Technical Support'))->name('support.index');
-        Route::get('support/{id}', fn() => $placeholder('Ticket Details'))->name('support.show');
     });
 
 });
