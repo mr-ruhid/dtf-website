@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\ModelController;
 use App\Http\Controllers\Admin\PostController;
+use App\Http\Controllers\Admin\PrintZoneController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SliderController;
@@ -93,6 +94,12 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::put('attributes/{attribute}/values/{value}', [AttributeController::class, 'updateValue'])->name('attributes.values.update');
         Route::delete('attributes/{attribute}/values/{value}', [AttributeController::class, 'destroyValue'])->name('attributes.values.destroy');
         Route::put('attributes/{attribute}/values/{value}/toggle', [AttributeController::class, 'toggleValueStatus'])->name('attributes.values.toggle');
+
+        Route::get('print-zones', [PrintZoneController::class, 'index'])->name('print-zones.index');
+        Route::post('print-zones', [PrintZoneController::class, 'store'])->name('print-zones.store');
+        Route::put('print-zones/{zone}', [PrintZoneController::class, 'update'])->name('print-zones.update');
+        Route::delete('print-zones/{zone}', [PrintZoneController::class, 'destroy'])->name('print-zones.destroy');
+        Route::put('print-zones/{zone}/toggle', [PrintZoneController::class, 'toggleStatus'])->name('print-zones.toggle');
 
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::get('settings/general', [SettingController::class, 'general'])->name('settings.general');
