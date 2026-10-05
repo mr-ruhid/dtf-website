@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\ModelController;
@@ -75,6 +76,12 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::delete('models/{model}', [ModelController::class, 'destroy'])->name('models.destroy');
         Route::put('models/{model}/toggle', [ModelController::class, 'toggleStatus'])->name('models.toggle');
 
+        Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
+        Route::post('categories', [CategoryController::class, 'store'])->name('categories.store');
+        Route::put('categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+        Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+        Route::put('categories/{category}/toggle', [CategoryController::class, 'toggleStatus'])->name('categories.toggle');
+
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::get('settings/general', [SettingController::class, 'general'])->name('settings.general');
         Route::post('settings/general', [SettingController::class, 'generalUpdate'])->name('settings.general.update');
@@ -93,10 +100,6 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::get('products', fn() => $placeholder('All Products'))->name('products.index');
         Route::get('products/create', fn() => $placeholder('Create Product'))->name('products.create');
         Route::get('products/{id}/edit', fn() => $placeholder('Edit Product'))->name('products.edit');
-
-        Route::get('categories', fn() => $placeholder('Categories'))->name('categories.index');
-        Route::get('categories/create', fn() => $placeholder('Create Category'))->name('categories.create');
-        Route::get('categories/{id}/edit', fn() => $placeholder('Edit Category'))->name('categories.edit');
 
         Route::get('attributes', fn() => $placeholder('Attributes'))->name('attributes.index');
         Route::get('attributes/create', fn() => $placeholder('Create Attribute'))->name('attributes.create');
