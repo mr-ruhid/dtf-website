@@ -71,7 +71,8 @@
                     <span x-show="sidebarOpen" class="text-sm">FAQ</span>
                 </a>
 
-                <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 hover:text-white transition">
+                <a href="{{ route('admin.sliders.index') }}"
+                   class="flex items-center gap-3 px-4 py-3 transition {{ request()->routeIs('admin.sliders*') ? 'bg-slate-800 text-white border-l-4 border-indigo-500' : 'hover:bg-slate-800 hover:text-white' }}">
                     <i class="fa-solid fa-image w-5 text-center"></i>
                     <span x-show="sidebarOpen" class="text-sm">Sliders</span>
                 </a>
@@ -153,6 +154,7 @@
             <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-box w-5"></i><span class="text-sm">Products</span></a>
             <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-cart-shopping w-5"></i><span class="text-sm">Orders</span></a>
             <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-users w-5"></i><span class="text-sm">Customers</span></a>
+            <a href="{{ route('admin.sliders.index') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-image w-5"></i><span class="text-sm">Sliders</span></a>
             <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-gear w-5"></i><span class="text-sm">Settings</span></a>
         </nav>
     </aside>
