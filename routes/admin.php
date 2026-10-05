@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\FaqController;
+use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SliderController;
 use App\Http\Controllers\Admin\TwoFactorController;
@@ -47,6 +48,12 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::put('faqs/{faq}', [FaqController::class, 'update'])->name('faqs.update');
         Route::delete('faqs/{faq}', [FaqController::class, 'destroy'])->name('faqs.destroy');
         Route::put('faqs/{faq}/toggle', [FaqController::class, 'toggleStatus'])->name('faqs.toggle');
+
+        Route::get('gallery', [GalleryController::class, 'index'])->name('gallery.index');
+        Route::post('gallery', [GalleryController::class, 'store'])->name('gallery.store');
+        Route::put('gallery/{item}', [GalleryController::class, 'update'])->name('gallery.update');
+        Route::delete('gallery/{item}', [GalleryController::class, 'destroy'])->name('gallery.destroy');
+        Route::put('gallery/{item}/toggle', [GalleryController::class, 'toggleStatus'])->name('gallery.toggle');
     });
 
 });
