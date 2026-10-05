@@ -136,6 +136,29 @@
                 </a>
 
                 <div x-show="sidebarOpen" class="flex items-center gap-2 px-3 mt-5 mb-2">
+                    <span class="text-[9px] uppercase tracking-[0.15em] text-slate-600 font-bold">Shipping</span>
+                    <div class="flex-1 glow-line"></div>
+                </div>
+
+                <a href="{{ route('admin.branches.index') }}"
+                   class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.branches*') ? 'active' : '' }}">
+                    <div class="icon-box"><i class="fa-solid fa-store"></i></div>
+                    <span x-show="sidebarOpen" class="text-[13px] font-medium">Branches</span>
+                </a>
+
+                <a href="{{ route('admin.delivery-zones.index') }}"
+                   class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.delivery-zones*') ? 'active' : '' }}">
+                    <div class="icon-box"><i class="fa-solid fa-map-location-dot"></i></div>
+                    <span x-show="sidebarOpen" class="text-[13px] font-medium">Delivery Zones</span>
+                </a>
+
+                <a href="{{ route('admin.delivery-rates.index') }}"
+                   class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.delivery-rates*') ? 'active' : '' }}">
+                    <div class="icon-box"><i class="fa-solid fa-truck-fast"></i></div>
+                    <span x-show="sidebarOpen" class="text-[13px] font-medium">Delivery Rates</span>
+                </a>
+
+                <div x-show="sidebarOpen" class="flex items-center gap-2 px-3 mt-5 mb-2">
                     <span class="text-[9px] uppercase tracking-[0.15em] text-slate-600 font-bold">System</span>
                     <div class="flex-1 glow-line"></div>
                 </div>
@@ -291,6 +314,23 @@
             <a href="{{ route('admin.sliders.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.sliders*') ? 'active' : '' }}">
                 <div class="icon-box"><i class="fa-solid fa-panorama"></i></div>
                 <span class="text-[13px] font-medium">Sliders</span>
+            </a>
+
+            <div class="flex items-center gap-2 px-3 mt-5 mb-2">
+                <span class="text-[9px] uppercase tracking-[0.15em] text-slate-600 font-bold">Shipping</span>
+                <div class="flex-1 glow-line"></div>
+            </div>
+            <a href="{{ route('admin.branches.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.branches*') ? 'active' : '' }}">
+                <div class="icon-box"><i class="fa-solid fa-store"></i></div>
+                <span class="text-[13px] font-medium">Branches</span>
+            </a>
+            <a href="{{ route('admin.delivery-zones.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.delivery-zones*') ? 'active' : '' }}">
+                <div class="icon-box"><i class="fa-solid fa-map-location-dot"></i></div>
+                <span class="text-[13px] font-medium">Delivery Zones</span>
+            </a>
+            <a href="{{ route('admin.delivery-rates.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.delivery-rates*') ? 'active' : '' }}">
+                <div class="icon-box"><i class="fa-solid fa-truck-fast"></i></div>
+                <span class="text-[13px] font-medium">Delivery Rates</span>
             </a>
 
             <div class="flex items-center gap-2 px-3 mt-5 mb-2">
