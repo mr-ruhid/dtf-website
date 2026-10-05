@@ -60,6 +60,47 @@
                     <p class="text-xs text-gray-500 mt-2">You can use the editor to add text, headings, images, links and HTML.</p>
                 </div>
 
+                <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4" x-data="{ open: true }">
+                    <button type="button" @click="open = !open" class="w-full flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                            </div>
+                            <div class="text-left">
+                                <h3 class="font-semibold text-gray-700 text-sm">SEO Settings</h3>
+                                <p class="text-xs text-gray-400">Search engine optimization</p>
+                            </div>
+                        </div>
+                        <i :class="open ? 'rotate-180' : ''" class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform"></i>
+                    </button>
+
+                    <div x-show="open" x-collapse class="space-y-4 pt-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Meta Title</label>
+                            <input type="text" name="meta_title" value="{{ old('meta_title') }}" maxlength="200"
+                                   placeholder="Defaults to post title if empty"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            <p class="text-xs text-gray-500 mt-1">Recommended: 50-60 characters</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
+                            <textarea name="meta_description" rows="3" maxlength="300"
+                                      placeholder="Defaults to excerpt if empty"
+                                      class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">{{ old('meta_description') }}</textarea>
+                            <p class="text-xs text-gray-500 mt-1">Recommended: 150-160 characters</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Meta Keywords</label>
+                            <input type="text" name="meta_keywords" value="{{ old('meta_keywords') }}" maxlength="300"
+                                   placeholder="keyword1, keyword2, keyword3"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            <p class="text-xs text-gray-500 mt-1">Separate with commas</p>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <div class="space-y-6">
