@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SliderController;
 use App\Http\Controllers\Admin\TwoFactorController;
 use Illuminate\Support\Facades\Route;
@@ -65,6 +66,14 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::delete('blog/{post}', [PostController::class, 'destroy'])->name('blog.destroy');
         Route::put('blog/{post}/toggle', [PostController::class, 'toggleStatus'])->name('blog.toggle');
 
+        Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+        Route::get('settings/general', [SettingController::class, 'general'])->name('settings.general');
+        Route::get('settings/about', [SettingController::class, 'about'])->name('settings.about');
+        Route::get('settings/update', [SettingController::class, 'update'])->name('settings.update');
+        Route::get('settings/backup', [SettingController::class, 'backup'])->name('settings.backup');
+        Route::get('settings/cache', [SettingController::class, 'cache'])->name('settings.cache');
+        Route::post('settings/cache/clear/{type}', [SettingController::class, 'clearCache'])->name('settings.cache.clear');
+
         $placeholder = function (string $title) {
             return view('admin.placeholder', compact('title'));
         };
@@ -94,12 +103,6 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
 
         Route::get('support', fn() => $placeholder('Technical Support'))->name('support.index');
         Route::get('support/{id}', fn() => $placeholder('Ticket Details'))->name('support.show');
-
-        Route::get('settings', fn() => $placeholder('Settings'))->name('settings.index');
-        Route::get('settings/general', fn() => $placeholder('General Settings'))->name('settings.general');
-        Route::get('settings/seo', fn() => $placeholder('SEO Settings'))->name('settings.seo');
-        Route::get('settings/mail', fn() => $placeholder('Mail Settings'))->name('settings.mail');
-        Route::get('settings/payment', fn() => $placeholder('Payment Settings'))->name('settings.payment');
     });
 
 });
