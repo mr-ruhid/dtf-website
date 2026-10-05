@@ -10,6 +10,7 @@ class AttributeValue extends Model
         'attribute_id',
         'value',
         'color_code',
+        'price_adjustment',
         'sort_order',
         'status',
     ];
@@ -17,6 +18,7 @@ class AttributeValue extends Model
     protected $casts = [
         'status' => 'boolean',
         'sort_order' => 'integer',
+        'price_adjustment' => 'decimal:2',
     ];
 
     public function attribute()
