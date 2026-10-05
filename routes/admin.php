@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\SliderController;
 use App\Http\Controllers\Admin\TwoFactorController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,12 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
         Route::put('profile/two-factor', [ProfileController::class, 'toggleTwoFactor'])->name('profile.two-factor');
+
+        Route::resource('sliders', SliderController::class)->except(['show']);
+
+        Route::post('sliders/{slider}/items', [SliderController::class, 'storeItem'])->name('sliders.items.store');
+        Route::put('sliders/{slider}/items/{item}', [SliderController::class, 'updateItem'])->name('sliders.items.update');
+        Route::delete('sliders/{slider}/items/{item}', [SliderController::class, 'destroyItem'])->name('sliders.items.destroy');
     });
 
 });
