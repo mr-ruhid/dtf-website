@@ -74,8 +74,7 @@
                     </div>
                     <div class="divide-y divide-gray-100 max-h-72 overflow-y-auto">
                         @foreach ($attributes->where('is_locked', false) as $attr)
-                            <div class="group flex items-center transition
-                                {{-- hover --}}">
+                            <div class="group flex items-center transition">
                                 <button @click="selectedId = {{ $attr->id }}"
                                         :class="selectedId === {{ $attr->id }} ? 'bg-indigo-50 border-l-4 border-indigo-500' : 'border-l-4 border-transparent hover:bg-gray-50'"
                                         class="flex-1 text-left px-5 py-3 transition flex items-center gap-3 min-w-0">
@@ -174,6 +173,7 @@
                                                     <span class="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0"></span>
                                                 @endif
                                             </div>
+                                            <p class="text-[10px] text-indigo-600 font-semibold mt-1.5 bg-indigo-50 px-2 py-0.5 rounded inline-block">+${{ number_format($value->price_adjustment, 2) }}</p>
                                             <div class="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition">
                                                 <form method="POST" action="{{ route('admin.attributes.values.toggle', [$attr, $value]) }}" class="flex-1">
                                                     @csrf
@@ -204,6 +204,7 @@
                                         <div class="group flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50/60 transition">
                                             <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded font-mono w-10 text-center">{{ $value->sort_order }}</span>
                                             <p class="flex-1 text-sm text-gray-800 {{ !$value->status ? 'line-through text-gray-400' : '' }}">{{ $value->value }}</p>
+                                            <span class="text-[10px] text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded">+${{ number_format($value->price_adjustment, 2) }}</span>
                                             <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
                                                 <form method="POST" action="{{ route('admin.attributes.values.toggle', [$attr, $value]) }}">
                                                     @csrf
@@ -375,6 +376,16 @@
                                class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                     </div>
                     <p class="text-xs text-gray-500 mt-1">Pick from palette or enter hex code</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Price Adjustment</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 text-sm font-medium pointer-events-none">$</span>
+                        <input type="number" name="price_adjustment" step="0.01" min="0" :value="editingValue?.price_adjustment ?? 0"
+                               class="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Extra amount added to base price (default for all products)</p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
