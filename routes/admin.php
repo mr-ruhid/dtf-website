@@ -4,12 +4,14 @@ use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DeliveryRateController;
 use App\Http\Controllers\Admin\DeliveryZoneController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\ModelController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\PrintZoneController;
 use App\Http\Controllers\Admin\ProductController;
@@ -18,6 +20,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SliderController;
 use App\Http\Controllers\Admin\SupportController;
 use App\Http\Controllers\Admin\TwoFactorController;
+use App\Http\Controllers\Admin\UpdateController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
@@ -42,9 +45,7 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
 
         Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
-        Route::get('dashboard', function () {
-            return view('admin.dashboard');
-        })->name('dashboard');
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -75,6 +76,14 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::put('blog/{post}', [PostController::class, 'update'])->name('blog.update');
         Route::delete('blog/{post}', [PostController::class, 'destroy'])->name('blog.destroy');
         Route::put('blog/{post}/toggle', [PostController::class, 'toggleStatus'])->name('blog.toggle');
+
+        Route::get('pages', [PageController::class, 'index'])->name('pages.index');
+        Route::get('pages/create', [PageController::class, 'create'])->name('pages.create');
+        Route::post('pages', [PageController::class, 'store'])->name('pages.store');
+        Route::get('pages/{page}/edit', [PageController::class, 'edit'])->name('pages.edit');
+        Route::put('pages/{page}', [PageController::class, 'update'])->name('pages.update');
+        Route::delete('pages/{page}', [PageController::class, 'destroy'])->name('pages.destroy');
+        Route::put('pages/{page}/toggle', [PageController::class, 'toggleStatus'])->name('pages.toggle');
 
         Route::get('models', [ModelController::class, 'index'])->name('models.index');
         Route::get('models/create', [ModelController::class, 'create'])->name('models.create');
@@ -160,19 +169,36 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::post('settings/general', [SettingController::class, 'generalUpdate'])->name('settings.general.update');
         Route::delete('settings/general/logo', [SettingController::class, 'generalRemoveLogo'])->name('settings.general.remove-logo');
         Route::delete('settings/general/favicon', [SettingController::class, 'generalRemoveFavicon'])->name('settings.general.remove-favicon');
-        Route::get('settings/about', [SettingController::class, 'about'])->name('settings.about');
+
+        Route::get('settings/contact', [SettingController::class, 'contact'])->name('settings.contact');
+        Route::post('settings/contact', [SettingController::class, 'contactUpdate'])->name('settings.contact.update');
+
+        Route::get('settings/seo', [SettingController::class, 'seo'])->name('settings.seo');
+        Route::post('settings/seo', [SettingController::class, 'seoUpdate'])->name('settings.seo.update');
+
+        Route::get('settings/homepage', [SettingController::class, 'homepage'])->name('settings.homepage');
+        Route::post('settings/homepage', [SettingController::class, 'homepageUpdate'])->name('settings.homepage.update');
+
+        Route::get('settings/smtp', [SettingController::class, 'smtp'])->name('settings.smtp');
+        Route::post('settings/smtp', [SettingController::class, 'smtpUpdate'])->name('settings.smtp.update');
+        Route::post('settings/smtp/test', [SettingController::class, 'smtpTest'])->name('settings.smtp.test');
+
+        Route::get('settings/system', [SettingController::class, 'system'])->name('settings.system');
+
+        Route::get('settings/maintenance', [SettingController::class, 'maintenance'])->name('settings.maintenance');
+        Route::post('settings/maintenance', [SettingController::class, 'maintenanceUpdate'])->name('settings.maintenance.update');
+
+        Route::get('settings/security', [SettingController::class, 'security'])->name('settings.security');
+        Route::post('settings/security/block', [SettingController::class, 'blockIp'])->name('settings.security.block');
+        Route::delete('settings/security/unblock/{blockedIp}', [SettingController::class, 'unblockIp'])->name('settings.security.unblock');
+
         Route::get('settings/update', [SettingController::class, 'update'])->name('settings.update');
+        Route::post('settings/update/install', [UpdateController::class, 'install'])->name('settings.update.install');
+
         Route::get('settings/backup', [SettingController::class, 'backup'])->name('settings.backup');
+
         Route::get('settings/cache', [SettingController::class, 'cache'])->name('settings.cache');
         Route::post('settings/cache/clear/{type}', [SettingController::class, 'clearCache'])->name('settings.cache.clear');
-
-        $placeholder = function (string $title) {
-            return view('admin.placeholder', compact('title'));
-        };
-
-        Route::get('pages', fn() => $placeholder('Pages'))->name('pages.index');
-        Route::get('pages/create', fn() => $placeholder('Create Page'))->name('pages.create');
-        Route::get('pages/{id}/edit', fn() => $placeholder('Edit Page'))->name('pages.edit');
     });
 
 });
