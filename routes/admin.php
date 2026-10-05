@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\TwoFactorController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,9 +25,14 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
 
     Route::middleware('admin')->group(function () {
         Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+
         Route::get('dashboard', function () {
             return view('admin.dashboard');
         })->name('dashboard');
+
+        Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     });
 
 });
