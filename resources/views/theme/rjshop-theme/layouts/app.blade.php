@@ -39,9 +39,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-    <style>
-        [x-cloak] { display: none !important; }
-    </style>
+    <link rel="stylesheet" href="{{ asset('theme/rjshop-theme/css/theme.css') }}">
 
     @stack('styles')
 </head>
@@ -54,6 +52,8 @@
     </main>
 
     @include('theme.rjshop-theme.partials.footer')
+
+    <script src="{{ asset('theme/rjshop-theme/js/quantum-field.js') }}"></script>
 
     @stack('scripts')
 </body>
