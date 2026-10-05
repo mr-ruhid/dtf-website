@@ -7,6 +7,7 @@ use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
@@ -14,7 +15,7 @@ class SettingController extends Controller
 {
     public function index()
     {
-        return redirect()->route('admin.settings.general');
+        return view('admin.settings.layout');
     }
 
     public function general()
@@ -23,22 +24,11 @@ class SettingController extends Controller
             'site_name',
             'site_tagline',
             'site_description',
-            'site_email',
-            'site_phone',
-            'site_address',
             'site_logo',
             'site_favicon',
             'site_currency',
             'site_language',
             'site_timezone',
-            'facebook_url',
-            'instagram_url',
-            'twitter_url',
-            'youtube_url',
-            'linkedin_url',
-            'tiktok_url',
-            'maintenance_mode',
-            'maintenance_message',
         ];
 
         $settings = Setting::getMany($keys);
@@ -52,24 +42,12 @@ class SettingController extends Controller
             'site_name' => ['required', 'string', 'max:100'],
             'site_tagline' => ['nullable', 'string', 'max:150'],
             'site_description' => ['nullable', 'string', 'max:500'],
-            'site_email' => ['nullable', 'email', 'max:150'],
-            'site_phone' => ['nullable', 'string', 'max:30'],
-            'site_address' => ['nullable', 'string', 'max:255'],
             'site_currency' => ['nullable', 'string', 'max:10'],
             'site_language' => ['nullable', 'string', 'max:10'],
             'site_timezone' => ['nullable', 'string', 'max:100'],
-            'facebook_url' => ['nullable', 'string', 'max:255'],
-            'instagram_url' => ['nullable', 'string', 'max:255'],
-            'twitter_url' => ['nullable', 'string', 'max:255'],
-            'youtube_url' => ['nullable', 'string', 'max:255'],
-            'linkedin_url' => ['nullable', 'string', 'max:255'],
-            'tiktok_url' => ['nullable', 'string', 'max:255'],
-            'maintenance_message' => ['nullable', 'string', 'max:500'],
             'site_logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,svg,webp', 'max:2048'],
             'site_favicon' => ['nullable', 'image', 'mimes:jpg,jpeg,png,ico,svg', 'max:1024'],
         ]);
-
-        $data['maintenance_mode'] = $request->boolean('maintenance_mode') ? '1' : '0';
 
         foreach (['site_logo', 'site_favicon'] as $fileKey) {
             if ($request->hasFile($fileKey)) {
@@ -108,9 +86,137 @@ class SettingController extends Controller
         return back()->with('status', 'Favicon removed.')->with('tab', 'general');
     }
 
-    public function about()
+    public function contact()
     {
-        return view('admin.settings.about');
+        $keys = [
+            'site_email',
+            'site_phone',
+            'site_address',
+            'facebook_url',
+            'instagram_url',
+            'twitter_url',
+            'youtube_url',
+            'linkedin_url',
+            'tiktok_url',
+        ];
+
+        $settings = Setting::getMany($keys);
+
+        return view('admin.settings.contact', compact('settings'));
+    }
+
+    public function contactUpdate(Request $request)
+    {
+        $data = $request->validate([
+            'site_email' => ['nullable', 'email', 'max:150'],
+            'site_phone' => ['nullable', 'string', 'max:30'],
+            'site_address' => ['nullable', 'string', 'max:255'],
+            'facebook_url' => ['nullable', 'string', 'max:255'],
+            'instagram_url' => ['nullable', 'string', 'max:255'],
+            'twitter_url' => ['nullable', 'string', 'max:255'],
+            'youtube_url' => ['nullable', 'string', 'max:255'],
+            'linkedin_url' => ['nullable', 'string', 'max:255'],
+            'tiktok_url' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        Setting::setMany($data);
+
+        return back()->with('status', 'Contact & social settings updated.');
+    }
+
+    public function seo()
+    {
+        return view('admin.settings.seo');
+    }
+
+    public function homepage()
+    {
+        return view('admin.settings.homepage');
+    }
+
+    public function smtp()
+    {
+        return view('admin.settings.smtp');
+    }
+
+    public function system()
+    {
+        $data = [
+            'theme' => [
+                'name' => 'RJSHOP ADMIN',
+                'version' => '1.2',
+                'description' => 'RJ Shop theme derivative',
+            ],
+            'app' => [
+                'name' => 'RJ SHOP AI',
+                'version' => '1.1',
+            ],
+            'system' => [
+                'php_version' => PHP_VERSION,
+                'laravel_version' => app()->version(),
+                'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
+                'server_os' => PHP_OS,
+                'database_driver' => config('database.default'),
+                'database_version' => $this->getDatabaseVersion(),
+                'cache_driver' => config('cache.default'),
+                'session_driver' => config('session.driver'),
+                'queue_driver' => config('queue.default'),
+                'timezone' => config('app.timezone'),
+                'locale' => config('app.locale'),
+                'environment' => app()->environment(),
+                'debug_mode' => config('app.debug') ? 'Enabled' : 'Disabled',
+                'url' => config('app.url'),
+                'max_upload_size' => ini_get('upload_max_filesize'),
+                'max_post_size' => ini_get('post_max_size'),
+                'memory_limit' => ini_get('memory_limit'),
+                'max_execution_time' => ini_get('max_execution_time') . 's',
+            ],
+            'extensions' => [
+                'openssl' => extension_loaded('openssl'),
+                'pdo' => extension_loaded('pdo'),
+                'mbstring' => extension_loaded('mbstring'),
+                'tokenizer' => extension_loaded('tokenizer'),
+                'xml' => extension_loaded('xml'),
+                'ctype' => extension_loaded('ctype'),
+                'json' => extension_loaded('json'),
+                'bcmath' => extension_loaded('bcmath'),
+                'fileinfo' => extension_loaded('fileinfo'),
+                'gd' => extension_loaded('gd'),
+                'curl' => extension_loaded('curl'),
+                'zip' => extension_loaded('zip'),
+            ],
+        ];
+
+        return view('admin.settings.system', compact('data'));
+    }
+
+    public function maintenance()
+    {
+        $keys = ['maintenance_mode', 'maintenance_message'];
+        $settings = Setting::getMany($keys);
+
+        return view('admin.settings.maintenance', compact('settings'));
+    }
+
+    public function maintenanceUpdate(Request $request)
+    {
+        $data = $request->validate([
+            'maintenance_message' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $data['maintenance_mode'] = $request->boolean('maintenance_mode') ? '1' : '0';
+
+        Setting::setMany($data);
+
+        return back()->with('status', 'Maintenance settings updated.');
+    }
+
+    public function security()
+    {
+        $logs = \App\Models\LoginLog::latest()->limit(50)->get();
+        $blockedIps = \App\Models\BlockedIp::latest()->get();
+
+        return view('admin.settings.security', compact('logs', 'blockedIps'));
     }
 
     public function update()
@@ -192,6 +298,29 @@ class SettingController extends Controller
         }
 
         return back()->with('status', $message);
+    }
+
+    protected function getDatabaseVersion(): string
+    {
+        try {
+            $driver = config('database.default');
+
+            if ($driver === 'sqlite') {
+                return DB::selectOne('select sqlite_version() as version')->version ?? 'Unknown';
+            }
+
+            if ($driver === 'mysql') {
+                return DB::selectOne('select version() as version')->version ?? 'Unknown';
+            }
+
+            if ($driver === 'pgsql') {
+                return DB::selectOne('select version() as version')->version ?? 'Unknown';
+            }
+
+            return 'Unknown';
+        } catch (\Exception $e) {
+            return 'Unknown';
+        }
     }
 
     protected function folderSize(string $path): int
