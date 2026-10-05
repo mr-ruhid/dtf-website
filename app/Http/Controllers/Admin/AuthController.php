@@ -49,6 +49,13 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Access denied.'])->onlyInput('email');
         }
 
+        if (!$user->two_factor_enabled) {
+            LoginLog::log('password', 'success', $email);
+            Auth::login($user, $request->boolean('remember'));
+            $request->session()->regenerate();
+            return redirect()->route('admin.dashboard');
+        }
+
         $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         $request->session()->put('2fa_user_id', $user->id);
