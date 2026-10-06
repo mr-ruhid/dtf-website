@@ -44,6 +44,7 @@
         }
         .glow-line{height:1px;background:linear-gradient(90deg,transparent,#6366f1 50%,transparent);opacity:.4;}
     </style>
+    @stack('styles')
 </head>
 <body class="bg-slate-100 text-gray-800 antialiased" x-data="{ sidebarOpen: true, mobileOpen: false }">
 
@@ -368,6 +369,8 @@
         </nav>
 
     </aside>
+
+    @stack('scripts')
 
 </body>
 </html>
