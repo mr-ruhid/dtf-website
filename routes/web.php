@@ -10,5 +10,10 @@ Route::get('/contact-us', [PageController::class, 'contact'])->name('page.contac
 Route::get('/faq', [PageController::class, 'faq'])->name('page.faq');
 Route::get('/design', [PageController::class, 'design'])->name('page.design');
 
+Route::get('/terms-conditions', [PageController::class, 'terms'])->name('page.terms');
+Route::get('/privacy-policy', [PageController::class, 'privacy'])->name('page.privacy');
+Route::get('/shipping-policy', [PageController::class, 'shipping'])->name('page.shipping');
+Route::get('/return-policy', [PageController::class, 'returnPolicy'])->name('page.return');
+
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
