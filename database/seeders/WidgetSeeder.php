@@ -23,24 +23,55 @@ class WidgetSeeder extends Seeder
                 'name' => 'How It Works',
                 'sort_order' => 2,
                 'settings' => [
+                    'eyebrow' => 'How it works',
                     'title' => 'Cut. Place. Press. Peel.',
                     'subtitle' => 'We print the film. You press it onto the shirt. That is the whole product.',
-                    'link_text' => 'See the guide',
-                    'link_url' => '/how-to-press',
-                    'items' => [
-                        ['number' => '01', 'title' => 'Cut', 'description' => 'Your sheet arrives uncut. Snip each design off. Keep extras in a drawer.', 'image' => ''],
-                        ['number' => '02', 'title' => 'Place', 'description' => 'Park it on the garment, print facing down. Cotton, poly, or a blend.', 'image' => ''],
-                        ['number' => '03', 'title' => 'Press', 'description' => '310°F / 155°C. Medium pressure. 12–15 seconds. Heat press or EasyPress.', 'image' => ''],
-                        ['number' => '04', 'title' => 'Peel', 'description' => 'Wait 5 seconds. Peel warm. Enjoy your custom print.', 'image' => ''],
-                    ],
                     'button_text' => 'Build a DTF Gangsheet',
                     'button_url' => '/products',
+                    'items' => [
+                        ['number' => '01', 'title' => 'Cut', 'description' => 'Your sheet arrives uncut. Snip each design off. Keep extras in a drawer.', 'link_text' => 'See the guide', 'link_url' => '/how-to-press', 'image' => ''],
+                        ['number' => '02', 'title' => 'Place', 'description' => 'Park it on the garment, print facing down. Cotton, poly, or a blend.', 'link_text' => 'See the guide', 'link_url' => '/how-to-press', 'image' => ''],
+                        ['number' => '03', 'title' => 'Press', 'description' => '310°F / 155°C. Medium pressure. 12-15 seconds. Heat press or EasyPress.', 'link_text' => 'See the guide', 'link_url' => '/how-to-press', 'image' => ''],
+                        ['number' => '04', 'title' => 'Peel', 'description' => 'Wait 5 seconds. Peel warm. Enjoy your custom print.', 'link_text' => 'See the guide', 'link_url' => '/how-to-press', 'image' => ''],
+                    ],
+                ],
+            ],
+            [
+                'key' => 'build_or_upload',
+                'name' => 'Build or Upload',
+                'sort_order' => 3,
+                'settings' => [
+                    'eyebrow' => 'Got a file?',
+                    'title' => 'Two ways to start. One result.',
+                    'subtitle' => 'Build it or upload it. Same film, same day. That\'s the whole menu.',
+                    'build_card' => [
+                        'badge' => 'No file',
+                        'title' => 'Build it',
+                        'description' => 'Design your gang sheet in our online builder. Drag, drop, done.',
+                        'button_text' => 'Open the builder',
+                        'button_url' => '/design',
+                        'image' => '',
+                    ],
+                    'upload_card' => [
+                        'badge' => 'Ready',
+                        'title' => 'Upload it',
+                        'description' => 'Already have a print-ready file? Send it and we\'ll handle the rest.',
+                        'button_text' => 'Send the file',
+                        'button_url' => '/contact-us',
+                        'image' => '',
+                    ],
+                    'info_card' => [
+                        'badge' => 'That\'s all',
+                        'number' => '3',
+                        'title' => 'No third step',
+                        'description' => 'Build it or upload it. Same film, same day. That\'s the whole menu.',
+                    ],
                 ],
             ],
             [
                 'key' => 'features',
                 'name' => 'Features',
-                'sort_order' => 3,
+                'sort_order' => 4,
                 'settings' => [
                     'title' => 'Premium DTF Transfer Performance You Can Trust',
                     'subtitle' => 'Our premium DTF transfers are engineered to deliver consistent, professional-grade results across a wide range of fabrics.',
@@ -55,7 +86,7 @@ class WidgetSeeder extends Seeder
             [
                 'key' => 'categories',
                 'name' => 'Shop by Category',
-                'sort_order' => 4,
+                'sort_order' => 5,
                 'settings' => [
                     'title' => 'Shop by Category',
                     'subtitle' => 'Browse our full range of products',
@@ -65,7 +96,7 @@ class WidgetSeeder extends Seeder
             [
                 'key' => 'featured_products',
                 'name' => 'Featured Products',
-                'sort_order' => 5,
+                'sort_order' => 6,
                 'settings' => [
                     'title' => 'Featured Products',
                     'subtitle' => 'Handpicked by our team',
@@ -75,7 +106,7 @@ class WidgetSeeder extends Seeder
             [
                 'key' => 'testimonials',
                 'name' => 'Testimonials',
-                'sort_order' => 6,
+                'sort_order' => 7,
                 'settings' => [
                     'title' => 'What Our Customers Say',
                     'subtitle' => 'Real reviews from real customers',
@@ -89,7 +120,7 @@ class WidgetSeeder extends Seeder
             [
                 'key' => 'stats',
                 'name' => 'Statistics',
-                'sort_order' => 7,
+                'sort_order' => 8,
                 'settings' => [
                     'items' => [
                         ['icon' => 'fa-box', 'value' => '50K+', 'label' => 'Orders Delivered'],
@@ -102,7 +133,7 @@ class WidgetSeeder extends Seeder
             [
                 'key' => 'info',
                 'name' => 'Custom Info Section',
-                'sort_order' => 8,
+                'sort_order' => 9,
                 'settings' => [
                     'title' => 'About Our Process',
                     'content' => '<p>We use only the highest quality materials and state-of-the-art printing technology. Every order is inspected by hand before it ships.</p>',
@@ -113,7 +144,7 @@ class WidgetSeeder extends Seeder
             [
                 'key' => 'slider_mid',
                 'name' => 'Mid Banner',
-                'sort_order' => 9,
+                'sort_order' => 10,
                 'settings' => [
                     'location' => 'home_mid',
                 ],
@@ -121,7 +152,7 @@ class WidgetSeeder extends Seeder
             [
                 'key' => 'blog_preview',
                 'name' => 'Latest Blog Posts',
-                'sort_order' => 10,
+                'sort_order' => 11,
                 'settings' => [
                     'title' => 'Latest from the Blog',
                     'subtitle' => 'Tips, guides, and industry news',
@@ -131,7 +162,7 @@ class WidgetSeeder extends Seeder
             [
                 'key' => 'faq_preview',
                 'name' => 'FAQ',
-                'sort_order' => 11,
+                'sort_order' => 12,
                 'settings' => [
                     'title' => 'Frequently Asked Questions',
                     'subtitle' => 'Quick answers to common questions',
@@ -143,7 +174,7 @@ class WidgetSeeder extends Seeder
             [
                 'key' => 'newsletter',
                 'name' => 'Newsletter Subscribe',
-                'sort_order' => 12,
+                'sort_order' => 13,
                 'settings' => [
                     'title' => 'Join Our Newsletter',
                     'subtitle' => 'Get the latest updates, tips, and exclusive offers delivered to your inbox.',
@@ -154,7 +185,7 @@ class WidgetSeeder extends Seeder
             [
                 'key' => 'cta',
                 'name' => 'Call to Action',
-                'sort_order' => 13,
+                'sort_order' => 14,
                 'settings' => [
                     'title' => 'Ready to Start Your Project?',
                     'subtitle' => 'Upload your design, pick your product, and we will handle the rest.',
@@ -167,7 +198,7 @@ class WidgetSeeder extends Seeder
             [
                 'key' => 'live_chat',
                 'name' => 'Live Chat',
-                'sort_order' => 14,
+                'sort_order' => 15,
                 'settings' => [
                     'welcome_message' => 'Hi! How can we help?',
                     'agent_name' => 'Support Team',
