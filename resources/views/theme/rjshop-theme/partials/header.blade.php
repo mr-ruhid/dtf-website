@@ -76,27 +76,25 @@
          :class="hideSub ? 'h-16 md:h-[68px]' : 'h-16 md:h-20'">
         <div class="flex items-center justify-between h-full">
 
-            <a href="{{ url('/') }}" class="group flex items-center gap-3 shrink-0">
+            <a href="{{ url('/') }}" class="group flex items-center shrink-0">
                 @if($siteLogoUrl)
                     <img src="{{ $siteLogoUrl }}" alt="{{ $siteName }}"
-                         class="w-auto brightness-0 invert transition-all duration-300"
-                         :class="hideSub ? 'h-8' : 'h-10'">
-                    <span class="font-black tracking-tight text-white transition-all duration-300"
-                          :class="hideSub ? 'text-lg md:text-xl' : 'text-xl md:text-2xl'">
-                        {{ $siteName }}
-                    </span>
+                         class="w-auto transition-all duration-300"
+                         :class="hideSub ? 'h-8 md:h-9' : 'h-10 md:h-12'">
                 @else
-                    <div class="relative flex items-center justify-center transition-all duration-300"
-                         :class="hideSub ? 'w-9 h-9' : 'w-11 h-11'">
-                        <div class="absolute inset-0 rounded-full border-2 border-indigo-400/60 animate-orbit-slow"></div>
-                        <div class="absolute inset-1.5 rounded-full border border-purple-400/60 animate-orbit-reverse"></div>
-                        <div class="absolute inset-3 rounded-full bg-gradient-to-br from-indigo-500 to-pink-500"></div>
-                        <span class="relative z-10 text-white font-black text-xs">RJ</span>
+                    <div class="flex items-center gap-3">
+                        <div class="relative flex items-center justify-center transition-all duration-300"
+                             :class="hideSub ? 'w-9 h-9' : 'w-11 h-11'">
+                            <div class="absolute inset-0 rounded-full border-2 border-indigo-400/60 animate-orbit-slow"></div>
+                            <div class="absolute inset-1.5 rounded-full border border-purple-400/60 animate-orbit-reverse"></div>
+                            <div class="absolute inset-3 rounded-full bg-gradient-to-br from-indigo-500 to-pink-500"></div>
+                            <span class="relative z-10 text-white font-black text-xs">RJ</span>
+                        </div>
+                        <span class="font-black tracking-tight text-white transition-all duration-300"
+                              :class="hideSub ? 'text-lg md:text-xl' : 'text-xl md:text-2xl'">
+                            {{ $siteName }}<span class="text-indigo-400">.</span>
+                        </span>
                     </div>
-                    <span class="font-black tracking-tight text-white transition-all duration-300"
-                          :class="hideSub ? 'text-lg md:text-xl' : 'text-xl md:text-2xl'">
-                        {{ $siteName }}<span class="text-indigo-400">.</span>
-                    </span>
                 @endif
             </a>
 
