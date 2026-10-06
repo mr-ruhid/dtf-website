@@ -4,10 +4,40 @@
 
 @section('content')
 
-<div class="flex items-center justify-between mb-6">
-    <div>
-        <h2 class="text-xl font-semibold text-gray-800">Widgets</h2>
-        <p class="text-sm text-gray-500 mt-1">Manage homepage sections</p>
+<div class="mb-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-xl font-semibold text-gray-800">Homepage Widgets</h2>
+            <p class="text-sm text-gray-500 mt-1">Manage and reorder homepage sections</p>
+        </div>
+    </div>
+</div>
+
+<div class="mb-6 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-2xl p-6 md:p-8 text-white relative overflow-hidden">
+    <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.4), transparent 40%), radial-gradient(circle at 80% 70%, rgba(255,255,255,0.3), transparent 40%);"></div>
+
+    <div class="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div class="flex-1">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-xs font-medium mb-4">
+                <i class="fa-solid fa-cubes"></i>
+                <span>{{ $widgets->count() }} Standard Widgets</span>
+            </div>
+            <h3 class="text-2xl md:text-3xl font-bold mb-2">Drag, drop, activate</h3>
+            <p class="text-white/80 text-sm max-w-lg leading-relaxed">
+                Widgets are predefined sections of your homepage. Reorder them by dragging the handle, toggle active state, and click edit to customize content.
+            </p>
+        </div>
+
+        <div class="flex items-center gap-3 md:gap-4">
+            <div class="text-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-3 min-w-[80px]">
+                <div class="text-2xl font-bold">{{ $widgets->where('is_active', true)->count() }}</div>
+                <div class="text-[10px] uppercase tracking-wider text-white/70 mt-0.5">Active</div>
+            </div>
+            <div class="text-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-3 min-w-[80px]">
+                <div class="text-2xl font-bold">{{ $widgets->where('is_active', false)->count() }}</div>
+                <div class="text-[10px] uppercase tracking-wider text-white/70 mt-0.5">Inactive</div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -23,7 +53,7 @@
     </div>
 @endif
 
-<div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
     <table class="w-full text-sm">
         <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
             <tr>
@@ -31,23 +61,38 @@
                 <th class="px-4 py-3 text-left font-medium">Widget</th>
                 <th class="px-4 py-3 text-left font-medium">Key</th>
                 <th class="px-4 py-3 text-left font-medium w-20">Order</th>
-                <th class="px-4 py-3 text-left font-medium">Status</th>
-                <th class="px-4 py-3 text-right font-medium w-32">Actions</th>
+                <th class="px-4 py-3 text-left font-medium w-32">Status</th>
+                <th class="px-4 py-3 text-right font-medium w-40">Actions</th>
             </tr>
         </thead>
         <tbody id="widgetsList" class="divide-y divide-gray-100">
             @foreach ($widgets as $widget)
-                <tr class="hover:bg-gray-50" data-id="{{ $widget->id }}">
-                    <td class="px-4 py-3 text-gray-300 cursor-grab drag-handle">
+                @php
+                    $locked = in_array($widget->key, ['hero', 'slider_mid']);
+                @endphp
+                <tr class="hover:bg-gray-50 transition" data-id="{{ $widget->id }}">
+                    <td class="px-4 py-3 text-gray-300 cursor-grab drag-handle select-none">
                         <i class="fa-solid fa-grip-vertical"></i>
                     </td>
                     <td class="px-4 py-3">
-                        <p class="font-medium text-gray-800">{{ $widget->name }}</p>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-puzzle-piece text-xs"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">{{ $widget->name }}</p>
+                                @if($locked)
+                                    <p class="text-[10px] text-amber-600 font-medium mt-0.5">
+                                        <i class="fa-solid fa-lock text-[8px]"></i> Managed via Sliders
+                                    </p>
+                                @endif
+                            </div>
+                        </div>
                     </td>
                     <td class="px-4 py-3">
                         <span class="font-mono text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{{ $widget->key }}</span>
                     </td>
-                    <td class="px-4 py-3 text-gray-600">{{ $widget->sort_order }}</td>
+                    <td class="px-4 py-3 text-gray-600 font-mono text-xs">{{ $widget->sort_order }}</td>
                     <td class="px-4 py-3">
                         <form method="POST" action="{{ route('admin.widgets.toggle', $widget) }}">
                             @csrf
@@ -59,10 +104,16 @@
                         </form>
                     </td>
                     <td class="px-4 py-3 text-right">
-                        <a href="{{ route('admin.widgets.edit', $widget) }}"
-                           class="w-8 h-8 inline-flex items-center justify-center rounded hover:bg-indigo-50 text-indigo-600 transition">
-                            <i class="fa-solid fa-pen text-xs"></i>
-                        </a>
+                        @if($locked)
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 cursor-not-allowed" title="Edit this via Sliders module">
+                                <i class="fa-solid fa-lock text-[10px]"></i> Locked
+                            </span>
+                        @else
+                            <a href="{{ route('admin.widgets.edit', $widget) }}"
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition">
+                                <i class="fa-solid fa-pen text-[10px]"></i> Edit
+                            </a>
+                        @endif
                     </td>
                 </tr>
             @endforeach
