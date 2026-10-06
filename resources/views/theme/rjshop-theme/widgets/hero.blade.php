@@ -3,19 +3,30 @@
 @endphp
 
 @if($slider && $slider->activeItems->count())
-    @php $items = $slider->activeItems; $total = $items->count(); @endphp
+    @php
+        $items = $slider->activeItems;
+        $total = $items->count();
+        $lastItem = $items->last();
+        $totalScreens = $total + 1;
+    @endphp
 
-    <section id="rjHero" class="relative bg-[#05030f]" style="height: {{ $total * 100 }}vh;">
+    <section id="rjHero" class="relative bg-[#05030f]" style="height: {{ $totalScreens * 100 }}vh;">
 
         <div class="sticky top-0 h-screen w-full overflow-hidden">
 
             @foreach($items as $index => $item)
-                <div class="rj-bg absolute inset-0" data-index="{{ $index }}" style="opacity: 0; transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);">
+                <div class="rj-bg absolute inset-0" data-index="{{ $index }}" style="opacity: {{ $index === 0 ? 1 : 0 }}; transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);">
                     <img src="{{ $item->image_url }}" alt="{{ $item->title }}" class="rj-bg-img w-full h-full object-cover" data-index="{{ $index }}">
                     <div class="absolute inset-0 bg-gradient-to-r from-[#05030f]/95 via-[#05030f]/60 to-transparent"></div>
                     <div class="absolute inset-0 bg-gradient-to-t from-[#05030f]/80 via-transparent to-transparent"></div>
                 </div>
             @endforeach
+
+            <div class="rj-bg absolute inset-0" data-index="{{ $total }}" style="opacity: 0; transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);">
+                <img src="{{ $lastItem->image_url }}" alt="Design your own" class="rj-bg-img w-full h-full object-cover" data-index="{{ $total }}">
+                <div class="absolute inset-0 bg-[#05030f]/85"></div>
+                <div class="absolute inset-0 bg-gradient-to-b from-[#05030f]/90 via-[#05030f]/70 to-[#05030f]/90"></div>
+            </div>
 
             <canvas id="rjHeroCanvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
 
@@ -58,24 +69,72 @@
                 </div>
             @endforeach
 
-            <div class="absolute inset-0 pointer-events-none z-20" id="rjWaveOverlay"></div>
+            <div class="rj-slide absolute inset-0 flex items-center justify-center" data-index="{{ $total }}" style="opacity: 0; visibility: hidden; transition: opacity 0.8s ease, visibility 0s linear 0.8s;">
+                <div class="max-w-5xl mx-auto px-6 text-center">
+                    <div class="rj-el inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10 mb-8" style="opacity: 0; transform: translateY(30px);">
+                        <span class="w-1.5 h-1.5 bg-pink-400 rounded-full" style="box-shadow: 0 0 10px 3px rgba(244,114,182,0.9); animation: rjPulse 2s ease-in-out infinite;"></span>
+                        <span class="text-[11px] font-mono uppercase tracking-[0.25em] text-pink-300">// Create Your Own</span>
+                    </div>
+
+                    <h2 class="rj-el text-5xl md:text-7xl lg:text-8xl font-black leading-[0.95] tracking-tight mb-6" style="opacity: 0; transform: translateY(30px);">
+                        <span class="block text-white">Design</span>
+                        <span class="block bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">your own</span>
+                        <span class="block text-white">gang sheet</span>
+                    </h2>
+
+                    <p class="rj-el text-lg md:text-xl text-gray-400 leading-relaxed max-w-2xl mx-auto mb-10 font-light" style="opacity: 0; transform: translateY(30px);">
+                        Upload your artwork, arrange it on the canvas, and get instant pricing. No design skills required — just drag, drop, and print.
+                    </p>
+
+                    <div class="rj-el flex flex-wrap gap-4 justify-center" style="opacity: 0; transform: translateY(30px);">
+                        <a href="{{ url('design') }}"
+                           class="group pointer-events-auto inline-flex items-center gap-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold px-10 py-5 rounded-full transition-all duration-300 hover:scale-105"
+                           style="box-shadow: 0 0 40px rgba(168,85,247,0.5);">
+                            <i class="fa-solid fa-wand-magic-sparkles group-hover:rotate-12 transition-transform"></i>
+                            <span>Start Designing</span>
+                            <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition"></i>
+                        </a>
+
+                        <a href="{{ url('contact-us') }}"
+                           class="pointer-events-auto inline-flex items-center gap-3 bg-white/5 backdrop-blur-md border border-white/15 text-white font-semibold px-8 py-5 rounded-full hover:bg-white/10 transition-all">
+                            <i class="fa-solid fa-comments"></i>
+                            <span>Need Help?</span>
+                        </a>
+                    </div>
+
+                    <div class="rj-el mt-14 flex flex-wrap items-center justify-center gap-8 font-mono text-[10px] text-gray-500 uppercase tracking-[0.25em]" style="opacity: 0; transform: translateY(30px);">
+                        <span class="flex items-center gap-2">
+                            <i class="fa-solid fa-bolt text-yellow-400"></i>
+                            Instant pricing
+                        </span>
+                        <span class="flex items-center gap-2">
+                            <i class="fa-solid fa-cloud-arrow-up text-indigo-400"></i>
+                            Any format
+                        </span>
+                        <span class="flex items-center gap-2">
+                            <i class="fa-solid fa-truck-fast text-pink-400"></i>
+                            Fast shipping
+                        </span>
+                    </div>
+                </div>
+            </div>
 
             <div class="absolute top-0 left-0 right-0 h-0.5 bg-white/5 z-30">
                 <div class="rj-progress h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-150" style="width: 0%;"></div>
             </div>
 
             <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3 z-30">
-                @foreach($items as $index => $item)
+                @for($i = 0; $i < $totalScreens; $i++)
                     <button class="rj-dot h-1.5 rounded-full transition-all duration-500"
-                            data-index="{{ $index }}"
-                            style="width: {{ $index === 0 ? '40px' : '8px' }}; background: {{ $index === 0 ? 'linear-gradient(90deg, #818cf8, #ec4899)' : 'rgba(255,255,255,0.2)' }};"
-                            aria-label="Slide {{ $index + 1 }}"></button>
-                @endforeach
+                            data-index="{{ $i }}"
+                            style="width: {{ $i === 0 ? '40px' : '8px' }}; background: {{ $i === 0 ? 'linear-gradient(90deg, #818cf8, #ec4899)' : 'rgba(255,255,255,0.2)' }};"
+                            aria-label="Screen {{ $i + 1 }}"></button>
+                @endfor
             </div>
 
             <div class="absolute bottom-10 right-8 md:right-16 hidden md:flex items-center gap-2 z-30 pointer-events-none">
                 <span class="rj-counter font-mono text-3xl font-black text-white">01</span>
-                <span class="font-mono text-[11px] text-gray-500">/ {{ str_pad($total, 2, '0', STR_PAD_LEFT) }}</span>
+                <span class="font-mono text-[11px] text-gray-500">/ {{ str_pad($totalScreens, 2, '0', STR_PAD_LEFT) }}</span>
             </div>
 
             <div class="absolute bottom-24 right-1/2 translate-x-1/2 flex flex-col items-center gap-3 z-30 pointer-events-none">
@@ -94,12 +153,12 @@
         .rj-slide.active .rj-el:nth-child(2) { animation-delay: 0.3s; }
         .rj-slide.active .rj-el:nth-child(3) { animation-delay: 0.45s; }
         .rj-slide.active .rj-el:nth-child(4) { animation-delay: 0.6s; }
+        .rj-slide.active .rj-el:nth-child(5) { animation-delay: 0.75s; }
         @keyframes rjWaveIn {
             0% { opacity: 0; transform: translateY(60px) scale(0.9); filter: blur(12px); }
             60% { filter: blur(0); }
             100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
-        .rj-bg.active { opacity: 1 !important; }
     </style>
 
     <script>
@@ -113,28 +172,10 @@
         var dots = hero.querySelectorAll('.rj-dot');
         var progressBar = hero.querySelector('.rj-progress');
         var counter = hero.querySelector('.rj-counter');
-        var waveOverlay = document.getElementById('rjWaveOverlay');
-        var total = textSlides.length;
+        var totalScreens = textSlides.length;
         var current = -1;
-        var transitioning = false;
 
-        function triggerWave(direction) {
-            if (!waveOverlay) return;
-            var wave = document.createElement('div');
-            wave.style.cssText = 'position:absolute;inset:0;background:linear-gradient(90deg, transparent, rgba(99,102,241,0.15), transparent);transform:translateX(-100%);';
-            waveOverlay.appendChild(wave);
-
-            requestAnimationFrame(function() {
-                wave.style.transition = 'transform 1s cubic-bezier(0.4, 0, 0.2, 1)';
-                wave.style.transform = 'translateX(100%)';
-            });
-
-            setTimeout(function() {
-                if (wave.parentNode) wave.parentNode.removeChild(wave);
-            }, 1100);
-        }
-
-        function updateSlide(idx, direction) {
+        function updateSlide(idx) {
             if (idx === current) return;
 
             bgSlides.forEach(function(el, i) {
@@ -154,12 +195,10 @@
                 }
             });
             if (counter) counter.textContent = String(idx + 1).padStart(2, '0');
-
-            if (current !== -1) triggerWave(direction);
             current = idx;
         }
 
-        updateSlide(0, 1);
+        updateSlide(0);
 
         var ticking = false;
         window.addEventListener('scroll', function() {
@@ -174,13 +213,11 @@
 
                     if (progressBar) progressBar.style.width = (progress * 100) + '%';
 
-                    var rawIdx = progress * total;
-                    var idx = Math.min(total - 1, Math.floor(rawIdx));
-                    var direction = idx > current ? 1 : -1;
-                    updateSlide(idx, direction);
+                    var idx = Math.min(totalScreens - 1, Math.floor(progress * totalScreens));
+                    updateSlide(idx);
 
                     bgImages.forEach(function(img, i) {
-                        var offset = (progress * 100) - (i * (100 / total));
+                        var offset = (progress * 100) - (i * (100 / totalScreens));
                         img.style.transform = 'scale(1.15) translateY(' + (offset * -0.4) + 'px)';
                     });
 
@@ -197,7 +234,7 @@
                 var heroHeight = hero.offsetHeight;
                 var windowH = window.innerHeight;
                 var scrollable = heroHeight - windowH;
-                var targetScroll = heroTopAbs + (idx / total) * scrollable + 10;
+                var targetScroll = heroTopAbs + (idx / totalScreens) * scrollable + 10;
                 window.scrollTo({ top: targetScroll, behavior: 'smooth' });
             });
         });
