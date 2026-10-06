@@ -16,6 +16,7 @@ class ProductModel extends Model
         'image',
         'icon',
         'sort_order',
+        'show_in_header',
         'status',
         'meta_title',
         'meta_description',
@@ -24,6 +25,7 @@ class ProductModel extends Model
 
     protected $casts = [
         'status' => 'boolean',
+        'show_in_header' => 'boolean',
         'sort_order' => 'integer',
     ];
 
@@ -65,5 +67,17 @@ class ProductModel extends Model
             return $this->image;
         }
         return asset('storage/' . $this->image);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 1);
+    }
+
+    public function scopeInHeader($query)
+    {
+        return $query->where('status', 1)
+            ->where('show_in_header', 1)
+            ->orderBy('sort_order');
     }
 }
