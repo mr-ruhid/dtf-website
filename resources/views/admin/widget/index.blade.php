@@ -55,10 +55,18 @@
 
 @php
     $lockedWidgets = [
-        'hero' => ['label' => 'Managed via Sliders', 'url' => route('admin.sliders.index')],
-        'slider_mid' => ['label' => 'Managed via Sliders', 'url' => route('admin.sliders.index')],
-        'faq_preview' => ['label' => 'Managed via FAQs', 'url' => route('admin.faqs.index')],
-        'blog_preview' => ['label' => 'Managed via Blog', 'url' => route('admin.blog.index')],
+        'hero' => ['label' => 'Managed via Sliders', 'url' => route('admin.sliders.index'), 'type' => 'managed'],
+        'slider_mid' => ['label' => 'Managed via Sliders', 'url' => route('admin.sliders.index'), 'type' => 'managed'],
+        'faq_preview' => ['label' => 'Managed via FAQs', 'url' => route('admin.faqs.index'), 'type' => 'managed'],
+        'blog_preview' => ['label' => 'Managed via Blog', 'url' => route('admin.blog.index'), 'type' => 'managed'],
+
+        'categories' => ['label' => 'Activate via Services', 'url' => route('admin.services.index'), 'type' => 'plugin'],
+        'featured_products' => ['label' => 'Activate via Services', 'url' => route('admin.services.index'), 'type' => 'plugin'],
+        'testimonials' => ['label' => 'Activate via Services', 'url' => route('admin.services.index'), 'type' => 'plugin'],
+        'stats' => ['label' => 'Activate via Services', 'url' => route('admin.services.index'), 'type' => 'plugin'],
+        'newsletter' => ['label' => 'Activate via Services', 'url' => route('admin.services.index'), 'type' => 'plugin'],
+        'cta' => ['label' => 'Activate via Services', 'url' => route('admin.services.index'), 'type' => 'plugin'],
+        'live_chat' => ['label' => 'Activate via Services', 'url' => route('admin.services.index'), 'type' => 'plugin'],
     ];
 @endphp
 
@@ -71,28 +79,29 @@
                 <th class="px-4 py-3 text-left font-medium">Key</th>
                 <th class="px-4 py-3 text-left font-medium w-20">Order</th>
                 <th class="px-4 py-3 text-left font-medium w-32">Status</th>
-                <th class="px-4 py-3 text-right font-medium w-40">Actions</th>
+                <th class="px-4 py-3 text-right font-medium w-52">Actions</th>
             </tr>
         </thead>
         <tbody id="widgetsList" class="divide-y divide-gray-100">
             @foreach ($widgets as $widget)
                 @php
                     $locked = $lockedWidgets[$widget->key] ?? null;
+                    $isPlugin = $locked && $locked['type'] === 'plugin';
                 @endphp
-                <tr class="hover:bg-gray-50 transition" data-id="{{ $widget->id }}">
+                <tr class="hover:bg-gray-50 transition {{ $isPlugin ? 'opacity-90' : '' }}" data-id="{{ $widget->id }}">
                     <td class="px-4 py-3 text-gray-300 cursor-grab drag-handle select-none">
                         <i class="fa-solid fa-grip-vertical"></i>
                     </td>
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg {{ $locked ? 'bg-amber-50 text-amber-600' : 'bg-indigo-50 text-indigo-600' }} flex items-center justify-center shrink-0">
-                                <i class="fa-solid {{ $locked ? 'fa-lock' : 'fa-puzzle-piece' }} text-xs"></i>
+                            <div class="w-8 h-8 rounded-lg {{ $isPlugin ? 'bg-slate-100 text-slate-500' : ($locked ? 'bg-amber-50 text-amber-600' : 'bg-indigo-50 text-indigo-600') }} flex items-center justify-center shrink-0">
+                                <i class="fa-solid {{ $isPlugin ? 'fa-lock' : ($locked ? 'fa-link' : 'fa-puzzle-piece') }} text-xs"></i>
                             </div>
                             <div>
-                                <p class="font-medium text-gray-800">{{ $widget->name }}</p>
+                                <p class="font-medium {{ $isPlugin ? 'text-gray-600' : 'text-gray-800' }}">{{ $widget->name }}</p>
                                 @if($locked)
-                                    <p class="text-[10px] text-amber-600 font-medium mt-0.5">
-                                        <i class="fa-solid fa-link text-[8px]"></i> {{ $locked['label'] }}
+                                    <p class="text-[10px] {{ $isPlugin ? 'text-rose-500' : 'text-amber-600' }} font-medium mt-0.5">
+                                        <i class="fa-solid {{ $isPlugin ? 'fa-plug' : 'fa-link' }} text-[8px]"></i> {{ $locked['label'] }}
                                     </p>
                                 @endif
                             </div>
@@ -103,17 +112,31 @@
                     </td>
                     <td class="px-4 py-3 text-gray-600 font-mono text-xs">{{ $widget->sort_order }}</td>
                     <td class="px-4 py-3">
-                        <form method="POST" action="{{ route('admin.widgets.toggle', $widget) }}">
-                            @csrf
-                            @method('PUT')
-                            <button class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition {{ $widget->is_active ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-gray-200 text-gray-600 hover:bg-gray-300' }}">
-                                <i class="fa-solid {{ $widget->is_active ? 'fa-toggle-on' : 'fa-toggle-off' }}"></i>
-                                {{ $widget->is_active ? 'Active' : 'Inactive' }}
-                            </button>
-                        </form>
+                        @if($isPlugin)
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-slate-100 text-slate-500 cursor-not-allowed" title="Requires plugin activation">
+                                <i class="fa-solid fa-lock"></i>
+                                Locked
+                            </span>
+                        @else
+                            <form method="POST" action="{{ route('admin.widgets.toggle', $widget) }}">
+                                @csrf
+                                @method('PUT')
+                                <button class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition {{ $widget->is_active ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-gray-200 text-gray-600 hover:bg-gray-300' }}">
+                                    <i class="fa-solid {{ $widget->is_active ? 'fa-toggle-on' : 'fa-toggle-off' }}"></i>
+                                    {{ $widget->is_active ? 'Active' : 'Inactive' }}
+                                </button>
+                            </form>
+                        @endif
                     </td>
                     <td class="px-4 py-3 text-right">
-                        @if($locked)
+                        @if($isPlugin)
+                            <a href="{{ $locked['url'] }}"
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium bg-gradient-to-r from-amber-500 to-pink-500 text-white hover:shadow-lg hover:shadow-amber-300/50 transition"
+                               title="{{ $locked['label'] }}">
+                                <i class="fa-solid fa-rocket text-[10px]"></i>
+                                {{ $locked['label'] }}
+                            </a>
+                        @elseif($locked)
                             <a href="{{ $locked['url'] }}"
                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition"
                                title="{{ $locked['label'] }}">
