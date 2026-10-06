@@ -69,6 +69,24 @@ class ProductModel extends Model
         return asset('storage/' . $this->image);
     }
 
+    public function categories()
+    {
+        return $this->hasMany(Category::class, 'model_id');
+    }
+
+    public function rootCategories()
+    {
+        return $this->hasMany(Category::class, 'model_id')
+            ->whereNull('parent_id')
+            ->where('status', 1)
+            ->orderBy('sort_order');
+    }
+
+    public function products()
+    {
+        return $this->hasMany(Product::class, 'model_id');
+    }
+
     public function scopeActive($query)
     {
         return $query->where('status', 1);
