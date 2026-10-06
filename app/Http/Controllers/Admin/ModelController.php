@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\ProductModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +18,8 @@ class ModelController extends Controller
 
     public function create()
     {
-        return view('admin.model.create');
+        $products = Product::orderBy('name')->get();
+        return view('admin.model.create', compact('products'));
     }
 
     public function store(Request $request)
@@ -27,6 +29,14 @@ class ModelController extends Controller
         $data['status'] = $request->boolean('status');
         $data['show_in_header'] = $request->boolean('show_in_header');
         $data['sort_order'] = $data['sort_order'] ?? 0;
+        $data['display_type'] = $data['display_type'] ?? 'grid';
+
+        if ($data['display_type'] !== 'single') {
+            $data['single_product_id'] = null;
+        }
+        if ($data['display_type'] !== 'custom') {
+            $data['custom_view'] = null;
+        }
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('models', 'public');
@@ -39,7 +49,8 @@ class ModelController extends Controller
 
     public function edit(ProductModel $model)
     {
-        return view('admin.model.edit', compact('model'));
+        $products = Product::orderBy('name')->get();
+        return view('admin.model.edit', compact('model', 'products'));
     }
 
     public function update(Request $request, ProductModel $model)
@@ -49,6 +60,14 @@ class ModelController extends Controller
         $data['status'] = $request->boolean('status');
         $data['show_in_header'] = $request->boolean('show_in_header');
         $data['sort_order'] = $data['sort_order'] ?? 0;
+        $data['display_type'] = $data['display_type'] ?? 'grid';
+
+        if ($data['display_type'] !== 'single') {
+            $data['single_product_id'] = null;
+        }
+        if ($data['display_type'] !== 'custom') {
+            $data['custom_view'] = null;
+        }
 
         if ($request->hasFile('image')) {
             if ($model->image && !str_starts_with($model->image, 'http')) {
@@ -89,6 +108,9 @@ class ModelController extends Controller
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'status' => ['nullable', 'boolean'],
             'show_in_header' => ['nullable', 'boolean'],
+            'display_type' => ['nullable', 'in:grid,single,custom'],
+            'single_product_id' => ['nullable', 'exists:products,id'],
+            'custom_view' => ['nullable', 'string', 'max:100'],
             'meta_title' => ['nullable', 'string', 'max:200'],
             'meta_description' => ['nullable', 'string', 'max:300'],
             'meta_keywords' => ['nullable', 'string', 'max:300'],
