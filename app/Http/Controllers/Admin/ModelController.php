@@ -25,6 +25,7 @@ class ModelController extends Controller
         $data = $this->validateData($request);
 
         $data['status'] = $request->boolean('status');
+        $data['show_in_header'] = $request->boolean('show_in_header');
         $data['sort_order'] = $data['sort_order'] ?? 0;
 
         if ($request->hasFile('image')) {
@@ -46,6 +47,7 @@ class ModelController extends Controller
         $data = $this->validateData($request, $model->id);
 
         $data['status'] = $request->boolean('status');
+        $data['show_in_header'] = $request->boolean('show_in_header');
         $data['sort_order'] = $data['sort_order'] ?? 0;
 
         if ($request->hasFile('image')) {
@@ -86,6 +88,7 @@ class ModelController extends Controller
             'icon' => ['nullable', 'string', 'max:100'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'status' => ['nullable', 'boolean'],
+            'show_in_header' => ['nullable', 'boolean'],
             'meta_title' => ['nullable', 'string', 'max:200'],
             'meta_description' => ['nullable', 'string', 'max:300'],
             'meta_keywords' => ['nullable', 'string', 'max:300'],
