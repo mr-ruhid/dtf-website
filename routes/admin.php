@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\DeliveryRateController;
 use App\Http\Controllers\Admin\DeliveryZoneController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\GalleryController;
+use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\ModelController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageController;
@@ -59,6 +60,18 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::put('widgets/{widget}', [WidgetController::class, 'update'])->name('widgets.update');
         Route::put('widgets/{widget}/toggle', [WidgetController::class, 'toggle'])->name('widgets.toggle');
         Route::post('widgets/reorder', [WidgetController::class, 'reorder'])->name('widgets.reorder');
+
+        Route::get('menus', [MenuController::class, 'index'])->name('menus.index');
+        Route::post('menus', [MenuController::class, 'store'])->name('menus.store');
+        Route::get('menus/{menu}', [MenuController::class, 'show'])->name('menus.show');
+        Route::put('menus/{menu}', [MenuController::class, 'update'])->name('menus.update');
+        Route::delete('menus/{menu}', [MenuController::class, 'destroy'])->name('menus.destroy');
+        Route::put('menus/{menu}/toggle', [MenuController::class, 'toggle'])->name('menus.toggle');
+        Route::post('menus/{menu}/items', [MenuController::class, 'storeItem'])->name('menus.items.store');
+        Route::put('menus/{menu}/items/{item}', [MenuController::class, 'updateItem'])->name('menus.items.update');
+        Route::delete('menus/{menu}/items/{item}', [MenuController::class, 'destroyItem'])->name('menus.items.destroy');
+        Route::put('menus/{menu}/items/{item}/toggle', [MenuController::class, 'toggleItem'])->name('menus.items.toggle');
+        Route::post('menus/{menu}/reorder', [MenuController::class, 'reorder'])->name('menus.reorder');
 
         Route::resource('sliders', SliderController::class)->except(['show']);
         Route::post('sliders/{slider}/items', [SliderController::class, 'storeItem'])->name('sliders.items.store');
