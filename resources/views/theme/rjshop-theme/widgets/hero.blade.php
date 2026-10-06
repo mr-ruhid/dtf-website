@@ -10,80 +10,61 @@
         <div class="sticky top-0 h-screen w-full overflow-hidden">
 
             @foreach($items as $index => $item)
-                <div class="rj-bg absolute inset-0" data-index="{{ $index }}" style="opacity: {{ $index === 0 ? 1 : 0 }}; transition: opacity 1s ease;">
+                <div class="rj-bg absolute inset-0" data-index="{{ $index }}" style="opacity: 0; transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);">
                     <img src="{{ $item->image_url }}" alt="{{ $item->title }}" class="rj-bg-img w-full h-full object-cover" data-index="{{ $index }}">
-                    <div class="absolute inset-0 bg-gradient-to-r from-[#05030f] via-[#05030f]/85 to-[#05030f]/30"></div>
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#05030f] via-transparent to-[#05030f]/60"></div>
+                    <div class="absolute inset-0 bg-gradient-to-r from-[#05030f]/95 via-[#05030f]/60 to-transparent"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#05030f]/80 via-transparent to-transparent"></div>
                 </div>
             @endforeach
 
             <canvas id="rjHeroCanvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
 
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-                <div class="relative w-[500px] h-[500px] md:w-[900px] md:h-[900px]">
-                    <div class="absolute inset-0 rounded-full border border-indigo-500/15" style="animation: rjSpin 25s linear infinite;">
-                        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-indigo-400 rounded-full" style="box-shadow: 0 0 20px 6px rgba(129,140,248,0.9);"></div>
-                    </div>
-                    <div class="absolute inset-[15%] rounded-full border border-purple-500/15" style="animation: rjSpin 18s linear infinite reverse;">
-                        <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-purple-400 rounded-full" style="box-shadow: 0 0 16px 5px rgba(192,132,252,0.9);"></div>
-                    </div>
-                    <div class="absolute inset-[30%] rounded-full border border-pink-500/15" style="animation: rjSpin 12s linear infinite;">
-                        <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-pink-400 rounded-full" style="box-shadow: 0 0 16px 5px rgba(244,114,182,0.9);"></div>
-                    </div>
-                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full" style="background: radial-gradient(circle, rgba(99,102,241,0.4), rgba(168,85,247,0.2), transparent 70%); filter: blur(60px); animation: rjPulse 4s ease-in-out infinite;"></div>
-                </div>
-            </div>
-
-            <div class="relative h-full w-full z-10 pointer-events-none">
-                @foreach($items as $index => $item)
-                    <div class="rj-slide absolute inset-0 flex items-center" data-index="{{ $index }}" style="opacity: {{ $index === 0 ? 1 : 0 }}; transition: opacity 0.8s ease;">
-                        <div class="max-w-7xl mx-auto px-6 lg:px-12 w-full">
-                            <div class="max-w-2xl rj-slide-inner">
-                                <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10 mb-8">
-                                    <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full" style="box-shadow: 0 0 10px 3px rgba(52,211,153,0.9); animation: rjPulse 2s ease-in-out infinite;"></span>
-                                    <span class="text-[11px] font-mono uppercase tracking-[0.25em] text-indigo-300">State {{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</span>
-                                    @if($item->subtitle)
-                                        <span class="w-px h-3 bg-white/20"></span>
-                                        <span class="text-[11px] font-mono uppercase tracking-[0.25em] text-gray-400">{{ $item->subtitle }}</span>
-                                    @endif
-                                </div>
-
-                                @if($item->title)
-                                    <h1 class="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[0.95] tracking-tight mb-6">
-                                        <span class="bg-gradient-to-r from-white via-indigo-200 to-white bg-clip-text text-transparent" style="background-size: 200% 100%; animation: rjShine 4s linear infinite;">
-                                            {{ $item->title }}
-                                        </span>
-                                    </h1>
-                                @endif
-
-                                @if($item->description)
-                                    <p class="text-lg md:text-xl text-gray-400 leading-relaxed mb-10 max-w-xl font-light">
-                                        {{ $item->description }}
-                                    </p>
-                                @endif
-
-                                @if($item->button_text && $item->button_link)
-                                    <a href="{{ $item->button_link }}"
-                                       class="group pointer-events-auto inline-flex items-center gap-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold px-8 py-4 rounded-full transition-all duration-300"
-                                       style="box-shadow: 0 0 30px rgba(139,92,246,0.4);"
-                                       onmouseover="this.style.boxShadow='0 0 60px rgba(139,92,246,0.8)'; this.style.transform='scale(1.05)';"
-                                       onmouseout="this.style.boxShadow='0 0 30px rgba(139,92,246,0.4)'; this.style.transform='scale(1)';">
-                                        <i class="fa-solid fa-atom"></i>
-                                        <span>{{ $item->button_text }}</span>
-                                        <i class="fa-solid fa-arrow-right"></i>
-                                    </a>
+            @foreach($items as $index => $item)
+                <div class="rj-slide absolute inset-0 flex items-center" data-index="{{ $index }}" style="opacity: 0; visibility: hidden; transition: opacity 0.8s ease, visibility 0s linear 0.8s;">
+                    <div class="max-w-7xl mx-auto px-6 lg:px-12 w-full">
+                        <div class="max-w-2xl">
+                            <div class="rj-el inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10 mb-8" style="opacity: 0; transform: translateY(30px);">
+                                <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full" style="box-shadow: 0 0 10px 3px rgba(52,211,153,0.9); animation: rjPulse 2s ease-in-out infinite;"></span>
+                                <span class="text-[11px] font-mono uppercase tracking-[0.25em] text-indigo-300">State {{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</span>
+                                @if($item->subtitle)
+                                    <span class="w-px h-3 bg-white/20"></span>
+                                    <span class="text-[11px] font-mono uppercase tracking-[0.25em] text-gray-400">{{ $item->subtitle }}</span>
                                 @endif
                             </div>
+
+                            @if($item->title)
+                                <h1 class="rj-el text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[0.95] tracking-tight mb-6" style="opacity: 0; transform: translateY(30px);">
+                                    {{ $item->title }}
+                                </h1>
+                            @endif
+
+                            @if($item->description)
+                                <p class="rj-el text-lg md:text-xl text-gray-300 leading-relaxed mb-10 max-w-xl font-light" style="opacity: 0; transform: translateY(30px);">
+                                    {{ $item->description }}
+                                </p>
+                            @endif
+
+                            @if($item->button_text && $item->button_link)
+                                <a href="{{ $item->button_link }}"
+                                   class="rj-el pointer-events-auto inline-flex items-center gap-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold px-8 py-4 rounded-full transition-all duration-300"
+                                   style="opacity: 0; transform: translateY(30px); box-shadow: 0 0 30px rgba(139,92,246,0.4);">
+                                    <i class="fa-solid fa-atom"></i>
+                                    <span>{{ $item->button_text }}</span>
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </a>
+                            @endif
                         </div>
                     </div>
-                @endforeach
-            </div>
+                </div>
+            @endforeach
 
-            <div class="absolute top-0 left-0 right-0 h-0.5 bg-white/5 z-20">
+            <div class="absolute inset-0 pointer-events-none z-20" id="rjWaveOverlay"></div>
+
+            <div class="absolute top-0 left-0 right-0 h-0.5 bg-white/5 z-30">
                 <div class="rj-progress h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-150" style="width: 0%;"></div>
             </div>
 
-            <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3 z-20">
+            <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3 z-30">
                 @foreach($items as $index => $item)
                     <button class="rj-dot h-1.5 rounded-full transition-all duration-500"
                             data-index="{{ $index }}"
@@ -92,22 +73,14 @@
                 @endforeach
             </div>
 
-            <div class="absolute bottom-10 right-8 md:right-16 hidden md:flex flex-col items-center gap-2 z-20 pointer-events-none">
-                <span class="rj-counter font-mono text-2xl font-black text-white">01</span>
-                <span class="font-mono text-[10px] text-gray-500">/ {{ str_pad($total, 2, '0', STR_PAD_LEFT) }}</span>
+            <div class="absolute bottom-10 right-8 md:right-16 hidden md:flex items-center gap-2 z-30 pointer-events-none">
+                <span class="rj-counter font-mono text-3xl font-black text-white">01</span>
+                <span class="font-mono text-[11px] text-gray-500">/ {{ str_pad($total, 2, '0', STR_PAD_LEFT) }}</span>
             </div>
 
-            <div class="absolute bottom-10 right-8 md:right-16 hidden md:flex flex-col items-center gap-2 z-20 pointer-events-none opacity-0">
-            </div>
-
-            <div class="absolute bottom-24 right-1/2 translate-x-1/2 flex flex-col items-center gap-3 z-20 pointer-events-none">
+            <div class="absolute bottom-24 right-1/2 translate-x-1/2 flex flex-col items-center gap-3 z-30 pointer-events-none">
                 <span class="font-mono text-[9px] text-gray-500 uppercase tracking-[0.3em]">Scroll</span>
                 <div class="w-px h-12 bg-gradient-to-b from-indigo-500/60 to-transparent"></div>
-            </div>
-
-            <div class="absolute top-8 left-8 font-mono text-[10px] text-gray-600 uppercase tracking-[0.3em] z-20 hidden md:flex items-center gap-2">
-                <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full" style="box-shadow: 0 0 10px 3px rgba(52,211,153,0.9); animation: rjPulse 2s ease-in-out infinite;"></span>
-                <span>Live</span>
             </div>
         </div>
     </section>
@@ -115,22 +88,18 @@
     <style>
         @keyframes rjSpin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
         @keyframes rjPulse { 0%,100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
-        @keyframes rjShine { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        @keyframes rjTitleIn {
-            0% { filter: blur(20px); opacity: 0; transform: translateY(40px) scale(0.95); }
-            100% { filter: blur(0); opacity: 1; transform: translateY(0) scale(1); }
+        .rj-slide.active { opacity: 1 !important; visibility: visible !important; transition-delay: 0s, 0s !important; }
+        .rj-slide.active .rj-el { animation: rjWaveIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .rj-slide.active .rj-el:nth-child(1) { animation-delay: 0.15s; }
+        .rj-slide.active .rj-el:nth-child(2) { animation-delay: 0.3s; }
+        .rj-slide.active .rj-el:nth-child(3) { animation-delay: 0.45s; }
+        .rj-slide.active .rj-el:nth-child(4) { animation-delay: 0.6s; }
+        @keyframes rjWaveIn {
+            0% { opacity: 0; transform: translateY(60px) scale(0.9); filter: blur(12px); }
+            60% { filter: blur(0); }
+            100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
-        @keyframes rjFadeUp {
-            0% { opacity: 0; transform: translateY(40px); filter: blur(10px); }
-            100% { opacity: 1; transform: translateY(0); filter: blur(0); }
-        }
-        .rj-slide.active { opacity: 1 !important; }
-        .rj-slide.active .rj-slide-inner { animation: rjTitleIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) both; }
-        .rj-slide.active .rj-slide-inner > * { animation: rjFadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) both; }
-        .rj-slide.active .rj-slide-inner > *:nth-child(1) { animation-delay: 0.1s; }
-        .rj-slide.active .rj-slide-inner > *:nth-child(2) { animation-delay: 0.25s; }
-        .rj-slide.active .rj-slide-inner > *:nth-child(3) { animation-delay: 0.4s; }
-        .rj-slide.active .rj-slide-inner > *:nth-child(4) { animation-delay: 0.55s; }
+        .rj-bg.active { opacity: 1 !important; }
     </style>
 
     <script>
@@ -144,10 +113,28 @@
         var dots = hero.querySelectorAll('.rj-dot');
         var progressBar = hero.querySelector('.rj-progress');
         var counter = hero.querySelector('.rj-counter');
+        var waveOverlay = document.getElementById('rjWaveOverlay');
         var total = textSlides.length;
-        var current = 0;
+        var current = -1;
+        var transitioning = false;
 
-        function updateSlide(idx) {
+        function triggerWave(direction) {
+            if (!waveOverlay) return;
+            var wave = document.createElement('div');
+            wave.style.cssText = 'position:absolute;inset:0;background:linear-gradient(90deg, transparent, rgba(99,102,241,0.15), transparent);transform:translateX(-100%);';
+            waveOverlay.appendChild(wave);
+
+            requestAnimationFrame(function() {
+                wave.style.transition = 'transform 1s cubic-bezier(0.4, 0, 0.2, 1)';
+                wave.style.transform = 'translateX(100%)';
+            });
+
+            setTimeout(function() {
+                if (wave.parentNode) wave.parentNode.removeChild(wave);
+            }, 1100);
+        }
+
+        function updateSlide(idx, direction) {
             if (idx === current) return;
 
             bgSlides.forEach(function(el, i) {
@@ -167,32 +154,34 @@
                 }
             });
             if (counter) counter.textContent = String(idx + 1).padStart(2, '0');
+
+            if (current !== -1) triggerWave(direction);
             current = idx;
         }
 
-        textSlides[0].classList.add('active');
+        updateSlide(0, 1);
 
         var ticking = false;
         window.addEventListener('scroll', function() {
             if (!ticking) {
                 window.requestAnimationFrame(function() {
                     var rect = hero.getBoundingClientRect();
-                    var heroTop = rect.top;
                     var heroHeight = hero.offsetHeight;
                     var windowH = window.innerHeight;
                     var scrollable = heroHeight - windowH;
-                    var scrolled = Math.max(0, -heroTop);
+                    var scrolled = Math.max(0, -rect.top);
                     var progress = Math.max(0, Math.min(1, scrolled / scrollable));
 
                     if (progressBar) progressBar.style.width = (progress * 100) + '%';
 
-                    var idx = Math.min(total - 1, Math.floor(progress * total));
-                    updateSlide(idx);
+                    var rawIdx = progress * total;
+                    var idx = Math.min(total - 1, Math.floor(rawIdx));
+                    var direction = idx > current ? 1 : -1;
+                    updateSlide(idx, direction);
 
                     bgImages.forEach(function(img, i) {
                         var offset = (progress * 100) - (i * (100 / total));
-                        var translate = offset * -0.5;
-                        img.style.transform = 'scale(1.1) translateY(' + translate + 'px)';
+                        img.style.transform = 'scale(1.15) translateY(' + (offset * -0.4) + 'px)';
                     });
 
                     ticking = false;
@@ -228,7 +217,7 @@
 
             function initParticles() {
                 particles = [];
-                var count = Math.min(140, Math.floor(w * h / 12000));
+                var count = Math.min(80, Math.floor(w * h / 20000));
                 for (var i = 0; i < count; i++) {
                     particles.push({
                         x: Math.random() * w,
@@ -245,8 +234,7 @@
             }
 
             function draw() {
-                ctx.fillStyle = 'rgba(5,3,15,0.15)';
-                ctx.fillRect(0, 0, w, h);
+                ctx.clearRect(0, 0, w, h);
                 time += 0.005;
 
                 for (var i = 0; i < particles.length; i++) {
@@ -289,10 +277,7 @@
                             ctx.beginPath();
                             ctx.moveTo(particles[i].x, particles[i].y);
                             ctx.lineTo(particles[j].x, particles[j].y);
-                            var grad = ctx.createLinearGradient(particles[i].x, particles[i].y, particles[j].x, particles[j].y);
-                            grad.addColorStop(0, 'hsla(' + particles[i].hue + ', 85%, 70%, ' + alpha + ')');
-                            grad.addColorStop(1, 'hsla(' + particles[j].hue + ', 85%, 70%, ' + alpha + ')');
-                            ctx.strokeStyle = grad;
+                            ctx.strokeStyle = 'hsla(250, 85%, 70%, ' + alpha + ')';
                             ctx.lineWidth = 0.6;
                             ctx.stroke();
                         }
