@@ -6,24 +6,21 @@
 @endphp
 
 @if($count)
-<section class="relative bg-white overflow-hidden py-16 md:py-24">
-    <div class="absolute top-0 left-1/4 w-[400px] h-[400px] bg-indigo-100/40 rounded-full blur-[120px] pointer-events-none"></div>
-    <div class="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-pink-100/30 rounded-full blur-[120px] pointer-events-none"></div>
+<section class="q-widget py-16 md:py-24">
+    <div class="q-widget-grid"></div>
+    <div class="q-widget-orb-a"></div>
+    <div class="q-widget-orb-b"></div>
 
-    <div class="relative max-w-6xl mx-auto px-6 lg:px-12">
+    <div class="q-widget-inner">
 
         @if($title || $subtitle)
-            <div class="max-w-3xl mx-auto text-center mb-14 md:mb-16">
+            <div class="q-widget-head q-widget-head-center">
                 @if($title)
-                    <h2 class="text-2xl md:text-4xl lg:text-5xl font-black leading-[1.1] tracking-tight text-gray-900 mb-4">
-                        {{ $title }}
-                    </h2>
+                    <h2 class="q-widget-title">{{ $title }}</h2>
                 @endif
 
                 @if($subtitle)
-                    <p class="text-sm md:text-base text-gray-500 leading-relaxed max-w-2xl mx-auto font-light">
-                        {{ $subtitle }}
-                    </p>
+                    <p class="q-widget-subtitle mx-auto">{{ $subtitle }}</p>
                 @endif
             </div>
         @endif
@@ -34,16 +31,16 @@
                 <div class="rj-feature group relative text-center">
 
                     <div class="relative inline-flex items-center justify-center mb-5">
-                        <div class="rj-feature-ring absolute inset-0 rounded-full border border-indigo-100 group-hover:border-indigo-300 transition-colors duration-500"></div>
-                        <div class="rj-feature-ring-2 absolute inset-1 rounded-full border border-transparent group-hover:border-pink-200/60 transition-colors duration-700"></div>
+                        <div class="rj-feature-ring absolute inset-0 rounded-full border border-white/[0.06] group-hover:border-indigo-500/40 transition-colors duration-500"></div>
+                        <div class="rj-feature-ring-2 absolute inset-1 rounded-full border border-transparent group-hover:border-pink-500/30 transition-colors duration-700"></div>
 
-                        <div class="relative w-12 h-12 rounded-full bg-gradient-to-br from-indigo-50 to-pink-50 flex items-center justify-center text-indigo-600 transition-transform duration-500 group-hover:scale-110">
-                            <i class="fa-solid {{ $item['icon'] ?? 'fa-check' }} text-base transition-colors duration-300 group-hover:text-pink-600"></i>
+                        <div class="relative w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500/10 to-pink-500/10 flex items-center justify-center text-indigo-300 transition-transform duration-500 group-hover:scale-110">
+                            <i class="fa-solid {{ $item['icon'] ?? 'fa-check' }} text-base transition-colors duration-300 group-hover:text-pink-300"></i>
                         </div>
                     </div>
 
                     @if(!empty($item['title']))
-                        <h3 class="text-base font-bold text-gray-900 tracking-tight mb-2 leading-snug">
+                        <h3 class="text-base font-bold text-white tracking-tight mb-2 leading-snug">
                             {{ $item['title'] }}
                         </h3>
                     @endif
