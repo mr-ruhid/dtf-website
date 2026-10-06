@@ -24,6 +24,27 @@
             return [$v->id => (float) $v->price_adjustment];
         });
     });
+
+    $dbOptions = $product->options->map(function($opt) {
+        return [
+            'id' => $opt->id,
+            'name' => $opt->name,
+            'type' => $opt->type,
+            'price_addon' => $opt->price_addon,
+            'is_required' => (bool) $opt->is_required,
+            'sort_order' => $opt->sort_order,
+            'status' => (bool) $opt->status,
+            'values' => $opt->values->map(function($v) {
+                return [
+                    'id' => $v->id,
+                    'value' => $v->value,
+                    'price_addon' => $v->price_addon,
+                    'sort_order' => $v->sort_order,
+                    'status' => (bool) $v->status,
+                ];
+            })->values(),
+        ];
+    })->values();
 @endphp
 
 @section('content')
@@ -207,6 +228,145 @@
                                         class="w-9 h-9 flex items-center justify-center rounded hover:bg-red-50 text-red-500 transition">
                                     <i class="fa-solid fa-trash text-xs"></i>
                                 </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold text-gray-800 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-sliders text-indigo-500"></i> Product Options
+                            </h3>
+                            <p class="text-xs text-gray-500 mt-1">Select dropdowns, text inputs, or measurements — with optional price add-ons</p>
+                        </div>
+                        <button type="button" @click="addOption"
+                                class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium px-3 py-1.5 rounded-lg transition">
+                            <i class="fa-solid fa-plus text-[10px] mr-1"></i> Add Option
+                        </button>
+                    </div>
+
+                    <div x-show="options.length === 0" class="bg-gray-50 rounded-lg p-6 text-center">
+                        <i class="fa-solid fa-cube text-2xl text-gray-300 mb-2"></i>
+                        <p class="text-xs text-gray-500">No options yet</p>
+                        <p class="text-[10px] text-gray-400 mt-0.5">Examples: Length, Width, Custom Size, Finish</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <template x-for="(option, optIndex) in options" :key="optIndex">
+                            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                <div class="bg-gray-50 px-4 py-3 border-b border-gray-100 flex items-center gap-3">
+                                    <span class="w-6 h-6 rounded-md bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center" x-text="optIndex + 1"></span>
+                                    <span class="text-sm font-medium text-gray-700 flex-1" x-text="option.name || 'Untitled Option'"></span>
+
+                                    <label class="flex items-center gap-1.5 text-[11px] text-gray-600 cursor-pointer">
+                                        <input type="checkbox" :name="`options[${optIndex}][status]`" value="1" x-model="option.status"
+                                               class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5">
+                                        Active
+                                    </label>
+
+                                    <button type="button" @click="removeOption(optIndex)"
+                                            class="w-7 h-7 flex items-center justify-center rounded hover:bg-red-50 text-red-500 transition" title="Remove option">
+                                        <i class="fa-solid fa-trash text-[10px]"></i>
+                                    </button>
+                                </div>
+
+                                <div class="p-4 space-y-4">
+                                    <input type="hidden" :name="`options[${optIndex}][id]`" :value="option.id || ''">
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-[11px] font-medium text-gray-600 mb-1">Option Name <span class="text-red-500">*</span></label>
+                                            <input type="text" :name="`options[${optIndex}][name]`" x-model="option.name" maxlength="150"
+                                                   placeholder="e.g. Length"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-[11px] font-medium text-gray-600 mb-1">Type</label>
+                                            <select :name="`options[${optIndex}][type]`" x-model="option.type"
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                                <option value="select">Dropdown (Select)</option>
+                                                <option value="text">Text Input</option>
+                                                <option value="number">Number Input</option>
+                                                <option value="measurement">Measurement (W × H)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <div>
+                                            <label class="block text-[11px] font-medium text-gray-600 mb-1">Price Add-on ($)</label>
+                                            <div class="relative">
+                                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
+                                                <input type="number" :name="`options[${optIndex}][price_addon]`" x-model="option.price_addon" step="0.01" min="0"
+                                                       class="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-[11px] font-medium text-gray-600 mb-1">Sort Order</label>
+                                            <input type="number" :name="`options[${optIndex}][sort_order]`" x-model="option.sort_order" min="0"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                        </div>
+
+                                        <div class="flex items-end pb-1">
+                                            <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                                <input type="checkbox" :name="`options[${optIndex}][is_required]`" value="1" x-model="option.is_required"
+                                                       class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                                Required
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div x-show="option.type === 'select'" class="border-t border-gray-100 pt-3">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <label class="text-[11px] font-medium text-gray-600">Dropdown Values</label>
+                                            <button type="button" @click="addOptionValue(optIndex)"
+                                                    class="text-[10px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium px-2 py-1 rounded transition">
+                                                <i class="fa-solid fa-plus text-[9px] mr-0.5"></i> Add Value
+                                            </button>
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <template x-for="(val, valIndex) in option.values" :key="valIndex">
+                                                <div class="flex items-center gap-2">
+                                                    <input type="hidden" :name="`options[${optIndex}][values][${valIndex}][id]`" :value="val.id || ''">
+
+                                                    <input type="text" :name="`options[${optIndex}][values][${valIndex}][value]`" x-model="val.value" maxlength="100"
+                                                           placeholder="e.g. 12 in"
+                                                           class="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+
+                                                    <div class="relative w-28">
+                                                        <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 text-[10px]">+$</span>
+                                                        <input type="number" :name="`options[${optIndex}][values][${valIndex}][price_addon]`" x-model="val.price_addon" step="0.01" min="0"
+                                                               class="w-full pl-8 pr-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                                    </div>
+
+                                                    <input type="number" :name="`options[${optIndex}][values][${valIndex}][sort_order]`" x-model="val.sort_order" min="0"
+                                                           class="w-16 px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                           placeholder="Sort">
+
+                                                    <label class="flex items-center gap-1 text-[10px] text-gray-600 cursor-pointer">
+                                                        <input type="checkbox" :name="`options[${optIndex}][values][${valIndex}][status]`" value="1" x-model="val.status"
+                                                               class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5">
+                                                        On
+                                                    </label>
+
+                                                    <button type="button" @click="option.values.splice(valIndex, 1)"
+                                                            class="w-7 h-7 flex items-center justify-center rounded hover:bg-red-50 text-red-500 transition">
+                                                        <i class="fa-solid fa-xmark text-xs"></i>
+                                                    </button>
+                                                </div>
+                                            </template>
+
+                                            <div x-show="option.values.length === 0" class="text-[11px] text-gray-400 py-2 text-center bg-gray-50 rounded">
+                                                No values yet — click "Add Value"
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </template>
                     </div>
@@ -536,16 +696,6 @@
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-3">
-                    <h3 class="font-semibold text-gray-700 text-sm flex items-center gap-2">
-                        <i class="fa-solid fa-cube text-indigo-500 text-xs"></i> Product Options
-                    </h3>
-                    <p class="text-xs text-gray-500">Product-specific selections like Length, Custom Size (W×H)</p>
-                    <div class="bg-gray-50 rounded-lg p-4 text-center">
-                        <p class="text-xs text-gray-400">Options available in next step</p>
-                    </div>
-                </div>
-
             </div>
 
         </div>
@@ -559,6 +709,7 @@
 const dbTiers = @json($dbTiers);
 const dbAttributeValues = @json($dbAttributeValues);
 const defaultPrices = @json($defaultPrices);
+const dbOptions = @json($dbOptions);
 
 function productForm() {
     return {
@@ -568,6 +719,7 @@ function productForm() {
         printType: '{{ $product->print_type }}',
         tiers: [],
         selectedAttributeValues: {},
+        options: [],
 
         init() {
             const oldTiers = @json(old('tiers'));
@@ -616,6 +768,44 @@ function productForm() {
                     };
                 });
             }
+
+            const oldOptions = @json(old('options'));
+
+            if (oldOptions && oldOptions.length) {
+                this.options = oldOptions.map(o => ({
+                    id: o.id || null,
+                    name: o.name || '',
+                    type: o.type || 'select',
+                    price_addon: o.price_addon || 0,
+                    is_required: !!o.is_required,
+                    sort_order: o.sort_order || 0,
+                    status: o.status !== undefined ? !!o.status : true,
+                    values: (o.values || []).map(v => ({
+                        id: v.id || null,
+                        value: v.value || '',
+                        price_addon: v.price_addon || 0,
+                        sort_order: v.sort_order || 0,
+                        status: v.status !== undefined ? !!v.status : true,
+                    }))
+                }));
+            } else if (dbOptions.length) {
+                this.options = dbOptions.map(o => ({
+                    id: o.id,
+                    name: o.name,
+                    type: o.type,
+                    price_addon: o.price_addon,
+                    is_required: o.is_required,
+                    sort_order: o.sort_order,
+                    status: o.status,
+                    values: (o.values || []).map(v => ({
+                        id: v.id,
+                        value: v.value,
+                        price_addon: v.price_addon,
+                        sort_order: v.sort_order,
+                        status: v.status,
+                    }))
+                }));
+            }
         },
 
         generateSlug() {
@@ -632,6 +822,35 @@ function productForm() {
             if (last && last.max_qty) nextMin = parseInt(last.max_qty) + 1;
             else if (last && last.min_qty) nextMin = parseInt(last.min_qty) + 11;
             this.tiers.push({min_qty: nextMin, max_qty: '', price: ''});
+        },
+
+        addOption() {
+            this.options.push({
+                id: null,
+                name: '',
+                type: 'select',
+                price_addon: 0,
+                is_required: false,
+                sort_order: this.options.length,
+                status: true,
+                values: [],
+            });
+        },
+
+        removeOption(index) {
+            if (!confirm('Remove this option and all its values?')) return;
+            this.options.splice(index, 1);
+        },
+
+        addOptionValue(optIndex) {
+            if (!this.options[optIndex].values) this.options[optIndex].values = [];
+            this.options[optIndex].values.push({
+                id: null,
+                value: '',
+                price_addon: 0,
+                sort_order: this.options[optIndex].values.length,
+                status: true,
+            });
         },
 
         toggleAttributeValue(attrId, valueId, valueName, defaultPrice) {
