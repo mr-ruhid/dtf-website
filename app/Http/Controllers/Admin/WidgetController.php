@@ -88,6 +88,30 @@ class WidgetController extends Controller
             }
         }
 
+        if ($widget->key === 'build_or_upload') {
+            foreach (['build_card', 'upload_card'] as $cardKey) {
+                if (!isset($data[$cardKey]) || !is_array($data[$cardKey])) {
+                    continue;
+                }
+
+                $oldImage = $existing[$cardKey]['image'] ?? null;
+
+                if ($request->hasFile("{$cardKey}.image_file")) {
+                    if ($oldImage && !str_starts_with($oldImage, 'http')) {
+                        Storage::disk('public')->delete($oldImage);
+                    }
+                    $data[$cardKey]['image'] = $request->file("{$cardKey}.image_file")->store($folder, 'public');
+                } elseif (!empty($data[$cardKey]['image'])) {
+                    $data[$cardKey]['image'] = $data[$cardKey]['image'];
+                } else {
+                    $data[$cardKey]['image'] = $oldImage ?? '';
+                }
+
+                unset($data[$cardKey]['image_file']);
+                unset($data[$cardKey]['image_preview']);
+            }
+        }
+
         return $data;
     }
 
@@ -112,6 +136,33 @@ class WidgetController extends Controller
                 'items.*.link_url' => ['nullable', 'string', 'max:255'],
                 'items.*.image' => ['nullable', 'string', 'max:500'],
                 'items.*.image_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            ]),
+
+            'build_or_upload' => $request->validate([
+                'eyebrow' => ['nullable', 'string', 'max:100'],
+                'title' => ['nullable', 'string', 'max:200'],
+                'subtitle' => ['nullable', 'string', 'max:500'],
+                'build_card' => ['nullable', 'array'],
+                'build_card.badge' => ['nullable', 'string', 'max:30'],
+                'build_card.title' => ['nullable', 'string', 'max:100'],
+                'build_card.description' => ['nullable', 'string', 'max:500'],
+                'build_card.button_text' => ['nullable', 'string', 'max:50'],
+                'build_card.button_url' => ['nullable', 'string', 'max:255'],
+                'build_card.image' => ['nullable', 'string', 'max:500'],
+                'build_card.image_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+                'upload_card' => ['nullable', 'array'],
+                'upload_card.badge' => ['nullable', 'string', 'max:30'],
+                'upload_card.title' => ['nullable', 'string', 'max:100'],
+                'upload_card.description' => ['nullable', 'string', 'max:500'],
+                'upload_card.button_text' => ['nullable', 'string', 'max:50'],
+                'upload_card.button_url' => ['nullable', 'string', 'max:255'],
+                'upload_card.image' => ['nullable', 'string', 'max:500'],
+                'upload_card.image_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+                'info_card' => ['nullable', 'array'],
+                'info_card.badge' => ['nullable', 'string', 'max:30'],
+                'info_card.number' => ['nullable', 'string', 'max:10'],
+                'info_card.title' => ['nullable', 'string', 'max:100'],
+                'info_card.description' => ['nullable', 'string', 'max:500'],
             ]),
 
             'features' => $request->validate([
