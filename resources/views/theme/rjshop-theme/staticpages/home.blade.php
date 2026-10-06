@@ -7,7 +7,7 @@
 @section('content')
 
 @foreach($widgets as $widget)
-    @includeIf('theme.rjshop-theme.widgets.' . $widget->key, ['widget' => $widget])
+    @includeIf('theme.rjshop-theme.widgets.' . str_replace('_', '-', $widget->key), ['widget' => $widget])
 @endforeach
 
 @endsection
