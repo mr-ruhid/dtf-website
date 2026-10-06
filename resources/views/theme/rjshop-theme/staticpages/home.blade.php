@@ -6,28 +6,8 @@
 
 @section('content')
 
-<section id="hero-section">
-</section>
-
-<section id="features-section">
-</section>
-
-<section id="featured-products-section">
-</section>
-
-<section id="categories-section">
-</section>
-
-<section id="slider-mid-section">
-</section>
-
-<section id="blog-preview-section">
-</section>
-
-<section id="faq-preview-section">
-</section>
-
-<section id="cta-section">
-</section>
+@foreach($widgets as $widget)
+    @includeIf('theme.rjshop-theme.widgets.' . $widget->key, ['widget' => $widget])
+@endforeach
 
 @endsection
