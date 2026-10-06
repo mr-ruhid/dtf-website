@@ -13,12 +13,7 @@ class BlogController extends Controller
             ->orderByDesc('id')
             ->paginate(9);
 
-        $featured = Post::where('status', 1)
-            ->where('is_featured', 1)
-            ->orderByDesc('published_at')
-            ->first();
-
-        return view('theme.rjshop-theme.blog.index', compact('posts', 'featured'));
+        return view('theme.rjshop-theme.blog.index', compact('posts'));
     }
 
     public function show(string $slug)
