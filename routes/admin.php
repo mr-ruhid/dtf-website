@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\SliderController;
 use App\Http\Controllers\Admin\SupportController;
 use App\Http\Controllers\Admin\TwoFactorController;
 use App\Http\Controllers\Admin\UpdateController;
+use App\Http\Controllers\Admin\WidgetController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
@@ -52,6 +53,12 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
         Route::put('profile/two-factor', [ProfileController::class, 'toggleTwoFactor'])->name('profile.two-factor');
+
+        Route::get('widgets', [WidgetController::class, 'index'])->name('widgets.index');
+        Route::get('widgets/{widget}/edit', [WidgetController::class, 'edit'])->name('widgets.edit');
+        Route::put('widgets/{widget}', [WidgetController::class, 'update'])->name('widgets.update');
+        Route::put('widgets/{widget}/toggle', [WidgetController::class, 'toggle'])->name('widgets.toggle');
+        Route::post('widgets/reorder', [WidgetController::class, 'reorder'])->name('widgets.reorder');
 
         Route::resource('sliders', SliderController::class)->except(['show']);
         Route::post('sliders/{slider}/items', [SliderController::class, 'storeItem'])->name('sliders.items.store');
