@@ -67,4 +67,33 @@ class PageController extends Controller
     {
         return view('theme.rjshop-theme.staticpages.design');
     }
+
+    public function terms()
+    {
+        return $this->simple('terms');
+    }
+
+    public function privacy()
+    {
+        return $this->simple('privacy');
+    }
+
+    public function shipping()
+    {
+        return $this->simple('shipping');
+    }
+
+    public function returnPolicy()
+    {
+        return $this->simple('return');
+    }
+
+    protected function simple(string $key)
+    {
+        $page = Page::findByKey($key);
+
+        abort_if(!$page, 404);
+
+        return view('theme.rjshop-theme.staticpages.simple', compact('page'));
+    }
 }
