@@ -4,7 +4,7 @@
 
 @section('content')
 
-<div x-data="{ slug: '{{ $model->slug }}' }">
+<div x-data="{ slug: '{{ $model->slug }}', displayType: '{{ old('display_type', $model->display_type ?? 'grid') }}' }">
 
     <div class="mb-6">
         <a href="{{ route('admin.models.index') }}" class="text-sm text-gray-500 hover:text-gray-700">
@@ -56,6 +56,71 @@
                         <input type="text" name="icon" value="{{ old('icon', $model->icon) }}"
                                placeholder="e.g. fa-print or fa-cube"
                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                            <i class="fa-solid fa-layer-group text-xs"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 text-sm">Display Type</h3>
+                            <p class="text-xs text-gray-400">How this model's page should render</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition"
+                               :class="displayType === 'grid' ? 'border-indigo-400 bg-indigo-50/40' : 'border-gray-200 hover:bg-gray-50'">
+                            <input type="radio" name="display_type" value="grid" x-model="displayType" class="mt-0.5 text-indigo-600 focus:ring-indigo-500">
+                            <div>
+                                <p class="text-sm font-medium text-gray-800">Grid</p>
+                                <p class="text-xs text-gray-500 mt-0.5">Shows categories and products in a grid layout. Default for most models.</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition"
+                               :class="displayType === 'single' ? 'border-indigo-400 bg-indigo-50/40' : 'border-gray-200 hover:bg-gray-50'">
+                            <input type="radio" name="display_type" value="single" x-model="displayType" class="mt-0.5 text-indigo-600 focus:ring-indigo-500">
+                            <div>
+                                <p class="text-sm font-medium text-gray-800">Single Product</p>
+                                <p class="text-xs text-gray-500 mt-0.5">Model links directly to one product page.</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition"
+                               :class="displayType === 'custom' ? 'border-indigo-400 bg-indigo-50/40' : 'border-gray-200 hover:bg-gray-50'">
+                            <input type="radio" name="display_type" value="custom" x-model="displayType" class="mt-0.5 text-indigo-600 focus:ring-indigo-500">
+                            <div>
+                                <p class="text-sm font-medium text-gray-800">Custom View</p>
+                                <p class="text-xs text-gray-500 mt-0.5">Uses a custom Blade template for a unique design.</p>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div x-show="displayType === 'single'" x-cloak x-collapse class="pt-2 border-t border-gray-100">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Select Product</label>
+                        <select name="single_product_id"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            <option value="">— Choose a product —</option>
+                            @foreach($products as $product)
+                                <option value="{{ $product->id }}" {{ old('single_product_id', $model->single_product_id) == $product->id ? 'selected' : '' }}>
+                                    {{ $product->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">The user will be redirected to this product page.</p>
+                    </div>
+
+                    <div x-show="displayType === 'custom'" x-cloak x-collapse class="pt-2 border-t border-gray-100">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Custom View Name</label>
+                        <input type="text" name="custom_view" value="{{ old('custom_view', $model->custom_view) }}"
+                               placeholder="e.g. gangsheet"
+                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">
+                            Blade file: <code class="bg-gray-100 px-1 rounded">resources/views/theme/rjshop-theme/models/{name}.blade.php</code>
+                        </p>
                     </div>
                 </div>
 
@@ -149,5 +214,7 @@
     </form>
 
 </div>
+
+<style>[x-cloak]{display:none!important;}</style>
 
 @endsection
