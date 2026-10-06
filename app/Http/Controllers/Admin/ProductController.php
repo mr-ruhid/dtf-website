@@ -77,6 +77,7 @@ class ProductController extends Controller
             $this->savePrices($product, $request);
             $this->saveAttributeValues($product, $request);
             $this->savePrintZones($product, $request);
+            $this->saveOptions($product, $request);
 
             DB::commit();
 
@@ -126,6 +127,7 @@ class ProductController extends Controller
             $this->savePrices($product, $request);
             $this->saveAttributeValues($product, $request);
             $this->savePrintZones($product, $request);
+            $this->saveOptions($product, $request);
 
             DB::commit();
 
@@ -201,6 +203,10 @@ class ProductController extends Controller
 
     protected function savePrices(Product $product, Request $request): void
     {
+        if (!$request->has('tiers')) {
+            return;
+        }
+
         $product->prices()->delete();
 
         $tiers = $request->input('tiers', []);
@@ -220,6 +226,10 @@ class ProductController extends Controller
 
     protected function saveAttributeValues(Product $product, Request $request): void
     {
+        if (!$request->has('attribute_values')) {
+            return;
+        }
+
         $product->attributeValues()->delete();
 
         $selected = $request->input('attribute_values', []);
@@ -267,8 +277,96 @@ class ProductController extends Controller
 
     protected function savePrintZones(Product $product, Request $request): void
     {
+        if (!$request->has('print_zones') && !$request->has('print_type')) {
+            return;
+        }
+
         $zones = $request->input('print_zones', []);
         $product->printZones()->sync($zones);
+    }
+
+    protected function saveOptions(Product $product, Request $request): void
+    {
+        if (!$request->has('options')) {
+            return;
+        }
+
+        $options = $request->input('options', []);
+
+        $existingIds = $product->options()->pluck('id')->toArray();
+        $keptIds = [];
+
+        foreach ($options as $optionData) {
+            if (empty($optionData['name'])) {
+                continue;
+            }
+
+            $optionId = $optionData['id'] ?? null;
+
+            if ($optionId && in_array((int) $optionId, $existingIds)) {
+                $option = $product->options()->find($optionId);
+                if ($option) {
+                    $option->update([
+                        'name' => $optionData['name'],
+                        'type' => $optionData['type'] ?? 'select',
+                        'price_addon' => (float) ($optionData['price_addon'] ?? 0),
+                        'is_required' => !empty($optionData['is_required']),
+                        'sort_order' => (int) ($optionData['sort_order'] ?? 0),
+                        'status' => !isset($optionData['status']) || !empty($optionData['status']),
+                    ]);
+                    $keptIds[] = $option->id;
+                }
+            } else {
+                $option = $product->options()->create([
+                    'name' => $optionData['name'],
+                    'type' => $optionData['type'] ?? 'select',
+                    'price_addon' => (float) ($optionData['price_addon'] ?? 0),
+                    'is_required' => !empty($optionData['is_required']),
+                    'sort_order' => (int) ($optionData['sort_order'] ?? 0),
+                    'status' => !isset($optionData['status']) || !empty($optionData['status']),
+                ]);
+                $keptIds[] = $option->id;
+            }
+
+            $valueIds = $option->values()->pluck('id')->toArray();
+            $keptValueIds = [];
+
+            foreach (($optionData['values'] ?? []) as $valueData) {
+                if (empty($valueData['value'])) {
+                    continue;
+                }
+
+                $valueId = $valueData['id'] ?? null;
+
+                if ($valueId && in_array((int) $valueId, $valueIds)) {
+                    $val = $option->values()->find($valueId);
+                    if ($val) {
+                        $val->update([
+                            'value' => $valueData['value'],
+                            'price_addon' => (float) ($valueData['price_addon'] ?? 0),
+                            'sort_order' => (int) ($valueData['sort_order'] ?? 0),
+                            'status' => !isset($valueData['status']) || !empty($valueData['status']),
+                        ]);
+                        $keptValueIds[] = $val->id;
+                    }
+                } else {
+                    $val = $option->values()->create([
+                        'value' => $valueData['value'],
+                        'price_addon' => (float) ($valueData['price_addon'] ?? 0),
+                        'sort_order' => (int) ($valueData['sort_order'] ?? 0),
+                        'status' => !isset($valueData['status']) || !empty($valueData['status']),
+                    ]);
+                    $keptValueIds[] = $val->id;
+                }
+            }
+
+            $option->values()->whereNotIn('id', $keptValueIds)->delete();
+        }
+
+        $product->options()->whereNotIn('id', $keptIds)->each(function ($opt) {
+            $opt->values()->delete();
+            $opt->delete();
+        });
     }
 
     protected function validateData(Request $request, ?int $ignoreId = null): array
@@ -297,6 +395,10 @@ class ProductController extends Controller
             'tiers' => ['nullable', 'array'],
             'attribute_values' => ['nullable', 'array'],
             'print_zones' => ['nullable', 'array'],
+            'options' => ['nullable', 'array'],
+            'options.*.name' => ['nullable', 'string', 'max:150'],
+            'options.*.type' => ['nullable', 'in:select,text,number,measurement'],
+            'options.*.values' => ['nullable', 'array'],
         ]);
     }
 }
