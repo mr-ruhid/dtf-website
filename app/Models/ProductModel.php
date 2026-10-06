@@ -17,6 +17,9 @@ class ProductModel extends Model
         'icon',
         'sort_order',
         'show_in_header',
+        'display_type',
+        'single_product_id',
+        'custom_view',
         'status',
         'meta_title',
         'meta_description',
@@ -27,6 +30,7 @@ class ProductModel extends Model
         'status' => 'boolean',
         'show_in_header' => 'boolean',
         'sort_order' => 'integer',
+        'single_product_id' => 'integer',
     ];
 
     protected static function booted(): void
@@ -85,6 +89,26 @@ class ProductModel extends Model
     public function products()
     {
         return $this->hasMany(Product::class, 'model_id');
+    }
+
+    public function singleProduct()
+    {
+        return $this->belongsTo(Product::class, 'single_product_id');
+    }
+
+    public function getIsGridAttribute(): bool
+    {
+        return $this->display_type === 'grid' || empty($this->display_type);
+    }
+
+    public function getIsSingleAttribute(): bool
+    {
+        return $this->display_type === 'single';
+    }
+
+    public function getIsCustomAttribute(): bool
+    {
+        return $this->display_type === 'custom';
     }
 
     public function scopeActive($query)
