@@ -2,11 +2,31 @@
     $siteName = \App\Models\Setting::get('site_name', 'RJ Shop');
     $siteLogo = \App\Models\Setting::get('site_logo');
     $siteLogoUrl = $siteLogo ? (str_starts_with($siteLogo, 'http') ? $siteLogo : asset('storage/' . $siteLogo)) : null;
-    $headerPages = \App\Models\Page::where('type', 'static')
-        ->where('status', 1)
-        ->whereNotIn('key', ['faq', 'terms', 'privacy', 'shipping', 'return'])
-        ->orderBy('sort_order')
-        ->get();
+
+    $headerMenu = \App\Models\Menu::bySlug('main-header');
+
+    if ($headerMenu && $headerMenu->activeItems->count()) {
+        $navItems = $headerMenu->activeItems;
+    } else {
+        $navItems = collect();
+        $navItems->push((object) [
+            'label' => 'Home',
+            'url' => '/',
+            'target' => '_self',
+            'icon' => null,
+            'children' => collect(),
+        ]);
+        foreach (\App\Models\Page::where('type', 'static')->where('status', 1)->whereNotIn('key', ['home', 'faq', 'terms', 'privacy', 'shipping', 'return'])->orderBy('sort_order')->get() as $p) {
+            $navItems->push((object) [
+                'label' => $p->title,
+                'url' => '/' . $p->slug,
+                'target' => '_self',
+                'icon' => null,
+                'children' => collect(),
+            ]);
+        }
+    }
+
     $announcementEnabled = \App\Models\Setting::get('announcement_enabled') == '1';
     $announcementText = \App\Models\Setting::get('announcement_text');
     $announcementLink = \App\Models\Setting::get('announcement_link');
@@ -58,24 +78,25 @@
             </a>
 
             <nav class="hidden md:flex items-center gap-2">
-                <a href="{{ url('/') }}"
-                   class="relative px-4 py-2 text-sm font-semibold {{ request()->is('/') ? 'text-white' : 'text-gray-300' }} hover:text-white transition">
-                    <span class="relative z-10">Home</span>
-                    @if(request()->is('/'))
-                        <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-gradient-to-r from-indigo-400 to-pink-400 rounded-full"></span>
-                    @endif
-                </a>
-
-                @foreach($headerPages as $page)
-                    @if($page->key !== 'home')
-                        <a href="{{ url($page->slug) }}"
-                           class="relative px-4 py-2 text-sm font-semibold {{ request()->is($page->slug) ? 'text-white' : 'text-gray-300' }} hover:text-white transition">
-                            <span class="relative z-10">{{ $page->title }}</span>
-                            @if(request()->is($page->slug))
-                                <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-gradient-to-r from-indigo-400 to-pink-400 rounded-full"></span>
+                @foreach($navItems as $item)
+                    @php
+                        $isActive = request()->is(ltrim($item->url, '/')) || ($item->url === '/' && request()->is('/'));
+                    @endphp
+                    <a href="{{ $item->url }}" target="{{ $item->target ?? '_self' }}"
+                       class="relative px-4 py-2 text-sm font-semibold {{ $isActive ? 'text-white' : 'text-gray-300' }} hover:text-white transition">
+                        <span class="relative z-10 inline-flex items-center gap-1.5">
+                            @if(!empty($item->icon))
+                                <i class="fa-solid {{ $item->icon }} text-xs"></i>
                             @endif
-                        </a>
-                    @endif
+                            {{ $item->label }}
+                            @if(isset($item->children) && $item->children->count())
+                                <i class="fa-solid fa-chevron-down text-[8px] opacity-60"></i>
+                            @endif
+                        </span>
+                        @if($isActive)
+                            <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-gradient-to-r from-indigo-400 to-pink-400 rounded-full"></span>
+                        @endif
+                    </a>
                 @endforeach
             </nav>
 
@@ -115,20 +136,12 @@
          class="md:hidden border-t border-indigo-500/20 bg-[#05030f]">
 
         <nav class="px-4 py-4 space-y-1">
-            <a href="{{ url('/') }}"
-               class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-white hover:bg-white/5 transition">
-                <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full"></span>
-                <span>Home</span>
-            </a>
-
-            @foreach($headerPages as $page)
-                @if($page->key !== 'home')
-                    <a href="{{ url($page->slug) }}"
-                       class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-white hover:bg-white/5 transition">
-                        <span class="w-1.5 h-1.5 bg-purple-400 rounded-full"></span>
-                        <span>{{ $page->title }}</span>
-                    </a>
-                @endif
+            @foreach($navItems as $item)
+                <a href="{{ $item->url }}" target="{{ $item->target ?? '_self' }}"
+                   class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-white hover:bg-white/5 transition">
+                    <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full"></span>
+                    <span>{{ $item->label }}</span>
+                </a>
             @endforeach
         </nav>
     </div>

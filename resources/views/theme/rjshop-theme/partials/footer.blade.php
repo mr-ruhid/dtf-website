@@ -16,7 +16,27 @@
         'tiktok_url' => 'fa-tiktok',
     ];
 
-    $footerPages = \App\Models\Page::footer()->get();
+    $footerMenu = \App\Models\Menu::bySlug('main-footer');
+
+    if ($footerMenu && $footerMenu->activeItems->count()) {
+        $footerNavItems = $footerMenu->activeItems;
+    } else {
+        $footerNavItems = collect();
+        $footerNavItems->push((object) [
+            'label' => 'Home',
+            'url' => '/',
+            'target' => '_self',
+            'icon' => null,
+        ]);
+        foreach (\App\Models\Page::footer()->get() as $p) {
+            $footerNavItems->push((object) [
+                'label' => $p->title,
+                'url' => '/' . $p->slug,
+                'target' => '_self',
+                'icon' => null,
+            ]);
+        }
+    }
 @endphp
 
 <footer class="relative bg-[#05030f] text-gray-400 overflow-hidden mt-0">
@@ -75,17 +95,15 @@
             <div>
                 <div class="font-mono text-[10px] text-indigo-400 uppercase tracking-[0.3em] mb-5">// Navigation</div>
                 <ul class="space-y-3">
-                    <li>
-                        <a href="{{ url('/') }}" class="group inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition">
-                            <span class="w-1 h-1 bg-indigo-400 rounded-full opacity-0 group-hover:opacity-100 shadow-[0_0_8px_2px_rgba(99,102,241,0.9)] transition"></span>
-                            <span>Home</span>
-                        </a>
-                    </li>
-                    @foreach($footerPages as $page)
+                    @foreach($footerNavItems as $item)
                         <li>
-                            <a href="{{ url($page->slug) }}" class="group inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition">
+                            <a href="{{ $item->url }}" target="{{ $item->target ?? '_self' }}"
+                               class="group inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition">
                                 <span class="w-1 h-1 bg-purple-400 rounded-full opacity-0 group-hover:opacity-100 shadow-[0_0_8px_2px_rgba(168,85,247,0.9)] transition"></span>
-                                <span>{{ $page->title }}</span>
+                                @if(!empty($item->icon))
+                                    <i class="fa-solid {{ $item->icon }} text-xs"></i>
+                                @endif
+                                <span>{{ $item->label }}</span>
                             </a>
                         </li>
                     @endforeach
