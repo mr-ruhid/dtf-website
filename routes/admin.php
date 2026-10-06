@@ -227,6 +227,9 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
 
         Route::get('settings/cache', [SettingController::class, 'cache'])->name('settings.cache');
         Route::post('settings/cache/clear/{type}', [SettingController::class, 'clearCache'])->name('settings.cache.clear');
+
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::view('services', 'admin.services.index')->name('services.index');
     });
 
 });
