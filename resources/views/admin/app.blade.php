@@ -43,6 +43,61 @@
             box-shadow:0 4px 12px -2px rgba(99,102,241,0.5);
         }
         .glow-line{height:1px;background:linear-gradient(90deg,transparent,#6366f1 50%,transparent);opacity:.4;}
+
+        .nav-services{
+            position:relative;
+            background: linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(236,72,153,0.06) 100%);
+            border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 12px;
+            margin-top: 6px;
+            transition: all .3s cubic-bezier(.4,0,.2,1);
+        }
+        .nav-services:hover{
+            background: linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(236,72,153,0.12) 100%);
+            border-color: rgba(245,158,11,0.4);
+            box-shadow: 0 0 20px -4px rgba(245,158,11,0.35);
+        }
+        .nav-services.active{
+            background: linear-gradient(135deg, rgba(245,158,11,0.18) 0%, rgba(236,72,153,0.15) 100%);
+            border-color: rgba(245,158,11,0.5);
+            box-shadow: 0 0 24px -4px rgba(245,158,11,0.4);
+        }
+        .nav-services .icon-box{
+            background: linear-gradient(135deg,#f59e0b,#ec4899);
+            color:#fff;
+            box-shadow: 0 4px 12px -2px rgba(245,158,11,0.5);
+        }
+        .nav-services.active .icon-box,
+        .nav-services:hover .icon-box{
+            background: linear-gradient(135deg,#fbbf24,#f472b6);
+            transform: scale(1.05);
+        }
+        .nav-services::after{
+            content:'';
+            position:absolute;
+            top:8px;right:8px;
+            width:6px;height:6px;
+            border-radius:50%;
+            background:#fbbf24;
+            box-shadow:0 0 8px 2px rgba(251,191,36,0.8);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot{
+            0%,100%{opacity:.6;transform:scale(1);}
+            50%{opacity:1;transform:scale(1.2);}
+        }
+        .nav-services .badge-extra{
+            font-family: ui-monospace, monospace;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #fbbf24;
+            background: rgba(251,191,36,0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(251,191,36,0.3);
+        }
     </style>
     @stack('styles')
 </head>
@@ -187,6 +242,20 @@
                    class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings*') ? 'active' : '' }}">
                     <div class="icon-box"><i class="fa-solid fa-sliders"></i></div>
                     <span x-show="sidebarOpen" class="text-[13px] font-medium">Settings</span>
+                </a>
+
+                <div x-show="sidebarOpen" class="flex items-center gap-2 px-3 mt-5 mb-2">
+                    <span class="text-[9px] uppercase tracking-[0.15em] text-amber-500 font-bold">Extra</span>
+                    <div class="flex-1" style="height:1px;background:linear-gradient(90deg,rgba(245,158,11,0.5),transparent);"></div>
+                </div>
+
+                <a href="{{ route('admin.services.index') }}"
+                   class="nav-services nav-item flex items-center gap-3 px-3 py-2.5 {{ request()->routeIs('admin.services*') ? 'active' : '' }}">
+                    <div class="icon-box"><i class="fa-solid fa-rocket"></i></div>
+                    <div x-show="sidebarOpen" class="flex-1 flex items-center justify-between min-w-0">
+                        <span class="text-[13px] font-semibold text-amber-100">Services</span>
+                        <span class="badge-extra">New</span>
+                    </div>
                 </a>
 
             </nav>
@@ -365,6 +434,18 @@
             <a href="{{ route('admin.settings.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings*') ? 'active' : '' }}">
                 <div class="icon-box"><i class="fa-solid fa-sliders"></i></div>
                 <span class="text-[13px] font-medium">Settings</span>
+            </a>
+
+            <div class="flex items-center gap-2 px-3 mt-5 mb-2">
+                <span class="text-[9px] uppercase tracking-[0.15em] text-amber-500 font-bold">Extra</span>
+                <div class="flex-1" style="height:1px;background:linear-gradient(90deg,rgba(245,158,11,0.5),transparent);"></div>
+            </div>
+            <a href="{{ route('admin.services.index') }}" class="nav-services nav-item flex items-center gap-3 px-3 py-2.5 {{ request()->routeIs('admin.services*') ? 'active' : '' }}">
+                <div class="icon-box"><i class="fa-solid fa-rocket"></i></div>
+                <div class="flex-1 flex items-center justify-between min-w-0">
+                    <span class="text-[13px] font-semibold text-amber-100">Services</span>
+                    <span class="badge-extra">New</span>
+                </div>
             </a>
         </nav>
 
