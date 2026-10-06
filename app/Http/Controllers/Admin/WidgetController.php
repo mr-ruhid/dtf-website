@@ -17,7 +17,15 @@ class WidgetController extends Controller
 
     public function edit(Widget $widget)
     {
-        return view('admin.widget.edit', compact('widget'));
+        $view = 'admin.widget.edit-' . str_replace('_', '-', $widget->key);
+
+        if (!view()->exists($view)) {
+            return redirect()
+                ->route('admin.widgets.index')
+                ->withErrors(['error' => 'Edit page for "' . $widget->key . '" is not yet available.']);
+        }
+
+        return view($view, compact('widget'));
     }
 
     public function update(Request $request, Widget $widget)
@@ -60,17 +68,19 @@ class WidgetController extends Controller
             ]),
 
             'steps' => $request->validate([
+                'eyebrow' => ['nullable', 'string', 'max:100'],
                 'title' => ['nullable', 'string', 'max:200'],
                 'subtitle' => ['nullable', 'string', 'max:500'],
-                'link_text' => ['nullable', 'string', 'max:50'],
-                'link_url' => ['nullable', 'string', 'max:255'],
                 'button_text' => ['nullable', 'string', 'max:50'],
                 'button_url' => ['nullable', 'string', 'max:255'],
-                'items' => ['nullable', 'array'],
+                'items' => ['nullable', 'array', 'min:4', 'max:5'],
                 'items.*.number' => ['nullable', 'string', 'max:10'],
                 'items.*.title' => ['nullable', 'string', 'max:100'],
                 'items.*.description' => ['nullable', 'string', 'max:500'],
+                'items.*.link_text' => ['nullable', 'string', 'max:50'],
+                'items.*.link_url' => ['nullable', 'string', 'max:255'],
                 'items.*.image' => ['nullable', 'string', 'max:500'],
+                'items.*.image_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             ]),
 
             'features' => $request->validate([
