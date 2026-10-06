@@ -4,6 +4,7 @@
     $siteLogoUrl = $siteLogo ? (str_starts_with($siteLogo, 'http') ? $siteLogo : asset('storage/' . $siteLogo)) : null;
     $headerPages = \App\Models\Page::where('type', 'static')
         ->where('status', 1)
+        ->whereNotIn('key', ['faq', 'terms', 'privacy', 'shipping', 'return'])
         ->orderBy('sort_order')
         ->get();
     $announcementEnabled = \App\Models\Setting::get('announcement_enabled') == '1';
