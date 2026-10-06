@@ -32,13 +32,25 @@
     $announcementLink = \App\Models\Setting::get('announcement_link');
 @endphp
 
-<header x-data="{ mobileOpen: false, scrolled: false }"
-        @scroll.window="scrolled = window.scrollY > 20"
+<header x-data="{
+            mobileOpen: false,
+            scrolled: false,
+            hideSub: false,
+            updateSub() {
+                const hero = document.getElementById('rjHero');
+                if (!hero) { this.hideSub = false; return; }
+                const rect = hero.getBoundingClientRect();
+                this.hideSub = rect.bottom < 100;
+            }
+        }"
+        @scroll.window="scrolled = window.scrollY > 20; updateSub()"
+        x-init="updateSub()"
         :class="scrolled ? 'bg-[#05030f]/95 backdrop-blur-xl shadow-[0_4px_30px_rgba(99,102,241,0.15)]' : 'bg-[#05030f]'"
         class="sticky top-0 z-50 transition-all duration-300 border-b border-indigo-500/20">
 
     @if($announcementEnabled && $announcementText)
-        <div class="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white text-xs md:text-sm">
+        <div class="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white text-xs md:text-sm transition-all duration-300"
+             :class="hideSub ? 'max-h-0 opacity-0' : 'max-h-20 opacity-100'">
             <div class="absolute inset-0 opacity-30">
                 <div class="absolute top-0 left-0 w-full h-full bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent)] animate-shimmer"></div>
             </div>
@@ -55,23 +67,29 @@
         </div>
     @endif
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16 md:h-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-300"
+         :class="hideSub ? 'h-16 md:h-[68px]' : 'h-16 md:h-20'">
+        <div class="flex items-center justify-between h-full">
 
             <a href="{{ url('/') }}" class="group flex items-center gap-3 shrink-0">
                 @if($siteLogoUrl)
-                    <img src="{{ $siteLogoUrl }}" alt="{{ $siteName }}" class="h-10 w-auto brightness-0 invert">
-                    <span class="text-xl md:text-2xl font-black tracking-tight text-white">
+                    <img src="{{ $siteLogoUrl }}" alt="{{ $siteName }}"
+                         class="w-auto brightness-0 invert transition-all duration-300"
+                         :class="hideSub ? 'h-8' : 'h-10'">
+                    <span class="font-black tracking-tight text-white transition-all duration-300"
+                          :class="hideSub ? 'text-lg md:text-xl' : 'text-xl md:text-2xl'">
                         {{ $siteName }}
                     </span>
                 @else
-                    <div class="relative w-11 h-11 flex items-center justify-center">
+                    <div class="relative flex items-center justify-center transition-all duration-300"
+                         :class="hideSub ? 'w-9 h-9' : 'w-11 h-11'">
                         <div class="absolute inset-0 rounded-full border-2 border-indigo-400/60 animate-orbit-slow"></div>
                         <div class="absolute inset-1.5 rounded-full border border-purple-400/60 animate-orbit-reverse"></div>
                         <div class="absolute inset-3 rounded-full bg-gradient-to-br from-indigo-500 to-pink-500"></div>
                         <span class="relative z-10 text-white font-black text-xs">RJ</span>
                     </div>
-                    <span class="text-xl md:text-2xl font-black tracking-tight text-white">
+                    <span class="font-black tracking-tight text-white transition-all duration-300"
+                          :class="hideSub ? 'text-lg md:text-xl' : 'text-xl md:text-2xl'">
                         {{ $siteName }}<span class="text-indigo-400">.</span>
                     </span>
                 @endif
@@ -123,7 +141,10 @@
         </div>
     </div>
 
-    @include('theme.rjshop-theme.partials.header-mega-menu')
+    <div class="overflow-hidden transition-all duration-500 ease-out"
+         :style="hideSub ? 'max-height: 0; opacity: 0;' : 'max-height: 100px; opacity: 1;'">
+        @include('theme.rjshop-theme.partials.header-mega-menu')
+    </div>
 
     <div x-show="mobileOpen"
          x-cloak
