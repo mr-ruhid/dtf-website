@@ -111,7 +111,6 @@
                 <div class="rj-dim absolute inset-0 bg-[#05030f] pointer-events-none"></div>
             </article>
 
-            {{-- Atomic layer above backgrounds, below content --}}
             <div class="rj-atomic pointer-events-none" style="z-index: 22;">
                 <div class="rj-orb rj-orb-a"></div>
                 <div class="rj-orb rj-orb-b"></div>
@@ -188,8 +187,11 @@
         #rjHero .rj-btn:hover::after { left: 140%; }
         #rjHero .rj-btn:hover { filter: brightness(1.12); }
 
-        /* ---------- ATOMIC LAYER ---------- */
-        #rjHero .rj-atomic { position: absolute; inset: 0; overflow: hidden; }
+        #rjHero .rj-atomic {
+            position: absolute; inset: 0; overflow: hidden;
+            will-change: opacity;
+            transition: opacity 0.3s ease;
+        }
 
         #rjHero .rj-orb {
             position: absolute; border-radius: 9999px;
@@ -219,7 +221,6 @@
             opacity: 0.75;
         }
 
-        /* Central atomic orbit — sits above backgrounds, feels like a hub */
         #rjHero .rj-orbit-wrap {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
@@ -333,6 +334,7 @@
         var counter = root.querySelector('.rj-counter');
         var currentLabel = root.querySelector('.rj-current');
         var scrollHint = root.querySelector('.rj-scroll');
+        var atomic = root.querySelector('.rj-atomic');
 
         var target = 0;
         var current = 0;
@@ -447,6 +449,11 @@
             if (scrollHint) {
                 scrollHint.style.opacity = idx >= S - 1 ? '0' : '1';
             }
+
+            if (atomic) {
+                var fadeOut = clamp(pos - (S - 2), 0, 1);
+                atomic.style.opacity = (1 - fadeOut).toFixed(3);
+            }
         }
 
         function tick(now) {
@@ -500,7 +507,6 @@
         render(current);
         request();
 
-        /* ---------- Particle canvas (independent of scroll) ---------- */
         var canvas = document.getElementById('rjHeroCanvas');
         if (canvas) {
             var ctx = canvas.getContext('2d');
