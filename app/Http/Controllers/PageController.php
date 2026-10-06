@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Faq;
 use App\Models\Page;
 use App\Models\Setting;
-use App\Models\Widget;
 
 class PageController extends Controller
 {
@@ -14,7 +14,7 @@ class PageController extends Controller
 
         abort_if(!$page, 404);
 
-        $widgets = Widget::activeWidgets();
+        $widgets = \App\Models\Widget::activeWidgets();
 
         return view('theme.rjshop-theme.staticpages.home', compact('page', 'widgets'));
     }
@@ -48,5 +48,23 @@ class PageController extends Controller
         ]);
 
         return view('theme.rjshop-theme.staticpages.contact', compact('page', 'settings'));
+    }
+
+    public function faq()
+    {
+        $page = Page::findByKey('faq');
+
+        abort_if(!$page, 404);
+
+        $faqs = Faq::where('status', 1)
+            ->orderBy('sort_order')
+            ->get();
+
+        return view('theme.rjshop-theme.staticpages.faq', compact('page', 'faqs'));
+    }
+
+    public function design()
+    {
+        return view('theme.rjshop-theme.staticpages.design');
     }
 }
