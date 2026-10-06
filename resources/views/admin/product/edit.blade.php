@@ -2,6 +2,30 @@
 
 @section('title', 'Edit Product')
 
+@php
+    $dbTiers = $product->prices->map(function($p) {
+        return [
+            'min_qty' => $p->min_qty,
+            'max_qty' => $p->max_qty,
+            'price' => $p->price,
+        ];
+    })->values();
+
+    $dbAttributeValues = $product->attributeValues->map(function($pav) {
+        return [
+            'attribute_id' => $pav->attribute_id,
+            'value_id' => $pav->attribute_value_id,
+            'price_override' => $pav->price_override,
+        ];
+    })->values();
+
+    $defaultPrices = $attributes->flatMap(function($a) {
+        return $a->activeValues->mapWithKeys(function($v) {
+            return [$v->id => (float) $v->price_adjustment];
+        });
+    });
+@endphp
+
 @section('content')
 
 <div x-data="productForm()">
@@ -532,6 +556,10 @@
 
 <script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js"></script>
 <script>
+const dbTiers = @json($dbTiers);
+const dbAttributeValues = @json($dbAttributeValues);
+const defaultPrices = @json($defaultPrices);
+
 function productForm() {
     return {
         name: '{{ $product->name }}',
@@ -543,7 +571,6 @@ function productForm() {
 
         init() {
             const oldTiers = @json(old('tiers'));
-            const dbTiers = @json($product->prices->map(fn($p) => ['min_qty' => $p->min_qty, 'max_qty' => $p->max_qty, 'price' => $p->price])->values());
 
             if (oldTiers && oldTiers.length) {
                 this.tiers = oldTiers.map(t => ({min_qty: t.min_qty || '', max_qty: t.max_qty || '', price: t.price || ''}));
@@ -552,14 +579,6 @@ function productForm() {
             } else {
                 this.tiers = [{min_qty: 1, max_qty: 11, price: ''}];
             }
-
-            const dbAttributeValues = @json($product->attributeValues->map(fn($pav) => [
-                'attribute_id' => $pav->attribute_id,
-                'value_id' => $pav->attribute_value_id,
-                'price_override' => $pav->price_override,
-            ])->values());
-
-            const defaultPrices = @json($attributes->flatMap(fn($a) => $a->activeValues->mapWithKeys(fn($v) => [$v->id => (float) $v->price_adjustment])));
 
             const oldAttrValues = @json(old('attribute_values'));
 
