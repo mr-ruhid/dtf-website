@@ -19,4 +19,4 @@ Route::get('/return-policy', [PageController::class, 'returnPolicy'])->name('pag
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 
-Route::get('/model/{slug}', [ModelController::class, 'show'])->name('model.show');
+Route::get('/{slug}', [ModelController::class, 'show'])->name('model.show');
