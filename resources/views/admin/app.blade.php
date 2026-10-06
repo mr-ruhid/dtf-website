@@ -123,6 +123,12 @@
                     <span x-show="sidebarOpen" class="text-[13px] font-medium">Widgets</span>
                 </a>
 
+                <a href="{{ route('admin.menus.index') }}"
+                   class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.menus*') ? 'active' : '' }}">
+                    <div class="icon-box"><i class="fa-solid fa-bars-staggered"></i></div>
+                    <span x-show="sidebarOpen" class="text-[13px] font-medium">Menus</span>
+                </a>
+
                 <a href="{{ route('admin.gallery.index') }}"
                    class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.gallery*') ? 'active' : '' }}">
                     <div class="icon-box"><i class="fa-solid fa-images"></i></div>
@@ -312,6 +318,10 @@
             <a href="{{ route('admin.widgets.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.widgets*') ? 'active' : '' }}">
                 <div class="icon-box"><i class="fa-solid fa-puzzle-piece"></i></div>
                 <span class="text-[13px] font-medium">Widgets</span>
+            </a>
+            <a href="{{ route('admin.menus.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.menus*') ? 'active' : '' }}">
+                <div class="icon-box"><i class="fa-solid fa-bars-staggered"></i></div>
+                <span class="text-[13px] font-medium">Menus</span>
             </a>
             <a href="{{ route('admin.gallery.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.gallery*') ? 'active' : '' }}">
                 <div class="icon-box"><i class="fa-solid fa-images"></i></div>
