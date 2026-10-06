@@ -38,9 +38,14 @@
             hideSub: false,
             updateSub() {
                 const hero = document.getElementById('rjHero');
-                if (!hero) { this.hideSub = false; return; }
-                const rect = hero.getBoundingClientRect();
-                this.hideSub = rect.bottom < 100;
+                const y = window.scrollY;
+
+                if (hero) {
+                    const rect = hero.getBoundingClientRect();
+                    this.hideSub = rect.bottom < 100;
+                } else {
+                    this.hideSub = y > 100;
+                }
             }
         }"
         @scroll.window="scrolled = window.scrollY > 20; updateSub()"
