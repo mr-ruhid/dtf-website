@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Widget;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class WidgetController extends Controller
 {
@@ -32,6 +33,8 @@ class WidgetController extends Controller
     {
         $data = $this->validateByKey($request, $widget->key);
 
+        $data = $this->handleUploads($request, $widget, $data);
+
         $widget->update([
             'settings' => $data,
         ]);
@@ -58,6 +61,34 @@ class WidgetController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+
+    protected function handleUploads(Request $request, Widget $widget, array $data): array
+    {
+        $folder = 'widgets/' . $widget->key;
+        $existing = $widget->settings ?? [];
+
+        if ($widget->key === 'steps' && isset($data['items']) && is_array($data['items'])) {
+            foreach ($data['items'] as $index => $item) {
+                $oldImage = $existing['items'][$index]['image'] ?? null;
+
+                if ($request->hasFile("items.{$index}.image_file")) {
+                    if ($oldImage && !str_starts_with($oldImage, 'http')) {
+                        Storage::disk('public')->delete($oldImage);
+                    }
+                    $data['items'][$index]['image'] = $request->file("items.{$index}.image_file")->store($folder, 'public');
+                } elseif (!empty($item['image'])) {
+                    $data['items'][$index]['image'] = $item['image'];
+                } else {
+                    $data['items'][$index]['image'] = $oldImage;
+                }
+
+                unset($data['items'][$index]['image_file']);
+                unset($data['items'][$index]['image_preview']);
+            }
+        }
+
+        return $data;
     }
 
     protected function validateByKey(Request $request, string $key): array
