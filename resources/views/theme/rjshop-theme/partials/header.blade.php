@@ -14,7 +14,7 @@
 <header x-data="{ mobileOpen: false, scrolled: false }"
         @scroll.window="scrolled = window.scrollY > 20"
         :class="scrolled ? 'bg-[#05030f]/95 backdrop-blur-xl shadow-[0_4px_30px_rgba(99,102,241,0.15)]' : 'bg-[#05030f]'"
-        class="transition-all duration-300 border-b border-indigo-500/20">
+        class="sticky top-0 z-50 transition-all duration-300 border-b border-indigo-500/20">
 
     @if($announcementEnabled && $announcementText)
         <div class="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white text-xs md:text-sm">
