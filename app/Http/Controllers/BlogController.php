@@ -13,7 +13,7 @@ class BlogController extends Controller
             ->orderByDesc('id')
             ->paginate(9);
 
-        return view('theme.rjshop-theme.blog.index', compact('posts'));
+        return view('theme.rjshop-theme.staticpages.blog', compact('posts'));
     }
 
     public function show(string $slug)
@@ -28,6 +28,6 @@ class BlogController extends Controller
             ->limit(3)
             ->get();
 
-        return view('theme.rjshop-theme.blog.show', compact('post', 'related'));
+        return view('theme.rjshop-theme.staticpages.blog-show', compact('post', 'related'));
     }
 }
