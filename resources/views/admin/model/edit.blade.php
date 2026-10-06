@@ -101,12 +101,19 @@
                 <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
                     <h3 class="font-semibold text-gray-700 text-sm">Publish</h3>
 
-                    <div>
+                    <div class="space-y-3">
                         <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
                             <input type="checkbox" name="status" value="1" {{ old('status', $model->status) ? 'checked' : '' }}
                                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                             Active
                         </label>
+
+                        <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                            <input type="checkbox" name="show_in_header" value="1" {{ old('show_in_header', $model->show_in_header) ? 'checked' : '' }}
+                                   class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            Show in Header
+                        </label>
+                        <p class="text-xs text-gray-500 pl-6">Display this model in the top category bar</p>
                     </div>
 
                     <div>
