@@ -53,6 +53,15 @@
     </div>
 @endif
 
+@php
+    $lockedWidgets = [
+        'hero' => ['label' => 'Managed via Sliders', 'url' => route('admin.sliders.index')],
+        'slider_mid' => ['label' => 'Managed via Sliders', 'url' => route('admin.sliders.index')],
+        'faq_preview' => ['label' => 'Managed via FAQs', 'url' => route('admin.faqs.index')],
+        'blog_preview' => ['label' => 'Managed via Blog', 'url' => route('admin.blog.index')],
+    ];
+@endphp
+
 <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
     <table class="w-full text-sm">
         <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
@@ -68,7 +77,7 @@
         <tbody id="widgetsList" class="divide-y divide-gray-100">
             @foreach ($widgets as $widget)
                 @php
-                    $locked = in_array($widget->key, ['hero', 'slider_mid']);
+                    $locked = $lockedWidgets[$widget->key] ?? null;
                 @endphp
                 <tr class="hover:bg-gray-50 transition" data-id="{{ $widget->id }}">
                     <td class="px-4 py-3 text-gray-300 cursor-grab drag-handle select-none">
@@ -76,14 +85,14 @@
                     </td>
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                                <i class="fa-solid fa-puzzle-piece text-xs"></i>
+                            <div class="w-8 h-8 rounded-lg {{ $locked ? 'bg-amber-50 text-amber-600' : 'bg-indigo-50 text-indigo-600' }} flex items-center justify-center shrink-0">
+                                <i class="fa-solid {{ $locked ? 'fa-lock' : 'fa-puzzle-piece' }} text-xs"></i>
                             </div>
                             <div>
                                 <p class="font-medium text-gray-800">{{ $widget->name }}</p>
                                 @if($locked)
                                     <p class="text-[10px] text-amber-600 font-medium mt-0.5">
-                                        <i class="fa-solid fa-lock text-[8px]"></i> Managed via Sliders
+                                        <i class="fa-solid fa-link text-[8px]"></i> {{ $locked['label'] }}
                                     </p>
                                 @endif
                             </div>
@@ -105,9 +114,12 @@
                     </td>
                     <td class="px-4 py-3 text-right">
                         @if($locked)
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 cursor-not-allowed" title="Edit this via Sliders module">
-                                <i class="fa-solid fa-lock text-[10px]"></i> Locked
-                            </span>
+                            <a href="{{ $locked['url'] }}"
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition"
+                               title="{{ $locked['label'] }}">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                                {{ $locked['label'] }}
+                            </a>
                         @else
                             <a href="{{ route('admin.widgets.edit', $widget) }}"
                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition">
