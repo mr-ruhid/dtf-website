@@ -23,12 +23,12 @@
             @endforeach
 
             <div class="rj-bg absolute inset-0" data-index="{{ $total }}" style="opacity: 0; transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);">
-                <img src="{{ $lastItem->image_url }}" alt="Design your own" class="rj-bg-img w-full h-full object-cover" data-index="{{ $total }}">
-                <div class="absolute inset-0 bg-[#05030f]/85"></div>
-                <div class="absolute inset-0 bg-gradient-to-b from-[#05030f]/90 via-[#05030f]/70 to-[#05030f]/90"></div>
+                <img src="{{ $lastItem->image_url }}" alt="Design your own" class="rj-bg-img w-full h-full object-cover" data-index="{{ $total }}" style="filter: blur(2px);">
+                <div class="absolute inset-0 bg-[#05030f]/70"></div>
+                <div class="absolute inset-0 bg-gradient-to-b from-[#05030f]/60 via-[#05030f]/40 to-[#05030f]/80"></div>
             </div>
 
-            <canvas id="rjHeroCanvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+            <canvas id="rjHeroCanvas" class="absolute inset-0 w-full h-full pointer-events-none" style="opacity: 0.5;"></canvas>
 
             @foreach($items as $index => $item)
                 <div class="rj-slide absolute inset-0 flex items-center" data-index="{{ $index }}" style="opacity: 0; visibility: hidden; transition: opacity 0.8s ease, visibility 0s linear 0.8s;">
@@ -70,25 +70,24 @@
             @endforeach
 
             <div class="rj-slide absolute inset-0 flex items-center justify-center" data-index="{{ $total }}" style="opacity: 0; visibility: hidden; transition: opacity 0.8s ease, visibility 0s linear 0.8s;">
-                <div class="max-w-5xl mx-auto px-6 text-center">
-                    <div class="rj-el inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10 mb-8" style="opacity: 0; transform: translateY(30px);">
+                <div class="max-w-4xl mx-auto px-6 text-center">
+                    <div class="rj-el inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10 mb-6" style="opacity: 0; transform: translateY(30px);">
                         <span class="w-1.5 h-1.5 bg-pink-400 rounded-full" style="box-shadow: 0 0 10px 3px rgba(244,114,182,0.9); animation: rjPulse 2s ease-in-out infinite;"></span>
-                        <span class="text-[11px] font-mono uppercase tracking-[0.25em] text-pink-300">// Create Your Own</span>
+                        <span class="text-[11px] font-mono uppercase tracking-[0.25em] text-pink-300">Create Your Own</span>
                     </div>
 
-                    <h2 class="rj-el text-5xl md:text-7xl lg:text-8xl font-black leading-[0.95] tracking-tight mb-6" style="opacity: 0; transform: translateY(30px);">
-                        <span class="block text-white">Design</span>
-                        <span class="block bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">your own</span>
-                        <span class="block text-white">gang sheet</span>
+                    <h2 class="rj-el text-4xl md:text-6xl lg:text-7xl font-black leading-[1] tracking-tight mb-5" style="opacity: 0; transform: translateY(30px);">
+                        <span class="text-white">Design your own </span>
+                        <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">gang sheet</span>
                     </h2>
 
-                    <p class="rj-el text-lg md:text-xl text-gray-400 leading-relaxed max-w-2xl mx-auto mb-10 font-light" style="opacity: 0; transform: translateY(30px);">
-                        Upload your artwork, arrange it on the canvas, and get instant pricing. No design skills required — just drag, drop, and print.
+                    <p class="rj-el text-base md:text-lg text-gray-300 leading-relaxed max-w-2xl mx-auto mb-8 font-light" style="opacity: 0; transform: translateY(30px);">
+                        Upload your artwork, arrange it on the canvas, and get instant pricing.
                     </p>
 
                     <div class="rj-el flex flex-wrap gap-4 justify-center" style="opacity: 0; transform: translateY(30px);">
                         <a href="{{ url('design') }}"
-                           class="group pointer-events-auto inline-flex items-center gap-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold px-10 py-5 rounded-full transition-all duration-300 hover:scale-105"
+                           class="group pointer-events-auto inline-flex items-center gap-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold px-8 py-4 rounded-full transition-all duration-300 hover:scale-105"
                            style="box-shadow: 0 0 40px rgba(168,85,247,0.5);">
                             <i class="fa-solid fa-wand-magic-sparkles group-hover:rotate-12 transition-transform"></i>
                             <span>Start Designing</span>
@@ -96,13 +95,13 @@
                         </a>
 
                         <a href="{{ url('contact-us') }}"
-                           class="pointer-events-auto inline-flex items-center gap-3 bg-white/5 backdrop-blur-md border border-white/15 text-white font-semibold px-8 py-5 rounded-full hover:bg-white/10 transition-all">
+                           class="pointer-events-auto inline-flex items-center gap-3 bg-white/5 backdrop-blur-md border border-white/15 text-white font-semibold px-7 py-4 rounded-full hover:bg-white/10 transition-all">
                             <i class="fa-solid fa-comments"></i>
                             <span>Need Help?</span>
                         </a>
                     </div>
 
-                    <div class="rj-el mt-14 flex flex-wrap items-center justify-center gap-8 font-mono text-[10px] text-gray-500 uppercase tracking-[0.25em]" style="opacity: 0; transform: translateY(30px);">
+                    <div class="rj-el mt-10 flex flex-wrap items-center justify-center gap-6 md:gap-8 font-mono text-[10px] text-gray-500 uppercase tracking-[0.2em]" style="opacity: 0; transform: translateY(30px);">
                         <span class="flex items-center gap-2">
                             <i class="fa-solid fa-bolt text-yellow-400"></i>
                             Instant pricing
@@ -254,7 +253,7 @@
 
             function initParticles() {
                 particles = [];
-                var count = Math.min(80, Math.floor(w * h / 20000));
+                var count = Math.min(60, Math.floor(w * h / 25000));
                 for (var i = 0; i < count; i++) {
                     particles.push({
                         x: Math.random() * w,
