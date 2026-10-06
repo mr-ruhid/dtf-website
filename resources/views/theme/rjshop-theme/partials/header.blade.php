@@ -2,7 +2,10 @@
     $siteName = \App\Models\Setting::get('site_name', 'RJ Shop');
     $siteLogo = \App\Models\Setting::get('site_logo');
     $siteLogoUrl = $siteLogo ? (str_starts_with($siteLogo, 'http') ? $siteLogo : asset('storage/' . $siteLogo)) : null;
-    $headerPages = \App\Models\Page::where('show_in_header', 1)->where('status', 1)->orderBy('sort_order')->get();
+    $headerPages = \App\Models\Page::where('type', 'static')
+        ->where('status', 1)
+        ->orderBy('sort_order')
+        ->get();
     $announcementEnabled = \App\Models\Setting::get('announcement_enabled') == '1';
     $announcementText = \App\Models\Setting::get('announcement_text');
     $announcementLink = \App\Models\Setting::get('announcement_link');
