@@ -4,9 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\Page;
 use App\Models\Setting;
+use App\Models\Widget;
 
 class PageController extends Controller
 {
+    public function home()
+    {
+        $page = Page::findByKey('home');
+
+        abort_if(!$page, 404);
+
+        $widgets = Widget::activeWidgets();
+
+        return view('theme.rjshop-theme.staticpages.home', compact('page', 'widgets'));
+    }
+
     public function about()
     {
         $page = Page::findByKey('about');
