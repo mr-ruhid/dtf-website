@@ -14,7 +14,7 @@
 <header x-data="{ mobileOpen: false, scrolled: false }"
         @scroll.window="scrolled = window.scrollY > 20"
         :class="scrolled ? 'bg-[#05030f]/95 backdrop-blur-xl shadow-[0_4px_30px_rgba(99,102,241,0.15)]' : 'bg-[#05030f]'"
-        class="sticky top-0 z-50 transition-all duration-300 border-b border-indigo-500/20">
+        class="transition-all duration-300 border-b border-indigo-500/20">
 
     @if($announcementEnabled && $announcementText)
         <div class="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white text-xs md:text-sm">
@@ -101,6 +101,8 @@
         </div>
     </div>
 
+    @include('theme.rjshop-theme.partials.header-mega-menu')
+
     <div x-show="mobileOpen"
          x-cloak
          x-transition:enter="transition ease-out duration-300"
@@ -130,3 +132,18 @@
         </nav>
     </div>
 </header>
+
+@push('styles')
+<style>
+@keyframes orbit-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes orbit-reverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+.animate-orbit-slow { animation: orbit-slow 20s linear infinite; }
+.animate-orbit-reverse { animation: orbit-reverse 14s linear infinite; }
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+.animate-shimmer { animation: shimmer 3s ease-in-out infinite; }
+</style>
+@endpush
