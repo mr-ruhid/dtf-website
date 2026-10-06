@@ -12,71 +12,73 @@
 @endphp
 
 @if($faqs->count())
-<section class="relative bg-[#f8f7f4] overflow-hidden py-16 md:py-24">
-    <div class="absolute top-0 left-1/4 w-[400px] h-[400px] bg-indigo-100/30 rounded-full blur-[120px] pointer-events-none"></div>
-    <div class="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-pink-100/30 rounded-full blur-[120px] pointer-events-none"></div>
+<section class="q-widget py-16 md:py-24">
+    <div class="q-widget-grid"></div>
+    <div class="q-widget-orb-a"></div>
+    <div class="q-widget-orb-b"></div>
 
-    <div class="relative max-w-3xl mx-auto px-6">
+    <div class="q-widget-inner">
 
-        <div class="text-center mb-12">
-            @if($title)
-                <h2 class="text-2xl md:text-4xl lg:text-[2.5rem] font-black leading-[1.15] tracking-tight text-gray-900 mb-3">
-                    {{ $title }}
-                </h2>
+        <div class="max-w-3xl mx-auto">
+
+            @if($title || $subtitle)
+                <div class="q-widget-head q-widget-head-center">
+                    @if($title)
+                        <h2 class="q-widget-title">{{ $title }}</h2>
+                    @endif
+
+                    @if($subtitle)
+                        <p class="q-widget-subtitle mx-auto">{{ $subtitle }}</p>
+                    @endif
+                </div>
             @endif
 
-            @if($subtitle)
-                <p class="text-sm md:text-base text-gray-500 leading-relaxed max-w-xl mx-auto font-light">
-                    {{ $subtitle }}
-                </p>
-            @endif
-        </div>
+            <div class="space-y-3" x-data="{ open: null }">
+                @foreach($faqs as $index => $faq)
+                    <div class="rj-faq bg-white/[0.015] border border-white/[0.07] rounded-xl overflow-hidden transition-all duration-300"
+                         :class="open === {{ $index }} ? 'bg-white/[0.03] border-indigo-500/30' : 'hover:border-white/[0.12]'">
 
-        <div class="space-y-3" x-data="{ open: null }">
-            @foreach($faqs as $index => $faq)
-                <div class="rj-faq bg-white border border-gray-200/70 rounded-xl overflow-hidden transition-all duration-300 hover:border-gray-300"
-                     :class="open === {{ $index }} ? 'shadow-[0_4px_24px_-8px_rgba(0,0,0,0.1)] border-gray-300' : ''">
+                        <button type="button"
+                                @click="open = open === {{ $index }} ? null : {{ $index }}"
+                                class="w-full text-left px-5 md:px-6 py-4 md:py-5 flex items-center gap-4 group">
 
-                    <button type="button"
-                            @click="open = open === {{ $index }} ? null : {{ $index }}"
-                            class="w-full text-left px-5 md:px-6 py-4 md:py-5 flex items-center gap-4 group">
+                            <span class="font-mono text-[10px] font-bold text-indigo-400/80 tracking-widest shrink-0 w-6">
+                                {{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}
+                            </span>
 
-                        <span class="font-mono text-[10px] font-bold text-indigo-400 tracking-widest shrink-0 w-6">
-                            {{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}
-                        </span>
+                            <span class="flex-1 text-[15px] md:text-base font-semibold text-white leading-snug pr-2">
+                                {{ $faq->question }}
+                            </span>
 
-                        <span class="flex-1 text-[15px] md:text-base font-semibold text-gray-900 leading-snug pr-2">
-                            {{ $faq->question }}
-                        </span>
+                            <span class="shrink-0 w-7 h-7 rounded-full bg-white/[0.04] group-hover:bg-indigo-500/15 flex items-center justify-center transition-colors">
+                                <i class="fa-solid fa-plus text-[10px] text-gray-400 group-hover:text-indigo-300 transition-all duration-300"
+                                   :class="open === {{ $index }} ? 'rotate-45 text-indigo-300' : ''"></i>
+                            </span>
+                        </button>
 
-                        <span class="shrink-0 w-7 h-7 rounded-full bg-gray-50 group-hover:bg-indigo-50 flex items-center justify-center transition-colors">
-                            <i class="fa-solid fa-plus text-[10px] text-gray-400 group-hover:text-indigo-600 transition-all duration-300"
-                               :class="open === {{ $index }} ? 'rotate-45 text-indigo-600' : ''"></i>
-                        </span>
-                    </button>
-
-                    <div x-show="open === {{ $index }}"
-                         x-collapse
-                         x-cloak>
-                        <div class="px-5 md:px-6 pb-5 md:pb-6 pt-0">
-                            <div class="pl-10 pr-4 text-[14px] leading-relaxed text-gray-600 rj-faq-answer">
-                                {!! nl2br(e(strip_tags($faq->answer, '<p><br><strong><em><a><ul><ol><li><h3><h4><blockquote>'))) !!}
+                        <div x-show="open === {{ $index }}"
+                             x-collapse
+                             x-cloak>
+                            <div class="px-5 md:px-6 pb-5 md:pb-6 pt-0">
+                                <div class="pl-10 pr-4 text-[14px] leading-relaxed text-gray-400 rj-faq-answer q-widget-content">
+                                    {!! nl2br(e(strip_tags($faq->answer, '<p><br><strong><em><a><ul><ol><li><h3><h4><blockquote>'))) !!}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            @endforeach
-        </div>
-
-        @if($buttonText && $buttonUrl)
-            <div class="mt-10 flex justify-center">
-                <a href="{{ $buttonUrl }}"
-                   class="group inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold px-6 py-3 rounded-lg transition-all duration-300">
-                    <span>{{ $buttonText }}</span>
-                    <i class="fa-solid fa-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
-                </a>
+                @endforeach
             </div>
-        @endif
+
+            @if($buttonText && $buttonUrl)
+                <div class="q-widget-actions">
+                    <a href="{{ $buttonUrl }}" class="q-widget-btn-outline">
+                        <span>{{ $buttonText }}</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            @endif
+
+        </div>
 
     </div>
 </section>
@@ -84,12 +86,5 @@
 <style>
     .rj-faq-answer p { margin-bottom: 0.75rem; }
     .rj-faq-answer p:last-child { margin-bottom: 0; }
-    .rj-faq-answer strong { color: #111827; font-weight: 600; }
-    .rj-faq-answer a { color: #4f46e5; text-decoration: underline; text-underline-offset: 2px; }
-    .rj-faq-answer ul,
-    .rj-faq-answer ol { padding-left: 1.25rem; margin-bottom: 0.75rem; }
-    .rj-faq-answer ul { list-style: disc; }
-    .rj-faq-answer ol { list-style: decimal; }
-    .rj-faq-answer li { margin-bottom: 0.25rem; }
 </style>
 @endif
