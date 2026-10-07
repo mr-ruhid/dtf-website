@@ -411,7 +411,7 @@
             <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-indigo-500/30">RJ</div>
                 <div class="leading-tight">
-                    <p class="text-white font-bold text-sm">RJ SHOP</p>
+                    <p class="text-white font-bold text-sm">RJSHOP AI</p>
                     <p class="text-[10px] text-indigo-400 font-medium tracking-widest uppercase">Admin Lite</p>
                 </div>
             </a>
