@@ -100,7 +100,7 @@
 
                     <div class="rj-dz-left-tip">
                         <i class="fa-solid fa-circle-info"></i>
-                        <span>Your design will be printed on this sheet size.</span>
+                        <span>Design will be printed on this sheet size.</span>
                     </div>
                 </div>
             </template>
@@ -120,11 +120,7 @@
             <div class="rj-dz-side-block">
                 <label class="rj-dz-label">Sheet Size</label>
                 <div class="rj-dz-select-wrap">
-                    <select class="rj-dz-select" x-model="zoneId" @change="changeZone()">
-                        <template x-for="z in zones" :key="z.id">
-                            <option :value="z.id" x-text="z.label"></option>
-                        </template>
-                    </select>
+                    <select class="rj-dz-select" x-ref="zoneSelect" x-model="zoneId" @change="changeZone()"></select>
                     <i class="fa-solid fa-chevron-down"></i>
                 </div>
                 <p class="rj-dz-hint" x-text="currentZone ? (currentZone.width_inch + ' × ' + currentZone.height_inch + ' in') : ''"></p>
@@ -161,7 +157,7 @@
                     :disabled="items.length === 0 || adding"
                     @click="addToCart()">
                 <i class="fa-solid" :class="adding ? 'fa-spinner fa-spin' : 'fa-cart-plus'"></i>
-                <span x-text="adding ? 'Adding...' : 'Add to Cart'"></span>
+                <span x-text="adding ? 'Adding...' : (items.length === 0 ? 'Upload to start' : 'Add to Cart')"></span>
             </button>
         </aside>
 
@@ -505,7 +501,18 @@
     }
 
     window.designStudio = function (config) {
-        var zones = (config.zones && config.zones.length) ? config.zones : FALLBACK_ZONES;
+        var incoming = (config.zones && config.zones.length) ? config.zones : FALLBACK_ZONES;
+        var zones = incoming.map(function (z) {
+            return {
+                id: z.id,
+                name: z.name || '',
+                slug: z.slug || '',
+                width_inch: Number(z.width_inch) || 12,
+                height_inch: Number(z.height_inch) || 12,
+                label: z.label || ((Number(z.width_inch) || 12) + ' × ' + (Number(z.height_inch) || 12) + ' in'),
+                price_addon: Number(z.price_addon) || 0
+            };
+        });
 
         return {
             zones: zones,
@@ -521,7 +528,27 @@
             canvas: null,
 
             init() {
-                this.$nextTick(() => this.setupCanvas());
+                this.$nextTick(() => {
+                    this.buildZoneOptions();
+                    this.setupCanvas();
+                });
+            },
+
+            buildZoneOptions() {
+                var s = this.$refs.zoneSelect;
+                if (!s) return;
+
+                s.innerHTML = this.zones.map(function (z) {
+                    var safe = String(z.label).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    return '<option value="' + z.id + '">' + safe + '</option>';
+                }).join('');
+
+                if (this.zoneId) {
+                    s.value = this.zoneId;
+                } else if (this.zones[0]) {
+                    this.zoneId = this.zones[0].id;
+                    s.value = this.zoneId;
+                }
             },
 
             get currentZone() {
@@ -761,13 +788,21 @@
 
                 try {
                     var store = window.Alpine && window.Alpine.store('cart');
-                    if (store) {
-                        await store.add(payload);
-                    } else {
+                    if (!store) {
                         this.toast('Cart not ready');
+                        this.adding = false;
+                        return;
+                    }
+
+                    var res = await store.add(payload);
+
+                    if (res && res.success) {
+                        this.toast('Added to cart ✓');
+                    } else {
+                        this.toast('Could not add to cart');
                     }
                 } catch (e) {
-                    this.toast('Could not add to cart');
+                    this.toast('Error: ' + (e.message || 'unknown'));
                 }
 
                 this.adding = false;
