@@ -143,6 +143,12 @@
                                             <i class="fa-solid fa-star text-xs"></i>
                                         </button>
                                     </form>
+                                    <form method="POST" action="{{ route('admin.products.duplicate', $product) }}">
+                                        @csrf
+                                        <button class="w-8 h-8 flex items-center justify-center rounded hover:bg-emerald-50 text-emerald-600 transition" title="Duplicate">
+                                            <i class="fa-solid fa-copy text-xs"></i>
+                                        </button>
+                                    </form>
                                     <a href="{{ route('admin.products.edit', $product) }}"
                                        class="w-8 h-8 flex items-center justify-center rounded hover:bg-indigo-50 text-indigo-600 transition">
                                         <i class="fa-solid fa-pen text-xs"></i>
