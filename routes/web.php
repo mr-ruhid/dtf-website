@@ -6,6 +6,9 @@ use App\Http\Controllers\ModelController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\DesignController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\ReceiptController;
+use App\Http\Controllers\TrackController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('page.home');
@@ -32,6 +35,19 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::put('/update/{key}', [CartController::class, 'update'])->name('update');
     Route::delete('/remove/{key}', [CartController::class, 'remove'])->name('remove');
     Route::post('/clear', [CartController::class, 'clear'])->name('clear');
+});
+
+Route::prefix('checkout')->name('checkout.')->group(function () {
+    Route::get('/', [CheckoutController::class, 'show'])->name('show');
+    Route::post('/', [CheckoutController::class, 'store'])->name('store');
+    Route::get('/success/{orderNumber}', [CheckoutController::class, 'success'])->name('success');
+    Route::post('/receipt/{orderNumber}', [ReceiptController::class, 'upload'])->name('receipt');
+});
+
+Route::prefix('track')->name('track.')->group(function () {
+    Route::get('/', [TrackController::class, 'form'])->name('form');
+    Route::post('/', [TrackController::class, 'lookup'])->name('lookup');
+    Route::get('/{token}', [TrackController::class, 'show'])->name('show');
 });
 
 Route::get('/{slug}', [ModelController::class, 'show'])->name('model.show');
