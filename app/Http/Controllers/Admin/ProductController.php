@@ -139,6 +139,72 @@ class ProductController extends Controller
         }
     }
 
+    public function duplicate(Product $product)
+    {
+        DB::beginTransaction();
+
+        try {
+            $newProduct = $product->replicate();
+            $newProduct->name = $product->name . ' (Copy)';
+            $newProduct->slug = null;
+            $newProduct->sku = $product->sku ? $product->sku . '-COPY' : null;
+            $newProduct->status = false;
+            $newProduct->save();
+
+            foreach ($product->prices as $price) {
+                $newProduct->prices()->create([
+                    'min_qty' => $price->min_qty,
+                    'max_qty' => $price->max_qty,
+                    'price' => $price->price,
+                ]);
+            }
+
+            foreach ($product->attributeValues as $pav) {
+                $newProduct->attributeValues()->create([
+                    'attribute_id' => $pav->attribute_id,
+                    'attribute_value_id' => $pav->attribute_value_id,
+                    'price_override' => $pav->price_override,
+                    'product_image_id' => $pav->product_image_id,
+                    'image' => $pav->image,
+                    'status' => $pav->status,
+                ]);
+            }
+
+            foreach ($product->options as $option) {
+                $newOption = $newProduct->options()->create([
+                    'name' => $option->name,
+                    'type' => $option->type,
+                    'price_addon' => $option->price_addon,
+                    'is_required' => $option->is_required,
+                    'sort_order' => $option->sort_order,
+                    'status' => $option->status,
+                ]);
+
+                foreach ($option->values as $value) {
+                    $newOption->values()->create([
+                        'value' => $value->value,
+                        'price_addon' => $value->price_addon,
+                        'sort_order' => $value->sort_order,
+                        'status' => $value->status,
+                    ]);
+                }
+            }
+
+            $zoneIds = $product->printZones->pluck('id')->toArray();
+            if (!empty($zoneIds)) {
+                $newProduct->printZones()->sync($zoneIds);
+            }
+
+            DB::commit();
+
+            return redirect()->route('admin.products.edit', $newProduct)
+                ->with('status', 'Product duplicated. Review and activate when ready.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Failed to duplicate: ' . $e->getMessage()]);
+        }
+    }
+
     public function destroy(Product $product)
     {
         foreach ($product->images as $image) {
