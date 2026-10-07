@@ -5,13 +5,13 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ModelController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\DesignController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('page.home');
 Route::get('/about-us', [PageController::class, 'about'])->name('page.about');
 Route::get('/contact-us', [PageController::class, 'contact'])->name('page.contact');
 Route::get('/faq', [PageController::class, 'faq'])->name('page.faq');
-Route::get('/design', [PageController::class, 'design'])->name('page.design');
 
 Route::get('/terms-conditions', [PageController::class, 'terms'])->name('page.terms');
 Route::get('/privacy-policy', [PageController::class, 'privacy'])->name('page.privacy');
@@ -20,6 +20,9 @@ Route::get('/return-policy', [PageController::class, 'returnPolicy'])->name('pag
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
+
+Route::get('/design', [DesignController::class, 'index'])->name('design.index');
+Route::get('/design/{slug}', [DesignController::class, 'index'])->name('design.product');
 
 Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.show');
 
