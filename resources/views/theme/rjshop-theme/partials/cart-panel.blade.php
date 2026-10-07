@@ -90,23 +90,38 @@
                                        x-text="Object.entries(item.attributes).map(([k,v]) => k + ': ' + v).join(' · ')"></p>
                                 </template>
 
-                                <div class="flex items-center justify-between mt-auto pt-1">
+                                <div class="flex items-center justify-between mt-auto pt-1 gap-2">
                                     <div class="inline-flex items-center rounded-lg bg-white/[0.03] border border-white/10">
                                         <button type="button"
                                                 @click="$store.cart.update(item.key, item.qty - 1)"
-                                                class="w-7 h-7 text-gray-400 hover:text-white hover:bg-indigo-500/15 transition rounded-l-lg"
+                                                class="w-7 h-7 text-gray-400 hover:text-white hover:bg-indigo-500/15 transition rounded-l-lg shrink-0"
                                                 :disabled="item.qty <= 1">−</button>
-                                        <span class="w-8 text-center text-white text-xs font-mono font-bold" x-text="item.qty"></span>
+                                        <input type="number"
+                                               :value="item.qty"
+                                               min="1"
+                                               max="9999"
+                                               @change="$store.cart.update(item.key, $event.target.value)"
+                                               @keydown.enter="$event.target.blur()"
+                                               @focus="$event.target.select()"
+                                               class="h-7 text-center text-white text-xs font-mono font-bold bg-transparent border-0 outline-none focus:bg-indigo-500/10 transition shrink-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                               :style="'width: ' + (String(item.qty).length > 2 ? (String(item.qty).length * 9 + 10) + 'px' : '44px')">
                                         <button type="button"
                                                 @click="$store.cart.update(item.key, item.qty + 1)"
-                                                class="w-7 h-7 text-gray-400 hover:text-white hover:bg-indigo-500/15 transition rounded-r-lg">+</button>
+                                                class="w-7 h-7 text-gray-400 hover:text-white hover:bg-indigo-500/15 transition rounded-r-lg shrink-0">+</button>
                                     </div>
 
-                                    <div class="text-right">
+                                    <div class="text-right shrink-0">
                                         <p class="font-mono text-white text-sm font-bold">$<span x-text="Number(item.total).toFixed(2)"></span></p>
                                         <p class="font-mono text-gray-500 text-[10px]">$<span x-text="Number(item.unit_price).toFixed(2)"></span> ea</p>
                                     </div>
                                 </div>
+
+                                <template x-if="item.tier_label">
+                                    <div class="flex items-center gap-1.5 mt-0.5">
+                                        <span class="w-1 h-1 rounded-full bg-emerald-400"></span>
+                                        <span class="font-mono text-[9px] text-emerald-400 uppercase tracking-wider" x-text="item.tier_label"></span>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </template>
@@ -198,7 +213,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         async update(key, qty) {
-            qty = Math.max(1, Math.min(999, parseInt(qty) || 1));
+            qty = Math.max(1, Math.min(9999, parseInt(qty) || 1));
             try {
                 const r = await fetch('/cart/update/' + key, {
                     method: 'PUT',
