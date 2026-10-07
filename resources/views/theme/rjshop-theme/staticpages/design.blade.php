@@ -795,11 +795,42 @@
                 var z = this.currentZone;
                 if (!z || !this.canvas) return;
 
-                var w = Math.max(1, Math.round(Number(z.width_inch) * DPI));
-                var h = Math.max(1, Math.round(Number(z.height_inch) * DPI));
+                var newW = Math.max(1, Math.round(Number(z.width_inch) * DPI));
+                var newH = Math.max(1, Math.round(Number(z.height_inch) * DPI));
+                var oldW = this.canvas.getWidth();
+                var oldH = this.canvas.getHeight();
 
-                this.canvas.setWidth(w);
-                this.canvas.setHeight(h);
+                if (newW === oldW && newH === oldH) {
+                    this.fitStage();
+                    return;
+                }
+
+                var objects = this.canvas.getObjects();
+                var hasObjects = objects.length > 0;
+
+                var snapshots = objects.map(function (o) {
+                    return {
+                        obj: o,
+                        relX: oldW > 0 ? o.left / oldW : 0.5,
+                        relY: oldH > 0 ? o.top / oldH : 0.5
+                    };
+                });
+
+                this.canvas.setWidth(newW);
+                this.canvas.setHeight(newH);
+
+                if (hasObjects) {
+                    snapshots.forEach(function (s) {
+                        var newLeft = s.relX * newW;
+                        var newTop = s.relY * newH;
+                        s.obj.set({
+                            left: newLeft,
+                            top: newTop
+                        });
+                        s.obj.setCoords();
+                    });
+                }
+
                 this.canvas.renderAll();
                 this.fitStage();
             },
@@ -841,11 +872,6 @@
                 this.customH = null;
                 this.zoneId = Number(val);
                 this.applyZoneSize();
-
-                if (!this.canvas) return;
-                this.canvas.getObjects().slice().forEach(o => this.canvas.remove(o));
-                this.syncCount();
-                this.syncActive();
             },
 
             applyCustom() {
