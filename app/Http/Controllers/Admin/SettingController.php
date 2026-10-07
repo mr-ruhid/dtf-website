@@ -531,6 +531,37 @@ class SettingController extends Controller
         return back()->with('status', $message);
     }
 
+        public function designPricing()
+    {
+        $keys = [
+            'design_custom_enabled',
+            'design_custom_price_per_sq_inch',
+            'design_custom_min_price',
+            'design_custom_min_inch',
+            'design_custom_max_inch',
+        ];
+
+        $settings = Setting::getMany($keys);
+
+        return view('admin.settings.design-pricing', compact('settings'));
+    }
+
+    public function designPricingUpdate(Request $request)
+    {
+        $data = $request->validate([
+            'design_custom_price_per_sq_inch' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'design_custom_min_price' => ['nullable', 'numeric', 'min:0', 'max:10000'],
+            'design_custom_min_inch' => ['nullable', 'numeric', 'min:1', 'max:60'],
+            'design_custom_max_inch' => ['nullable', 'numeric', 'min:1', 'max:200'],
+        ]);
+
+        $data['design_custom_enabled'] = $request->boolean('design_custom_enabled') ? '1' : '0';
+
+        Setting::setMany($data);
+
+        return back()->with('status', 'Design pricing settings updated.');
+    }
+
     protected function getDatabaseVersion(): string
     {
         try {
