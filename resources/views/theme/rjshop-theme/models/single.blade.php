@@ -12,9 +12,35 @@
     $options = $product->options->where('status', 1);
     $prices = $product->prices;
     $basePrice = $product->sale_price ?: $product->base_price;
+    $isDesignable = $product->print_type === 'custom_size';
+
+    $defaultZone = $product->printZones->where('status', 1)->sortBy('sort_order')->first();
+    $defaultW = $defaultZone ? (float) ($defaultZone->max_width_inch ?: 12) : 12;
+    $defaultH = $defaultZone ? (float) ($defaultZone->max_height_inch ?: 12) : 12;
 @endphp
 
-<section class="rj-sp-hero">
+<section class="rj-sp-hero"
+         x-data="standardProduct({
+            productId: {{ $product->id }},
+            slug: '{{ $product->slug }}',
+            basePrice: {{ (float) $basePrice }},
+            requiresDesign: {{ $isDesignable ? 'true' : 'false' }},
+            defaultW: {{ $defaultW }},
+            defaultH: {{ $defaultH }},
+            options: {{ \Illuminate\Support\Js::from($options->map(function ($o) {
+                return [
+                    'id' => $o->id,
+                    'name' => $o->name,
+                    'type' => $o->type,
+                    'required' => (bool) $o->is_required,
+                    'values' => $o->values->where('status', 1)->map(fn($v) => [
+                        'id' => $v->id,
+                        'value' => $v->value,
+                        'price_addon' => (float) $v->price_addon,
+                    ])->values(),
+                ];
+            })->values()) }}
+         })">
     <div class="rj-sp-grid-bg"></div>
     <div class="rj-sp-orb rj-sp-orb-a"></div>
     <div class="rj-sp-orb rj-sp-orb-b"></div>
@@ -76,7 +102,7 @@
                 <h1 class="rj-sp-title">{{ $product->name }}</h1>
 
                 <div class="rj-sp-price-row">
-                    <span class="rj-sp-price">${{ number_format($basePrice, 2) }}</span>
+                    <span class="rj-sp-price">$<span x-text="finalPrice.toFixed(2)"></span></span>
                     @if($product->sale_price && $product->base_price > $product->sale_price)
                         <span class="rj-sp-price-old">${{ number_format($product->base_price, 2) }}</span>
                         <span class="rj-sp-save">Save ${{ number_format($product->base_price - $product->sale_price, 2) }}</span>
@@ -124,7 +150,7 @@
                 @endif
 
                 @if($options->count())
-                    <div class="rj-sp-options" x-data="{ selections: {} }">
+                    <div class="rj-sp-options">
                         @foreach($options as $option)
                             <div class="rj-sp-option">
                                 <label class="rj-sp-option-label">
@@ -137,7 +163,7 @@
                                 @if($option->type === 'select')
                                     <div class="rj-sp-select-wrap">
                                         <select class="rj-sp-select"
-                                                x-model="selections[{{ $option->id }}]">
+                                                @change="pickOption({{ $option->id }}, $event.target.value)">
                                             <option value="">— Select {{ $option->name }} —</option>
                                             @foreach($option->values->where('status', 1) as $value)
                                                 <option value="{{ $value->id }}">
@@ -153,16 +179,18 @@
                                 @elseif($option->type === 'text')
                                     <input type="text" class="rj-sp-input"
                                            placeholder="Enter {{ $option->name }}"
-                                           x-model="selections[{{ $option->id }}]">
+                                           @input="pickOptionText({{ $option->id }}, $event.target.value)">
                                 @elseif($option->type === 'number')
                                     <input type="number" class="rj-sp-input"
                                            placeholder="0"
-                                           x-model="selections[{{ $option->id }}]">
+                                           @input="pickOptionText({{ $option->id }}, $event.target.value)">
                                 @elseif($option->type === 'measurement')
                                     <div class="rj-sp-measure">
-                                        <input type="number" class="rj-sp-input" placeholder="Width">
+                                        <input type="number" class="rj-sp-input" placeholder="Width"
+                                               @input="pickOptionText({{ $option->id }}, 'W:' + $event.target.value)">
                                         <span class="rj-sp-measure-sep">×</span>
-                                        <input type="number" class="rj-sp-input" placeholder="Height">
+                                        <input type="number" class="rj-sp-input" placeholder="Height"
+                                               @input="pickOptionText({{ $option->id }}, 'H:' + $event.target.value)">
                                     </div>
                                 @endif
                             </div>
@@ -170,21 +198,70 @@
                     </div>
                 @endif
 
+                @if($isDesignable)
+                    <div class="rj-sp-qty-row">
+                        <label class="rj-sp-option-label">
+                            Select Size
+                            <span class="rj-sp-req">*</span>
+                        </label>
+                        <div class="rj-sp-measure-2">
+                            <input type="number" min="1" max="60" step="0.1"
+                                   class="rj-sp-input"
+                                   x-model.number="designW"
+                                   placeholder="Width">
+                            <span class="rj-sp-measure-sep">×</span>
+                            <input type="number" min="1" max="60" step="0.1"
+                                   class="rj-sp-input"
+                                   x-model.number="designH"
+                                   placeholder="Height">
+                            <span class="rj-sp-measure-unit">in</span>
+                        </div>
+                        <p class="rj-sp-measure-hint" x-text="designHint"></p>
+                    </div>
+                @endif
+
+                <div class="rj-sp-qty-row">
+                    <label class="rj-sp-option-label">Quantity</label>
+                    <div class="rj-sp-qty">
+                        <button type="button" @click="decQty()" class="rj-sp-qty-btn">−</button>
+                        <input type="number" x-model.number="qty" min="1" class="rj-sp-qty-input">
+                        <button type="button" @click="incQty()" class="rj-sp-qty-btn">+</button>
+                    </div>
+                </div>
+
                 <div class="rj-sp-actions">
-                    <a href="{{ url('design') }}" class="rj-sp-btn rj-sp-btn-primary">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        <span>Build your gang sheet</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </a>
+                    @if($isDesignable)
+                        <button type="button"
+                                @click="goToDesign()"
+                                class="rj-sp-btn rj-sp-btn-primary">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Build your gang sheet</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    @else
+                        <button type="button"
+                                @click="addToCart()"
+                                :disabled="adding"
+                                class="rj-sp-btn rj-sp-btn-primary">
+                            <i class="fa-solid" :class="adding ? 'fa-spinner fa-spin' : 'fa-bag-shopping'"></i>
+                            <span x-text="adding ? 'Adding...' : 'Add to Cart'"></span>
+                            <span class="rj-sp-btn-price">$<span x-text="totalPrice.toFixed(2)"></span></span>
+                        </button>
+                    @endif
+
                     <a href="{{ url('contact-us') }}" class="rj-sp-btn rj-sp-btn-outline">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                        <span>Upload a ready file</span>
+                        <i class="fa-solid fa-comments"></i>
+                        <span>Ask a question</span>
                     </a>
                 </div>
 
                 <div class="rj-sp-upload-hint">
                     <i class="fa-solid fa-circle-info"></i>
-                    <span>Already have a print-ready file? <a href="{{ url('contact-us') }}">Upload it instead →</a></span>
+                    @if($isDesignable)
+                        <span>Already have a print-ready file? <a href="{{ url('contact-us') }}">Upload it instead →</a></span>
+                    @else
+                        <span>Need help with this product? <a href="{{ url('contact-us') }}">Contact support →</a></span>
+                    @endif
                 </div>
 
             </div>
@@ -252,7 +329,7 @@
 
         <div class="rj-sp-related">
             @foreach($relatedProducts as $rel)
-                <a href="#" class="rj-sp-related-card">
+                <a href="{{ url('product/' . $rel->slug) }}" class="rj-sp-related-card">
                     <div class="rj-sp-related-img">
                         @if($rel->images->first())
                             <img src="{{ $rel->images->first()->url }}" alt="{{ $rel->name }}">
@@ -522,16 +599,67 @@
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 12px; font-size: 14px; color: #fff;
-        font-family: inherit; outline: none; transition: all 0.3s ease;
+        font-family: ui-monospace, monospace; outline: none; transition: all 0.3s ease;
+        -moz-appearance: textfield;
     }
-    .rj-sp-input::placeholder { color: #4b5563; }
+    .rj-sp-input::-webkit-outer-spin-button,
+    .rj-sp-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .rj-sp-input::placeholder { color: #4b5563; font-family: inherit; }
     .rj-sp-input:focus {
         border-color: rgba(99, 102, 241, 0.6);
         background: rgba(99, 102, 241, 0.05);
     }
 
     .rj-sp-measure { display: flex; align-items: center; gap: 0.5rem; }
+    .rj-sp-measure-2 {
+        display: flex; align-items: center; gap: 0.5rem;
+        position: relative;
+    }
+    .rj-sp-measure-2 .rj-sp-input {
+        flex: 1; text-align: center; padding-right: 2.5rem;
+    }
     .rj-sp-measure-sep { color: #6b7280; font-family: ui-monospace, monospace; }
+    .rj-sp-measure-unit {
+        position: absolute; right: 0.75rem; top: 50%;
+        transform: translateY(-50%);
+        color: #6b7280;
+        font-family: ui-monospace, monospace;
+        font-size: 11px;
+        pointer-events: none;
+    }
+    .rj-sp-measure-hint {
+        font-family: ui-monospace, monospace;
+        font-size: 10px;
+        color: #6b7280;
+        margin: 0.25rem 0 0;
+        letter-spacing: 0.1em;
+    }
+
+    .rj-sp-qty-row { display: flex; flex-direction: column; gap: 0.5rem; }
+    .rj-sp-qty {
+        display: inline-flex; align-items: center;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px; overflow: hidden;
+        align-self: flex-start;
+    }
+    .rj-sp-qty-btn {
+        width: 44px; height: 44px;
+        background: transparent; border: none; color: #d1d5db;
+        font-size: 18px; font-weight: 600; cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .rj-sp-qty-btn:hover { background: rgba(99, 102, 241, 0.15); color: #fff; }
+    .rj-sp-qty-input {
+        width: 60px; height: 44px; background: transparent;
+        border: none; border-left: 1px solid rgba(255, 255, 255, 0.08);
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        color: #fff; font-family: ui-monospace, monospace;
+        font-size: 15px; font-weight: 600; text-align: center;
+        outline: none; -moz-appearance: textfield;
+    }
+    .rj-sp-qty-input::-webkit-outer-spin-button,
+    .rj-sp-qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
     .rj-sp-actions { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem; }
 
@@ -551,8 +679,17 @@
         box-shadow: 0 0 40px rgba(192, 132, 252, 0.4);
         transform: translateY(-1px);
     }
+    .rj-sp-btn-primary:disabled { opacity: 0.7; cursor: wait; transform: none; }
     .rj-sp-btn-primary i:last-child { transition: transform 0.3s; }
     .rj-sp-btn-primary:hover i:last-child { transform: translateX(4px); }
+    .rj-sp-btn-price {
+        font-family: ui-monospace, monospace; font-size: 13px;
+        padding: 5px 12px;
+        background: linear-gradient(135deg, #6366f1, #a855f7);
+        color: #fff;
+        border-radius: 9999px;
+        font-weight: 700;
+    }
     .rj-sp-btn-outline {
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.12);
@@ -732,5 +869,160 @@
         margin-top: 2.5rem; display: flex; justify-content: center;
     }
 </style>
+
+<script>
+function standardProduct(config) {
+    return {
+        productId: config.productId,
+        slug: config.slug,
+        basePrice: config.basePrice,
+        requiresDesign: config.requiresDesign,
+        options: config.options || [],
+
+        selections: {},
+        qty: 1,
+        adding: false,
+
+        designW: config.defaultW || 12,
+        designH: config.defaultH || 12,
+
+        get designHint() {
+            if (!this.designW || !this.designH) return '';
+            if (this.designW < 1 || this.designH < 1) return 'Minimum 1 inch';
+            if (this.designW > 60 || this.designH > 60) return 'Maximum 60 inch';
+            return this.designW + ' × ' + this.designH + ' in sheet';
+        },
+
+        get optionsAddon() {
+            let total = 0;
+            this.options.forEach(opt => {
+                const sel = this.selections[opt.id];
+                if (!sel) return;
+                if (opt.type === 'select' && sel.value_id) {
+                    const v = opt.values.find(x => x.id === sel.value_id);
+                    if (v) total += parseFloat(v.price_addon || 0);
+                }
+            });
+            return total;
+        },
+
+        get finalPrice() {
+            return parseFloat(this.basePrice) + this.optionsAddon;
+        },
+
+        get totalPrice() {
+            return this.finalPrice * (this.qty || 1);
+        },
+
+        pickOption(optionId, valueId) {
+            if (!valueId) {
+                delete this.selections[optionId];
+                return;
+            }
+            const opt = this.options.find(o => o.id === optionId);
+            if (!opt) return;
+            const v = opt.values.find(x => x.id == valueId);
+            if (!v) return;
+
+            this.selections[optionId] = {
+                option_id: optionId,
+                option_name: opt.name,
+                value_id: v.id,
+                value: v.value,
+                price_addon: parseFloat(v.price_addon || 0),
+            };
+        },
+
+        pickOptionText(optionId, value) {
+            const opt = this.options.find(o => o.id === optionId);
+            if (!opt) return;
+
+            if (!value) {
+                delete this.selections[optionId];
+                return;
+            }
+
+            this.selections[optionId] = {
+                option_id: optionId,
+                option_name: opt.name,
+                value_id: null,
+                value: value,
+                price_addon: 0,
+            };
+        },
+
+        incQty() { this.qty = Math.min(999, (this.qty || 1) + 1); },
+        decQty() { this.qty = Math.max(1, (this.qty || 1) - 1); },
+
+        goToDesign() {
+            if (!this.designW || !this.designH) {
+                this.flash('Please enter width and height');
+                return;
+            }
+            if (this.designW < 1 || this.designH < 1) {
+                this.flash('Minimum size is 1 inch');
+                return;
+            }
+            if (this.designW > 60 || this.designH > 60) {
+                this.flash('Maximum size is 60 inch');
+                return;
+            }
+
+            const url = '/design/' + this.slug + '?w=' + this.designW + '&h=' + this.designH;
+            window.location.href = url;
+        },
+
+        async addToCart() {
+            if (this.adding) return;
+
+            for (const opt of this.options) {
+                if (opt.required && !this.selections[opt.id]) {
+                    this.flash('Please select: ' + opt.name);
+                    return;
+                }
+            }
+
+            this.adding = true;
+
+            const attributes = {};
+            const optionsPayload = [];
+
+            Object.values(this.selections).forEach(s => {
+                attributes[s.option_name] = s.value;
+                optionsPayload.push({
+                    option_name: s.option_name,
+                    option_value: s.value,
+                    price_addon: s.price_addon,
+                });
+            });
+
+            const payload = {
+                product_id: this.productId,
+                unit_price: this.finalPrice,
+                qty: this.qty,
+                attributes: attributes,
+                options: optionsPayload,
+                print_type: '{{ $product->print_type ?: "none" }}'
+            };
+
+            try {
+                await Alpine.store('cart').add(payload);
+            } catch (e) {
+                this.flash('Could not add to cart');
+            }
+
+            this.adding = false;
+        },
+
+        flash(msg) {
+            const el = document.createElement('div');
+            el.textContent = msg;
+            el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0a0715;color:#fff;padding:12px 24px;border-radius:9999px;border:1px solid rgba(99,102,241,0.4);font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.6);';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 2200);
+        }
+    }
+}
+</script>
 
 @endsection
