@@ -3,6 +3,10 @@
 @section('meta_title', 'Design Studio')
 @section('meta_description', 'Build your gang sheet')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('theme/rjshop-theme/css/design-studio.css') }}">
+@endpush
+
 @section('content')
 
 @php
@@ -24,7 +28,6 @@
             pricing: {{ \Illuminate\Support\Js::from($pricing) }}
          })">
 
-    {{-- ============ TOOLBAR ============ --}}
     <div class="rj-dz-toolbar">
         <div class="rj-dz-tb-group">
             <label class="rj-dz-tb-btn rj-dz-tb-primary" title="Upload images (or drag & drop / paste)">
@@ -122,7 +125,6 @@
 
     <div class="rj-dz-body">
 
-        {{-- ============ LEFT: PRODUCT ============ --}}
         <aside class="rj-dz-left">
             <div class="rj-dz-left-inner">
                 <div class="rj-dz-left-label">// Product</div>
@@ -165,7 +167,6 @@
             </div>
         </aside>
 
-        {{-- ============ STAGE ============ --}}
         <div class="rj-dz-stage-wrap"
              x-ref="wrap"
              @dragover.prevent="dragging = true"
@@ -181,7 +182,6 @@
             </div>
         </div>
 
-        {{-- ============ RIGHT SIDEBAR ============ --}}
         <aside class="rj-dz-sidebar">
             <div class="rj-dz-side-block">
                 <label class="rj-dz-label">Sheet Size</label>
@@ -209,7 +209,6 @@
                 </button>
             </div>
 
-            {{-- Selected image controls --}}
             <div class="rj-dz-side-block rj-dz-sel" x-show="single" x-cloak>
                 <label class="rj-dz-label">
                     Selected Image
@@ -300,399 +299,12 @@
     </div>
 </section>
 
-<style>
-    [x-cloak] { display: none !important; }
-
-    .rj-dz {
-        position: relative;
-        background: #05030f;
-        color: #fff;
-        display: flex;
-        flex-direction: column;
-        height: calc(100vh - 80px);
-        min-height: 640px;
-        overflow: hidden;
-    }
-    .rj-dz-toolbar {
-        display: flex; align-items: center; gap: 8px;
-        padding: 10px 16px;
-        background: #0a0715;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
-        flex-shrink: 0;
-        overflow-x: auto;
-    }
-    .rj-dz-tb-group { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
-    .rj-dz-tb-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.08); margin: 0 6px; flex-shrink: 0; }
-    .rj-dz-tb-spacer { flex: 1; min-width: 8px; }
-    .rj-dz-tb-btn {
-        display: inline-flex; align-items: center; gap: 8px;
-        padding: 8px 12px; border-radius: 8px;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.08);
-        color: #d1d5db; font-size: 12px; font-weight: 600;
-        cursor: pointer; transition: all .2s;
-        font-family: inherit; white-space: nowrap;
-    }
-    .rj-dz-tb-btn:hover:not(:disabled) {
-        background: rgba(99,102,241,0.12);
-        border-color: rgba(99,102,241,0.4);
-        color: #fff;
-    }
-    .rj-dz-tb-btn:disabled { opacity: .35; cursor: not-allowed; }
-    .rj-dz-tb-primary {
-        background: linear-gradient(135deg, #6366f1, #a855f7);
-        border-color: transparent; color: #fff;
-    }
-    .rj-dz-tb-primary:hover:not(:disabled) {
-        background: linear-gradient(135deg, #7c7ff5, #b966f9);
-        box-shadow: 0 0 24px rgba(99,102,241,0.5);
-        border-color: transparent;
-    }
-    .rj-dz-tb-danger:hover:not(:disabled) {
-        background: rgba(244,63,94,0.12);
-        border-color: rgba(244,63,94,0.4);
-        color: #fda4af;
-    }
-    .rj-dz-tb-zoom {
-        font-family: ui-monospace, monospace; font-size: 11px;
-        color: #9ca3af; min-width: 44px; text-align: center;
-    }
-    .rj-dz-tb-info {
-        display: inline-flex; align-items: center; gap: 8px;
-        font-family: ui-monospace, monospace; font-size: 11px;
-        color: #6b7280; text-transform: uppercase; letter-spacing: .15em;
-        flex-shrink: 0; margin-left: 12px;
-    }
-    .rj-dz-dot {
-        width: 6px; height: 6px; border-radius: 50%;
-        background: #34d399;
-        box-shadow: 0 0 8px 2px rgba(52,211,153,0.7);
-    }
-
-    .rj-dz-body {
-        flex: 1; display: flex; overflow: hidden; min-height: 0;
-    }
-
-    /* ---- left ---- */
-    .rj-dz-left {
-        width: 240px; flex-shrink: 0;
-        background: #0a0715;
-        border-right: 1px solid rgba(255,255,255,0.06);
-        padding: 20px 16px;
-        overflow-y: auto;
-    }
-    .rj-dz-left-inner {
-        position: sticky; top: 0;
-        display: flex; flex-direction: column; gap: 12px;
-    }
-    .rj-dz-left-label {
-        font-family: ui-monospace, monospace;
-        font-size: 9px; text-transform: uppercase;
-        letter-spacing: .25em; color: #f472b6;
-        padding-bottom: 8px;
-        border-bottom: 1px dashed rgba(244,114,182,0.2);
-    }
-    .rj-dz-left-mock-wrap { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
-    .rj-dz-left-mock {
-        position: relative; aspect-ratio: 1;
-        border-radius: 12px; overflow: hidden;
-        background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(236,72,153,0.06));
-        border: 1px solid rgba(255,255,255,0.08);
-    }
-    .rj-dz-left-img { width: 100%; height: 100%; object-fit: cover; }
-    .rj-dz-left-img-empty {
-        width: 100%; height: 100%;
-        display: flex; align-items: center; justify-content: center;
-        color: rgba(255,255,255,0.08); font-size: 2rem;
-    }
-    .rj-dz-left-overlay {
-        position: absolute; left: 8px; bottom: 8px;
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 4px 10px;
-        background: rgba(5,3,15,0.85);
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 9999px;
-        font-family: ui-monospace, monospace;
-        font-size: 9px; text-transform: uppercase;
-        letter-spacing: .12em; color: #fff;
-    }
-    .rj-dz-left-dot {
-        width: 6px; height: 6px; border-radius: 50%;
-        background: #6366f1; box-shadow: 0 0 6px 1px rgba(99,102,241,0.8);
-    }
-    .rj-dz-left-name { font-size: 13px; font-weight: 700; color: #fff; margin: 0; line-height: 1.3; }
-    .rj-dz-left-meta {
-        font-family: ui-monospace, monospace;
-        font-size: 10px; color: #9ca3af;
-        margin: 0; display: flex; gap: 6px; align-items: center; letter-spacing: .05em;
-    }
-    .rj-dz-left-sep { color: #4b5563; }
-    .rj-dz-left-tip {
-        display: flex; gap: 8px; padding: 10px;
-        background: rgba(99,102,241,0.06);
-        border: 1px solid rgba(99,102,241,0.15);
-        border-radius: 10px;
-        font-size: 11px; color: #a5b4fc; line-height: 1.5;
-    }
-    .rj-dz-left-tip i { color: #818cf8; font-size: 11px; margin-top: 2px; }
-
-    /* ---- stage (scrollable, so zoom never clips) ---- */
-    .rj-dz-stage-wrap {
-        flex: 1; position: relative;
-        display: flex;
-        padding: 24px; overflow: auto;
-        background:
-            radial-gradient(circle at 30% 40%, rgba(99,102,241,0.06), transparent 60%),
-            radial-gradient(circle at 70% 60%, rgba(236,72,153,0.05), transparent 60%),
-            #05030f;
-        transition: box-shadow .2s;
-    }
-    .rj-dz-stage-wrap.rj-dz-dragging { box-shadow: inset 0 0 0 2px rgba(99,102,241,0.7); }
-    .rj-dz-stage {
-        position: relative;
-        margin: auto;           /* centers when small, scrolls when large */
-        flex-shrink: 0;
-        border-radius: 8px;
-        box-shadow:
-            0 0 0 1px rgba(99,102,241,0.2),
-            0 30px 80px -20px rgba(0,0,0,0.8),
-            0 0 60px rgba(99,102,241,0.15);
-    }
-    .rj-dz-bg-white { background: #fff; }
-    .rj-dz-bg-checker {
-        background-color: #fff;
-        background-image:
-            linear-gradient(45deg, #d1d5db 25%, transparent 25%, transparent 75%, #d1d5db 75%),
-            linear-gradient(45deg, #d1d5db 25%, transparent 25%, transparent 75%, #d1d5db 75%);
-        background-size: 20px 20px;
-        background-position: 0 0, 10px 10px;
-    }
-    .rj-dz-stage .canvas-container {
-        border-radius: 8px;
-        overflow: hidden;
-        display: block !important;
-    }
-    .rj-dz-empty {
-        position: absolute; inset: 0;
-        display: flex; flex-direction: column;
-        align-items: center; justify-content: center;
-        gap: 12px; color: #6b7280; pointer-events: none; text-align: center;
-    }
-    .rj-dz-empty i { font-size: 42px; opacity: .35; }
-    .rj-dz-empty p { font-size: 13px; margin: 0; }
-
-    /* ---- right sidebar ---- */
-    .rj-dz-sidebar {
-        width: 300px; flex-shrink: 0;
-        background: #0a0715;
-        border-left: 1px solid rgba(255,255,255,0.06);
-        padding: 20px;
-        display: flex; flex-direction: column;
-        overflow-y: auto;
-    }
-    .rj-dz-side-block { margin-bottom: 20px; }
-    .rj-dz-side-spacer { flex: 1; }
-    .rj-dz-label {
-        display: flex; align-items: center; justify-content: space-between;
-        font-family: ui-monospace, monospace;
-        font-size: 10px; text-transform: uppercase;
-        letter-spacing: .22em; color: #818cf8;
-        margin-bottom: 10px;
-    }
-    .rj-dz-label-note { color: #f472b6; font-size: 8px; margin-left: 4px; opacity: .7; letter-spacing: .1em; }
-    .rj-dz-select-wrap { position: relative; }
-    .rj-dz-select {
-        width: 100%;
-        padding: 12px 40px 12px 14px;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 10px;
-        color: #fff; font-size: 13px; font-family: inherit;
-        appearance: none; -webkit-appearance: none;
-        outline: none; cursor: pointer; transition: all .2s;
-    }
-    .rj-dz-select:focus {
-        border-color: rgba(99,102,241,0.6);
-        background: rgba(99,102,241,0.06);
-        box-shadow: 0 0 20px rgba(99,102,241,0.2);
-    }
-    .rj-dz-select option { background: #0a0715; color: #fff; }
-    .rj-dz-select-wrap i {
-        position: absolute; right: 14px; top: 50%;
-        transform: translateY(-50%);
-        color: #6b7280; font-size: 10px; pointer-events: none;
-    }
-    .rj-dz-hint {
-        font-family: ui-monospace, monospace;
-        font-size: 10px; color: #6b7280; margin: 8px 0 0; letter-spacing: .1em;
-    }
-
-    .rj-dz-custom { display: flex; align-items: center; gap: 6px; }
-    .rj-dz-custom input {
-        flex: 1; min-width: 0;
-        padding: 10px 8px;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 8px;
-        color: #fff; font-size: 13px;
-        font-family: ui-monospace, monospace;
-        text-align: center; outline: none;
-        -moz-appearance: textfield; transition: all .2s;
-    }
-    .rj-dz-custom input::-webkit-outer-spin-button,
-    .rj-dz-custom input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    .rj-dz-custom input:focus { border-color: rgba(244,114,182,0.6); background: rgba(244,114,182,0.06); }
-    .rj-dz-custom-sep { color: #6b7280; font-family: ui-monospace, monospace; }
-    .rj-dz-custom-unit { font-family: ui-monospace, monospace; font-size: 10px; color: #6b7280; letter-spacing: .1em; }
-    .rj-dz-custom-clear {
-        margin-top: 8px;
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 6px 10px;
-        background: rgba(244,114,182,0.08);
-        border: 1px solid rgba(244,114,182,0.25);
-        border-radius: 8px;
-        color: #f9a8d4; font-size: 10px;
-        font-family: ui-monospace, monospace;
-        text-transform: uppercase; letter-spacing: .15em;
-        cursor: pointer; transition: all .2s;
-    }
-    .rj-dz-custom-clear:hover { background: rgba(244,114,182,0.15); color: #fbcfe8; }
-
-    /* selected image panel */
-    .rj-dz-sel {
-        padding: 14px;
-        background: rgba(99,102,241,0.05);
-        border: 1px solid rgba(99,102,241,0.18);
-        border-radius: 12px;
-    }
-    .rj-dz-sel .rj-dz-custom input:focus { border-color: rgba(99,102,241,0.7); background: rgba(99,102,241,0.08); }
-    .rj-dz-lock {
-        width: 32px; height: 36px; flex-shrink: 0;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 8px; color: #6b7280; cursor: pointer; transition: all .2s;
-    }
-    .rj-dz-lock.is-on { color: #a5b4fc; border-color: rgba(99,102,241,0.5); background: rgba(99,102,241,0.12); }
-    .rj-dz-dpi {
-        font-size: 9px; letter-spacing: .1em;
-        padding: 2px 8px; border-radius: 9999px;
-        border: 1px solid transparent;
-    }
-    .rj-dz-dpi-ok   { color: #6ee7b7; background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.35); }
-    .rj-dz-dpi-warn { color: #fcd34d; background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.35); }
-    .rj-dz-dpi-bad  { color: #fda4af; background: rgba(244,63,94,.12);  border-color: rgba(244,63,94,.35); }
-    .rj-dz-row { display: flex; gap: 10px; margin-top: 12px; align-items: flex-end; }
-    .rj-dz-mini { display: flex; flex-direction: column; gap: 6px; width: 64px; }
-    .rj-dz-mini-grow { flex: 1; width: auto; }
-    .rj-dz-mini span { font-family: ui-monospace, monospace; font-size: 9px; color: #9ca3af; letter-spacing: .1em; text-transform: uppercase; }
-    .rj-dz-mini input[type=number] {
-        width: 100%; padding: 8px 6px;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 8px; color: #fff; font-size: 12px;
-        font-family: ui-monospace, monospace; text-align: center; outline: none;
-    }
-    .rj-dz-mini input[type=range] { width: 100%; accent-color: #6366f1; }
-    .rj-dz-actions { display: flex; gap: 6px; margin-top: 12px; }
-    .rj-dz-mini-btn {
-        flex: 1; display: inline-flex; flex-direction: column; align-items: center; gap: 4px;
-        padding: 8px 4px;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 8px; color: #d1d5db; cursor: pointer;
-        font-size: 9px; font-family: ui-monospace, monospace;
-        text-transform: uppercase; letter-spacing: .08em; transition: all .2s;
-    }
-    .rj-dz-mini-btn i { font-size: 12px; }
-    .rj-dz-mini-btn:hover { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.4); color: #fff; }
-
-    .rj-dz-qty {
-        display: inline-flex; align-items: center;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 10px; overflow: hidden;
-    }
-    .rj-dz-qty button {
-        width: 42px; height: 42px;
-        background: transparent; border: none;
-        color: #d1d5db; font-size: 18px; font-weight: 600;
-        cursor: pointer; transition: all .2s;
-    }
-    .rj-dz-qty button:hover { background: rgba(99,102,241,0.15); color: #fff; }
-    .rj-dz-qty input {
-        width: 64px; height: 42px;
-        background: transparent; border: none;
-        border-left: 1px solid rgba(255,255,255,0.08);
-        border-right: 1px solid rgba(255,255,255,0.08);
-        color: #fff; text-align: center;
-        font-family: ui-monospace, monospace;
-        font-size: 14px; font-weight: 600;
-        outline: none; -moz-appearance: textfield;
-    }
-    .rj-dz-qty input::-webkit-outer-spin-button,
-    .rj-dz-qty input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
-    .rj-dz-warn {
-        display: flex; gap: 8px; align-items: flex-start;
-        padding: 10px; margin-bottom: 8px;
-        background: rgba(244,63,94,0.08);
-        border: 1px solid rgba(244,63,94,0.3);
-        border-radius: 10px;
-        font-size: 11px; color: #fda4af; line-height: 1.5;
-    }
-    .rj-dz-warn i { margin-top: 2px; }
-    .rj-dz-warn-soft { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.3); color: #fcd34d; }
-
-    .rj-dz-side-total {
-        padding: 16px 0;
-        border-top: 1px solid rgba(255,255,255,0.06);
-        margin-bottom: 16px;
-    }
-    .rj-dz-total-row {
-        display: flex; justify-content: space-between;
-        font-size: 12px; color: #9ca3af;
-        padding: 4px 0; font-family: ui-monospace, monospace;
-    }
-    .rj-dz-total-grand {
-        font-size: 18px; font-weight: 800;
-        color: #fff; padding-top: 12px; margin-top: 8px;
-        border-top: 1px solid rgba(255,255,255,0.06);
-    }
-
-    .rj-dz-add {
-        width: 100%;
-        display: inline-flex; align-items: center; justify-content: center;
-        gap: 10px; padding: 16px;
-        background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
-        border: none; border-radius: 12px;
-        color: #fff; font-size: 14px; font-weight: 700;
-        cursor: pointer; font-family: inherit; transition: all .3s;
-        box-shadow: 0 10px 30px -10px rgba(168,85,247,0.5);
-    }
-    .rj-dz-add:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 16px 40px -10px rgba(168,85,247,0.7); }
-    .rj-dz-add:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
-
-    @media (max-width: 1100px) { .rj-dz-left { display: none !important; } }
-    @media (max-width: 900px) {
-        .rj-dz { height: calc(100vh - 64px); }
-        .rj-dz-sidebar { width: 260px; }
-        .rj-dz-tb-btn span { display: none; }
-    }
-    @media (max-width: 700px) {
-        .rj-dz { height: auto; min-height: 100vh; overflow: visible; }
-        .rj-dz-body { flex-direction: column; overflow: visible; }
-        .rj-dz-stage-wrap { min-height: 55vh; flex: none; }
-        .rj-dz-sidebar { width: 100%; border-left: none; border-top: 1px solid rgba(255,255,255,0.06); }
-    }
-</style>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 
 <script>
 (function () {
-    var DPI = 60;                 // canvas pixels per inch (editing resolution)
-    var TARGET_DPI = 300;         // print resolution used for default placement / export
+    var DPI = 60;
+    var TARGET_DPI = 300;
     var LOW_DPI = 100;
     var GOOD_DPI = 150;
     var MARGIN_IN = 0.2;
@@ -743,9 +355,16 @@
 
         var products = config.allProducts || [];
         var initialProduct = config.product || null;
-        var pricing = config.pricing || { enabled: true, per_sq_inch: 0.05, min_price: 4.50, min_inch: 1, max_inch: 60 };
 
-        // Non-reactive internals (Fabric objects must NOT be wrapped by Alpine's proxy)
+        var cfgPricing = config.pricing || {};
+        var pricing = {
+            enabled: cfgPricing.enabled !== false && cfgPricing.enabled !== 0 && cfgPricing.enabled !== '0',
+            per_sq_inch: (cfgPricing.per_sq_inch !== null && cfgPricing.per_sq_inch !== undefined && cfgPricing.per_sq_inch !== '') ? parseFloat(cfgPricing.per_sq_inch) : 0.05,
+            min_price: (cfgPricing.min_price !== null && cfgPricing.min_price !== undefined && cfgPricing.min_price !== '') ? parseFloat(cfgPricing.min_price) : 4.50,
+            min_inch: (cfgPricing.min_inch !== null && cfgPricing.min_inch !== undefined && cfgPricing.min_inch !== '') ? parseFloat(cfgPricing.min_inch) : 1,
+            max_inch: (cfgPricing.max_inch !== null && cfgPricing.max_inch !== undefined && cfgPricing.max_inch !== '') ? parseFloat(cfgPricing.max_inch) : 60
+        };
+
         var canvas = null;
         var hist = [];
         var hIndex = -1;
@@ -783,7 +402,6 @@
             fitScale: 1,
             ready: false,
 
-            /* ------------------------------------------------------------ init */
             init() {
                 var self = this;
                 this.buildProductOptions();
@@ -853,7 +471,6 @@
                 }
             },
 
-            /* ------------------------------------------------------------ pricing */
             get currentZone() {
                 if (this.isCustom && this.customW > 0 && this.customH > 0) {
                     return {
@@ -891,7 +508,6 @@
                 return d >= GOOD_DPI ? 'ok' : (d >= LOW_DPI ? 'warn' : 'bad');
             },
 
-            /* ------------------------------------------------------------ canvas setup */
             setupCanvas() {
                 var el = document.getElementById('designCanvas');
                 if (!el || typeof fabric === 'undefined') return;
@@ -941,7 +557,6 @@
                     window.addEventListener('resize', function () { self.fitStage(); });
                 }
 
-                // Ctrl/Cmd + wheel = zoom
                 if (wrap) {
                     wrap.addEventListener('wheel', function (e) {
                         if (!(e.ctrlKey || e.metaKey)) return;
@@ -950,7 +565,6 @@
                     }, { passive: false });
                 }
 
-                // Keyboard shortcuts
                 document.addEventListener('keydown', function (e) {
                     var t = e.target;
                     if (t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable)) return;
@@ -982,7 +596,6 @@
                     nudgeTimer = setTimeout(function () { self.commit(); }, 400);
                 });
 
-                // Paste image from clipboard
                 window.addEventListener('paste', function (e) {
                     var items = (e.clipboardData && e.clipboardData.items) || [];
                     var files = [];
@@ -996,7 +609,6 @@
                 });
             },
 
-            /* ------------------------------------------------------------ sync / stats */
             syncActive() {
                 var o = canvas ? canvas.getActiveObject() : null;
                 this.hasActive = !!o;
@@ -1052,7 +664,6 @@
                 this.pushHistory();
             },
 
-            /* ------------------------------------------------------------ history (undo / redo) */
             snapshot() {
                 return canvas.getObjects().map(function (o) {
                     return {
@@ -1106,7 +717,6 @@
                 this.canRedo = hIndex < hist.length - 1;
             },
 
-            /* ------------------------------------------------------------ sheet size */
             applyZoneSize() {
                 var z = this.currentZone;
                 if (!z || !canvas) return;
@@ -1115,8 +725,6 @@
                 var newH = Math.max(1, Math.round(Number(z.height_inch) * DPI));
 
                 if (newW !== canvas.getWidth() || newH !== canvas.getHeight()) {
-                    // Items keep their physical size and absolute position (no more drifting);
-                    // anything that no longer fits is flagged by refreshStats().
                     canvas.setDimensions({ width: newW, height: newH });
                     canvas.renderAll();
                 }
@@ -1150,7 +758,6 @@
                     container.style.transform = 'scale(' + scale + ')';
                 }
 
-                // keep handles a comfortable on-screen size at any zoom
                 cornerPx = clamp(14 / scale, 10, 70);
                 var self = this;
                 canvas.getObjects().forEach(function (o) { self.applyHandleSize(o); });
@@ -1223,7 +830,6 @@
                 }
             },
 
-            /* ------------------------------------------------------------ uploading */
             onFiles(e) {
                 this.addFiles(Array.from(e.target.files || []));
                 e.target.value = '';
@@ -1262,7 +868,6 @@
                     var cw = canvas.getWidth();
                     var ch = canvas.getHeight();
 
-                    // default: place at TARGET_DPI, but never larger than 60% of the sheet
                     var scale = Math.min(DPI / TARGET_DPI, (cw * 0.6) / img.width, (ch * 0.6) / img.height);
                     var cascade = replaceObj ? 0 : (self.itemCount % 6) * DPI * 0.15;
 
@@ -1315,7 +920,6 @@
                 try {
                     var removeFn = await loadRemoveBg();
                     var blob = await removeFn(active.getSrc());
-                    // blob URL is intentionally not revoked: undo/redo may bring this image back
                     var url = URL.createObjectURL(blob);
                     this.addImageFromSrc(url, active);
                 } catch (e) {
@@ -1325,7 +929,6 @@
                 this.bgWorking = false;
             },
 
-            /* ------------------------------------------------------------ object tools */
             activeObjs() { return canvas ? canvas.getActiveObjects() : []; },
 
             flipH() {
@@ -1364,7 +967,6 @@
                 this.commit();
             },
 
-            // --- numeric resize (inches) ---
             setSize(dim, val) {
                 var o = canvas ? canvas.getActiveObject() : null;
                 if (!o || o.type !== 'image') return;
@@ -1400,7 +1002,6 @@
             },
 
             applyLockToObject(o) {
-                // when locked, hide the side handles so only proportional corner scaling remains
                 var free = !this.lockRatio;
                 o.setControlsVisibility({ ml: free, mr: free, mt: free, mb: free });
             },
@@ -1413,12 +1014,10 @@
                 var cw = canvas.getWidth() - m * 2;
                 var ch = canvas.getHeight() - m * 2;
 
-                // account for rotation by fitting against the unrotated size ratio, then verifying
                 var s = Math.min(cw / o.width, ch / o.height);
                 o.set({ scaleX: s, scaleY: s });
                 o.setCoords();
 
-                // shrink further if rotation makes the bounding box larger than the sheet
                 var r = o.getBoundingRect(true, true);
                 var k = Math.min(cw / r.width, ch / r.height, 1);
                 if (k < 1) { o.set({ scaleX: s * k, scaleY: s * k }); o.setCoords(); }
@@ -1521,7 +1120,6 @@
                 this.pushHistory();
             },
 
-            // Simple shelf packing: tallest first, left to right, new row when full
             autoArrange() {
                 if (!canvas) return;
                 canvas.discardActiveObject();
@@ -1560,7 +1158,6 @@
                 }
             },
 
-            /* ------------------------------------------------------------ view */
             zoom(dir) {
                 this.zoomLevel = clamp(this.zoomLevel + dir * 0.15, 0.25, 4);
                 this.fitStage();
@@ -1581,7 +1178,6 @@
             decQty() { this.qty = Math.max(1, (Number(this.qty) || 1) - 1); },
             normalizeQty() { this.qty = clamp(Math.round(Number(this.qty)) || 1, 1, 999); },
 
-            /* ------------------------------------------------------------ export */
             exportCanvas(multiplier, bg) {
                 canvas.discardActiveObject();
                 var prev = canvas.backgroundColor;
@@ -1625,7 +1221,6 @@
                 }
             },
 
-            /* ------------------------------------------------------------ cart */
             async addToCart() {
                 if (this.itemCount === 0 || this.adding) return;
 
