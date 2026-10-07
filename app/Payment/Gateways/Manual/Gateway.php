@@ -8,6 +8,9 @@ use App\Models\PaymentTransaction;
 use App\Payment\Contracts\PaymentGatewayInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class Gateway implements PaymentGatewayInterface
 {
@@ -38,7 +41,7 @@ class Gateway implements PaymentGatewayInterface
 
     public function getIcon(): string
     {
-        return $this->manifest['icon'] ?? 'fa-solid fa-money-bill';
+        return $this->manifest['icon'] ?? 'fa-solid fa-hand-holding-dollar';
     }
 
     public function getVersion(): string
@@ -68,7 +71,13 @@ class Gateway implements PaymentGatewayInterface
         }
 
         $settings = $this->record->settings;
-        return $settings[$key] ?? $default;
+        $value = $settings[$key] ?? null;
+
+        if ($value === null || $value === '') {
+            return $default;
+        }
+
+        return $value;
     }
 
     public function setSetting(string $key, $value): void
@@ -112,6 +121,93 @@ class Gateway implements PaymentGatewayInterface
         return $this->getMode() === 'test';
     }
 
+    public function supportsRefund(): bool
+    {
+        return true;
+    }
+
+    public function getInstructions(): ?string
+    {
+        return $this->getSetting(
+            'instructions',
+            "Please complete the payment using any of the methods below, then upload your receipt.\n\nYour order will be confirmed once payment is verified by our team."
+        );
+    }
+
+    public function acceptsBankTransfer(): bool
+    {
+        return (bool) $this->getSetting('accept_bank_transfer', true);
+    }
+
+    public function acceptsEmailTransfer(): bool
+    {
+        return (bool) $this->getSetting('accept_email_transfer', false);
+    }
+
+    public function acceptsCardToCard(): bool
+    {
+        return (bool) $this->getSetting('accept_card_to_card', false);
+    }
+
+    public function requiresReceipt(): bool
+    {
+        return (bool) $this->getSetting('require_receipt_upload', true);
+    }
+
+    public function getReceiptMaxSizeMb(): int
+    {
+        return (int) $this->getSetting('receipt_max_size_mb', 5);
+    }
+
+    public function getPaymentWindowHours(): int
+    {
+        return (int) $this->getSetting('payment_window_hours', 48);
+    }
+
+    public function getActiveMethods(): array
+    {
+        $methods = [];
+
+        if ($this->acceptsBankTransfer()) {
+            $methods[] = [
+                'type' => 'bank',
+                'label' => 'Bank Transfer',
+                'icon' => 'fa-solid fa-building-columns',
+                'fields' => array_filter([
+                    'Bank Name' => $this->getSetting('bank_name'),
+                    'Account Holder' => $this->getSetting('account_name'),
+                    'Account / IBAN' => $this->getSetting('account_number'),
+                    'Routing / SWIFT' => $this->getSetting('routing_number'),
+                ]),
+            ];
+        }
+
+        if ($this->acceptsEmailTransfer()) {
+            $methods[] = [
+                'type' => 'email',
+                'label' => 'Email Transfer',
+                'icon' => 'fa-solid fa-envelope',
+                'fields' => array_filter([
+                    'Payment Email' => $this->getSetting('email_for_payments'),
+                ]),
+            ];
+        }
+
+        if ($this->acceptsCardToCard()) {
+            $methods[] = [
+                'type' => 'card',
+                'label' => 'Card-to-Card',
+                'icon' => 'fa-solid fa-credit-card',
+                'fields' => array_filter([
+                    'Card Number' => $this->getSetting('card_number'),
+                    'Card Holder' => $this->getSetting('card_holder'),
+                ]),
+            ];
+        }
+
+        return $methods;
+    }
+
     public function createPayment(Order $order): array
     {
         $transaction = PaymentTransaction::create([
@@ -124,6 +220,7 @@ class Gateway implements PaymentGatewayInterface
             'request_payload' => [
                 'order_number' => $order->order_number,
                 'amount' => $order->total,
+                'customer_email' => $order->customer_email,
             ],
         ]);
 
@@ -132,6 +229,10 @@ class Gateway implements PaymentGatewayInterface
             'transaction_id' => $transaction->id,
             'type' => 'instructions',
             'instructions' => $this->getInstructions(),
+            'methods' => $this->getActiveMethods(),
+            'requires_receipt' => $this->requiresReceipt(),
+            'receipt_max_size_mb' => $this->getReceiptMaxSizeMb(),
+            'payment_window_hours' => $this->getPaymentWindowHours(),
             'redirect_url' => null,
         ];
     }
@@ -156,8 +257,91 @@ class Gateway implements PaymentGatewayInterface
     {
         return [
             'success' => false,
-            'message' => 'Manual gateway does not support webhooks.',
+            'message' => 'Manual gateway does not accept incoming webhooks.',
         ];
+    }
+
+    public function attachReceipt(Order $order, string $filePath, ?string $originalName = null, ?string $mimeType = null, ?int $fileSize = null): array
+    {
+        $transaction = PaymentTransaction::where('order_id', $order->id)
+            ->where('gateway_id', $this->getId())
+            ->latest()
+            ->first();
+
+        if (!$transaction) {
+            return [
+                'success' => false,
+                'message' => 'No transaction found for this order.',
+            ];
+        }
+
+        $payload = $transaction->response_payload ?? [];
+        $payload['receipt'] = [
+            'file_path' => $filePath,
+            'original_name' => $originalName,
+            'mime_type' => $mimeType,
+            'file_size' => $fileSize,
+            'uploaded_at' => now()->toDateTimeString(),
+        ];
+
+        $transaction->update([
+            'status' => 'processing',
+            'response_payload' => $payload,
+        ]);
+
+        $order->update([
+            'payment_status' => 'unpaid',
+        ]);
+
+        $this->notifyAdmin($order, $transaction, $filePath, $originalName);
+
+        return [
+            'success' => true,
+            'message' => 'Receipt uploaded. Awaiting admin confirmation.',
+        ];
+    }
+
+    public function markAsPaid(Order $order, ?string $reference = null, ?string $note = null): bool
+    {
+        $transaction = PaymentTransaction::where('order_id', $order->id)
+            ->where('gateway_id', $this->getId())
+            ->whereIn('status', ['pending', 'processing'])
+            ->latest()
+            ->first();
+
+        if (!$transaction) {
+            $transaction = PaymentTransaction::create([
+                'order_id' => $order->id,
+                'gateway_id' => $this->getId(),
+                'status' => 'pending',
+                'amount' => $order->total,
+                'currency' => 'USD',
+                'mode' => $this->getMode(),
+            ]);
+        }
+
+        $transaction->update([
+            'status' => 'completed',
+            'reference_id' => $reference,
+            'response_payload' => array_merge(
+                $transaction->response_payload ?? [],
+                [
+                    'note' => $note,
+                    'marked_by' => auth()->id(),
+                    'marked_by_name' => auth()->user()?->name,
+                    'marked_at' => now()->toDateTimeString(),
+                ]
+            ),
+            'paid_at' => now(),
+        ]);
+
+        $order->update([
+            'payment_status' => 'paid',
+            'status' => $order->status === 'pending' ? 'confirmed' : $order->status,
+            'confirmed_at' => $order->confirmed_at ?? now(),
+        ]);
+
+        return true;
     }
 
     public function refund(Order $order, ?float $amount = null): array
@@ -187,7 +371,7 @@ class Gateway implements PaymentGatewayInterface
             ];
         }
 
-        DB::transaction(function () use ($transaction, $amount) {
+        DB::transaction(function () use ($transaction, $amount, $order) {
             $newRefunded = (float) $transaction->refunded_amount + $amount;
             $isFull = $newRefunded >= (float) $transaction->amount;
 
@@ -196,62 +380,110 @@ class Gateway implements PaymentGatewayInterface
                 'status' => $isFull ? 'refunded' : 'partially_refunded',
                 'refunded_at' => now(),
             ]);
+
+            if ($isFull) {
+                $order->update(['payment_status' => 'refunded']);
+            }
         });
 
         return [
             'success' => true,
-            'message' => 'Refund recorded manually. Please return funds via bank transfer.',
+            'message' => 'Refund recorded manually. Please return funds via your original method.',
             'amount' => $amount,
         ];
     }
 
-    public function supportsRefund(): bool
+    protected function notifyAdmin(Order $order, PaymentTransaction $transaction, string $filePath, ?string $originalName): void
     {
-        return true;
-    }
+        $payload = [
+            'event' => 'payment.receipt_uploaded',
+            'order_id' => $order->id,
+            'order_number' => $order->order_number,
+            'customer_name' => $order->customer_name,
+            'customer_email' => $order->customer_email,
+            'customer_phone' => $order->customer_phone,
+            'total' => (float) $order->total,
+            'currency' => 'USD',
+            'gateway' => $this->getId(),
+            'transaction_id' => $transaction->id,
+            'receipt_path' => $filePath,
+            'receipt_name' => $originalName,
+            'timestamp' => now()->toIso8601String(),
+        ];
 
-    public function getInstructions(): ?string
-    {
-        return $this->getSetting('instructions', 'Please complete the bank transfer and send the receipt to our support team. Your order will be confirmed once payment is verified.');
-    }
+        $webhookUrl = $this->getSetting('notification_webhook_url');
 
-    public function markAsPaid(Order $order, ?string $reference = null, ?string $note = null): bool
-    {
-        $transaction = PaymentTransaction::where('order_id', $order->id)
-            ->where('gateway_id', $this->getId())
-            ->whereIn('status', ['pending', 'processing'])
-            ->latest()
-            ->first();
-
-        if (!$transaction) {
-            $transaction = PaymentTransaction::create([
-                'order_id' => $order->id,
-                'gateway_id' => $this->getId(),
-                'status' => 'pending',
-                'amount' => $order->total,
-                'currency' => 'USD',
-                'mode' => $this->getMode(),
-            ]);
+        if ($webhookUrl) {
+            $this->sendWebhook($webhookUrl, $payload);
         }
 
-        $transaction->update([
-            'status' => 'completed',
-            'reference_id' => $reference,
-            'response_payload' => array_filter([
-                'note' => $note,
-                'marked_by' => auth()->id(),
-                'marked_at' => now()->toDateTimeString(),
-            ]),
-            'paid_at' => now(),
-        ]);
+        $email = $this->getSetting('notification_email');
 
-        $order->update([
-            'payment_status' => 'paid',
-            'status' => $order->status === 'pending' ? 'confirmed' : $order->status,
-            'confirmed_at' => $order->confirmed_at ?? now(),
-        ]);
+        if ($email) {
+            $this->sendEmailNotification($email, $payload);
+        }
+    }
 
-        return true;
+    protected function sendWebhook(string $url, array $payload): void
+    {
+        try {
+            $body = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $secret = (string) $this->getSetting('notification_webhook_secret', '');
+            $signature = $secret !== '' ? hash_hmac('sha256', $body, $secret) : '';
+
+            $headers = [
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+                'X-Event' => $payload['event'] ?? 'payment.notification',
+                'User-Agent' => 'PrintAll-Webhook/1.0',
+            ];
+
+            if ($signature !== '') {
+                $headers['X-Signature'] = $signature;
+            }
+
+            $response = Http::withHeaders($headers)
+                ->timeout(8)
+                ->withBody($body, 'application/json')
+                ->post($url);
+
+            if (!$response->successful()) {
+                Log::warning('Manual gateway webhook failed', [
+                    'url' => $url,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Manual gateway webhook exception: ' . $e->getMessage(), [
+                'url' => $url,
+            ]);
+        }
+    }
+
+    protected function sendEmailNotification(string $email, array $payload): void
+    {
+        try {
+            $lines = [
+                'New payment receipt uploaded.',
+                '',
+                'Order: ' . $payload['order_number'],
+                'Customer: ' . $payload['customer_name'],
+                'Email: ' . $payload['customer_email'],
+                'Phone: ' . $payload['customer_phone'],
+                'Total: $' . number_format($payload['total'], 2),
+                'Gateway: ' . $payload['gateway'],
+                'Transaction ID: ' . $payload['transaction_id'],
+                'Receipt: ' . ($payload['receipt_name'] ?? $payload['receipt_path']),
+                'Time: ' . $payload['timestamp'],
+            ];
+
+            Mail::raw(implode("\n", $lines), function ($message) use ($email) {
+                $message->to($email)->subject('New Payment Receipt Uploaded');
+            });
+        } catch (\Throwable $e) {
+            Log::error('Manual gateway email notification failed: ' . $e->getMessage());
+        }
     }
 
     protected function ensureRecord(): void
