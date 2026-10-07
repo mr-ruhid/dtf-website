@@ -13,13 +13,20 @@
     $basePrice = $product->sale_price ?: $product->base_price;
     $breadcrumbParent = $product->model;
     $isDesignable = $product->print_type === 'custom_size';
+
+    $defaultZone = $product->printZones->where('status', 1)->sortBy('sort_order')->first();
+    $defaultW = $defaultZone ? (float) ($defaultZone->max_width_inch ?: 12) : 12;
+    $defaultH = $defaultZone ? (float) ($defaultZone->max_height_inch ?: 12) : 12;
 @endphp
 
 <section class="rj-sp-hero"
          x-data="standardProduct({
             productId: {{ $product->id }},
+            slug: '{{ $product->slug }}',
             basePrice: {{ (float) $basePrice }},
             requiresDesign: {{ $isDesignable ? 'true' : 'false' }},
+            defaultW: {{ $defaultW }},
+            defaultH: {{ $defaultH }},
             options: {{ \Illuminate\Support\Js::from($options->map(function ($o) {
                 return [
                     'id' => $o->id,
@@ -193,6 +200,28 @@
                     </div>
                 @endif
 
+                @if($isDesignable)
+                    <div class="rj-sp-qty-row">
+                        <label class="rj-sp-option-label">
+                            Select Size
+                            <span class="rj-sp-req">*</span>
+                        </label>
+                        <div class="rj-sp-measure-2">
+                            <input type="number" min="1" max="60" step="0.1"
+                                   class="rj-sp-input"
+                                   x-model.number="designW"
+                                   placeholder="Width">
+                            <span class="rj-sp-measure-sep">×</span>
+                            <input type="number" min="1" max="60" step="0.1"
+                                   class="rj-sp-input"
+                                   x-model.number="designH"
+                                   placeholder="Height">
+                            <span class="rj-sp-measure-unit">in</span>
+                        </div>
+                        <p class="rj-sp-measure-hint" x-text="designHint"></p>
+                    </div>
+                @endif
+
                 <div class="rj-sp-qty-row">
                     <label class="rj-sp-option-label">Quantity</label>
                     <div class="rj-sp-qty">
@@ -204,11 +233,13 @@
 
                 <div class="rj-sp-actions">
                     @if($isDesignable)
-                        <a href="{{ url('design') }}" class="rj-sp-btn rj-sp-btn-primary">
+                        <button type="button"
+                                @click="goToDesign()"
+                                class="rj-sp-btn rj-sp-btn-primary">
                             <i class="fa-solid fa-wand-magic-sparkles"></i>
                             <span>Build your gang sheet</span>
                             <i class="fa-solid fa-arrow-right"></i>
-                        </a>
+                        </button>
                     @else
                         <button type="button"
                                 @click="addToCart()"
@@ -556,16 +587,44 @@
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 12px; font-size: 14px; color: #fff;
-        font-family: inherit; outline: none; transition: all 0.3s ease;
+        font-family: ui-monospace, monospace; outline: none; transition: all 0.3s ease;
+        -moz-appearance: textfield;
     }
-    .rj-sp-input::placeholder { color: #4b5563; }
+    .rj-sp-input::-webkit-outer-spin-button,
+    .rj-sp-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .rj-sp-input::placeholder { color: #4b5563; font-family: inherit; }
     .rj-sp-input:focus {
         border-color: rgba(99, 102, 241, 0.6);
         background: rgba(99, 102, 241, 0.05);
     }
 
     .rj-sp-measure { display: flex; align-items: center; gap: 0.5rem; }
+    .rj-sp-measure-2 {
+        display: flex; align-items: center; gap: 0.5rem;
+        position: relative;
+    }
+    .rj-sp-measure-2 .rj-sp-input {
+        flex: 1; text-align: center; padding-right: 2.5rem;
+    }
+    .rj-sp-measure-2 .rj-sp-input + .rj-sp-measure-sep + .rj-sp-input {
+        padding-right: 2rem;
+    }
     .rj-sp-measure-sep { color: #6b7280; font-family: ui-monospace, monospace; }
+    .rj-sp-measure-unit {
+        position: absolute; right: 0.75rem; top: 50%;
+        transform: translateY(-50%);
+        color: #6b7280;
+        font-family: ui-monospace, monospace;
+        font-size: 11px;
+        pointer-events: none;
+    }
+    .rj-sp-measure-hint {
+        font-family: ui-monospace, monospace;
+        font-size: 10px;
+        color: #6b7280;
+        margin: 0.25rem 0 0;
+        letter-spacing: 0.1em;
+    }
 
     .rj-sp-qty-row { display: flex; flex-direction: column; gap: 0.5rem; }
     .rj-sp-qty {
@@ -775,6 +834,7 @@
 function standardProduct(config) {
     return {
         productId: config.productId,
+        slug: config.slug,
         basePrice: config.basePrice,
         requiresDesign: config.requiresDesign,
         options: config.options || [],
@@ -782,6 +842,16 @@ function standardProduct(config) {
         selections: {},
         qty: 1,
         adding: false,
+
+        designW: config.defaultW || 12,
+        designH: config.defaultH || 12,
+
+        get designHint() {
+            if (!this.designW || !this.designH) return '';
+            if (this.designW < 1 || this.designH < 1) return 'Minimum 1 inch';
+            if (this.designW > 60 || this.designH > 60) return 'Maximum 60 inch';
+            return this.designW + ' × ' + this.designH + ' in sheet';
+        },
 
         get optionsAddon() {
             let total = 0;
@@ -843,6 +913,24 @@ function standardProduct(config) {
 
         incQty() { this.qty = Math.min(999, (this.qty || 1) + 1); },
         decQty() { this.qty = Math.max(1, (this.qty || 1) - 1); },
+
+        goToDesign() {
+            if (!this.designW || !this.designH) {
+                this.flash('Please enter width and height');
+                return;
+            }
+            if (this.designW < 1 || this.designH < 1) {
+                this.flash('Minimum size is 1 inch');
+                return;
+            }
+            if (this.designW > 60 || this.designH > 60) {
+                this.flash('Maximum size is 60 inch');
+                return;
+            }
+
+            const url = '/design/' + this.slug + '?w=' + this.designW + '&h=' + this.designH;
+            window.location.href = url;
+        },
 
         async addToCart() {
             if (this.adding) return;
