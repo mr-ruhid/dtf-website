@@ -39,10 +39,26 @@ class DesignController extends Controller
                 'slug' => $zone->slug,
                 'width_inch' => $w,
                 'height_inch' => $h,
-                'label' => $w . ' × ' . $h . ' in',
+                'label' => $zone->name . ' (' . $w . ' × ' . $h . ' in)',
                 'price_addon' => (float) $zone->price_addon,
             ];
         })->values();
+
+        $allProducts = Product::with('images')
+            ->where('status', 1)
+            ->orderBy('name')
+            ->get()
+            ->map(function (Product $p) {
+                return [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    'slug' => $p->slug,
+                    'base_price' => (float) ($p->sale_price ?: $p->base_price),
+                    'image' => $p->images->first()?->url,
+                    'print_type' => $p->print_type,
+                ];
+            })
+            ->values();
 
         $productPayload = null;
 
@@ -60,6 +76,7 @@ class DesignController extends Controller
         return view('theme.rjshop-theme.staticpages.design', [
             'zones' => $zonesPayload,
             'product' => $productPayload,
+            'allProducts' => $allProducts,
         ]);
     }
 }
