@@ -4,12 +4,12 @@
 
 @section('content')
 
-<div class="mb-6 flex items-center justify-between">
+<div class="mb-6 flex items-center justify-between flex-wrap gap-3">
     <div>
         <a href="{{ route('admin.orders.index') }}" class="text-sm text-gray-500 hover:text-gray-700">
             <i class="fa-solid fa-arrow-left text-xs mr-1"></i> Back to orders
         </a>
-        <div class="flex items-center gap-3 mt-2">
+        <div class="flex items-center gap-3 mt-2 flex-wrap">
             <h2 class="text-xl font-semibold text-gray-800 font-mono">{{ $order->order_number }}</h2>
             <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold
                 @if($order->status_color === 'amber') bg-amber-100 text-amber-700
@@ -21,16 +21,24 @@
                 @else bg-gray-100 text-gray-700 @endif">
                 {{ $order->status_label }}
             </span>
+            @if($order->payment_status === 'paid')
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-700">
+                    <i class="fa-solid fa-circle-check text-[10px]"></i> Paid
+                </span>
+            @endif
         </div>
         <p class="text-xs text-gray-400 mt-1">{{ $order->created_at->format('d M Y, H:i') }}</p>
     </div>
 
-    <div class="flex items-center gap-2">
-        @if ($order->tracking_number)
-            <div class="text-right mr-2">
-                <p class="text-[10px] text-gray-500 uppercase tracking-wider">Tracking</p>
-                <p class="text-xs font-mono font-semibold text-gray-800">{{ $order->tracking_number }}</p>
-            </div>
+    <div class="flex items-center gap-2 flex-wrap">
+        @if ($order->tracking_token)
+            <button type="button"
+                    onclick="copyTrackLink(this)"
+                    data-link="{{ route('track.show', ['token' => $order->tracking_token]) }}"
+                    class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium px-4 py-2.5 rounded-lg transition flex items-center gap-2">
+                <i class="fa-solid fa-link text-xs"></i>
+                <span>Copy Tracking Link</span>
+            </button>
         @endif
         <form method="POST" action="{{ route('admin.orders.destroy', $order) }}"
               onsubmit="return confirm('Delete this order permanently?')">
@@ -55,9 +63,164 @@
     </div>
 @endif
 
+@php
+    $receiptTxn = $order->transactions->firstWhere('response_payload.receipt', '!=', null);
+    if (!$receiptTxn) {
+        $receiptTxn = $order->transactions->first(function ($t) {
+            $p = $t->response_payload ?? [];
+            return !empty($p['receipt']);
+        });
+    }
+    $receipt = $receiptTxn ? ($receiptTxn->response_payload['receipt'] ?? null) : null;
+@endphp
+
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
     <div class="lg:col-span-2 space-y-6">
+
+        @if ($receipt)
+            @php
+                $receiptUrl = str_starts_with($receipt['file_path'], 'http')
+                    ? $receipt['file_path']
+                    : asset('storage/' . $receipt['file_path']);
+                $isImage = !empty($receipt['mime_type']) && str_starts_with($receipt['mime_type'], 'image/');
+            @endphp
+
+            <div class="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-amber-200 flex items-center justify-between gap-3 flex-wrap">
+                    <div class="flex items-center gap-2">
+                        <div class="w-9 h-9 rounded-lg bg-amber-500 text-white flex items-center justify-center">
+                            <i class="fa-solid fa-receipt text-sm"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-amber-900 text-sm">Payment Receipt Uploaded</h3>
+                            <p class="text-[11px] text-amber-700">
+                                Uploaded {{ !empty($receipt['uploaded_at']) ? \Carbon\Carbon::parse($receipt['uploaded_at'])->format('d M Y, H:i') : 'recently' }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a href="{{ $receiptUrl }}" target="_blank"
+                           class="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition">
+                            <i class="fa-solid fa-eye text-[10px]"></i> View
+                        </a>
+                        <a href="{{ $receiptUrl }}" download
+                           class="inline-flex items-center gap-2 bg-white hover:bg-amber-50 border border-amber-300 text-amber-700 text-xs font-semibold px-3 py-2 rounded-lg transition">
+                            <i class="fa-solid fa-download text-[10px]"></i> Download
+                        </a>
+                        <form method="POST" action="{{ route('admin.orders.receipt.delete', [$order, $receiptTxn->id]) }}"
+                              onsubmit="return confirm('Delete this receipt file?')">
+                            @csrf
+                            @method('DELETE')
+                            <button class="inline-flex items-center gap-2 bg-white hover:bg-red-50 border border-red-300 text-red-600 text-xs font-semibold px-3 py-2 rounded-lg transition">
+                                <i class="fa-solid fa-trash text-[10px]"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="p-5">
+                    <div class="flex gap-5 flex-wrap">
+                        <div class="shrink-0">
+                            @if ($isImage)
+                                <a href="{{ $receiptUrl }}" target="_blank"
+                                   class="block w-48 h-48 rounded-lg border-2 border-amber-200 overflow-hidden bg-white hover:border-amber-400 transition">
+                                    <img src="{{ $receiptUrl }}" class="w-full h-full object-contain">
+                                </a>
+                            @else
+                                <a href="{{ $receiptUrl }}" target="_blank"
+                                   class="block w-48 h-48 rounded-lg border-2 border-amber-200 bg-white flex flex-col items-center justify-center hover:border-amber-400 transition">
+                                    <i class="fa-solid fa-file-pdf text-4xl text-red-500 mb-2"></i>
+                                    <p class="text-xs text-gray-600 font-semibold">PDF Document</p>
+                                    <p class="text-[10px] text-gray-400 mt-1">Click to open</p>
+                                </a>
+                            @endif
+                        </div>
+
+                        <div class="flex-1 min-w-[200px] space-y-3">
+                            <div>
+                                <p class="text-[10px] text-amber-800 uppercase tracking-wider font-semibold mb-0.5">Original Name</p>
+                                <p class="text-sm text-gray-800 break-all">{{ $receipt['original_name'] ?? 'N/A' }}</p>
+                            </div>
+
+                            @if (!empty($receipt['file_size']))
+                                <div>
+                                    <p class="text-[10px] text-amber-800 uppercase tracking-wider font-semibold mb-0.5">File Size</p>
+                                    <p class="text-sm text-gray-800 font-mono">
+                                        @if ($receipt['file_size'] < 1024)
+                                            {{ $receipt['file_size'] }} B
+                                        @elseif ($receipt['file_size'] < 1024 * 1024)
+                                            {{ number_format($receipt['file_size'] / 1024, 1) }} KB
+                                        @else
+                                            {{ number_format($receipt['file_size'] / 1024 / 1024, 2) }} MB
+                                        @endif
+                                    </p>
+                                </div>
+                            @endif
+
+                            @if ($order->payment_status !== 'paid')
+                                <div class="pt-3 border-t border-amber-200">
+                                    <p class="text-[11px] text-amber-800 mb-2">
+                                        <i class="fa-solid fa-circle-info mr-1"></i>
+                                        Verify the receipt then confirm payment below.
+                                    </p>
+                                </div>
+                            @else
+                                <div class="pt-3 border-t border-amber-200">
+                                    <p class="text-[11px] text-emerald-700 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                        <span class="font-semibold">Payment already confirmed</span>
+                                    </p>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if ($order->payment_status !== 'paid' && $gateway && method_exists($gateway, 'markAsPaid'))
+            <div class="bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-xl p-6">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-money-bill-wave text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-emerald-900 mb-1">Confirm Payment Received</h3>
+                        <p class="text-xs text-emerald-700 mb-4">
+                            Mark this order as paid to confirm it and move it to processing.
+                        </p>
+
+                        <form method="POST" action="{{ route('admin.orders.mark-paid', $order) }}"
+                              onsubmit="return confirm('Mark this order as PAID?')"
+                              class="space-y-3">
+                            @csrf
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-emerald-900 mb-1">Reference / Txn ID</label>
+                                    <input type="text" name="reference" maxlength="100"
+                                           placeholder="e.g. Bank ref, TXN-123"
+                                           class="w-full px-3 py-2 border border-emerald-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-emerald-900 mb-1">Note (optional)</label>
+                                    <input type="text" name="note" maxlength="500"
+                                           placeholder="e.g. Verified via bank statement"
+                                           class="w-full px-3 py-2 border border-emerald-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                                </div>
+                            </div>
+
+                            <button type="submit"
+                                    class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-6 py-3 rounded-lg transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30">
+                                <i class="fa-solid fa-circle-check"></i>
+                                <span>Mark as Paid & Confirm Order</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
@@ -72,7 +235,14 @@
 
                             <div class="w-20 h-20 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
                                 @if ($item->product_image)
-                                    <img src="{{ asset('storage/' . $item->product_image) }}" class="w-full h-full object-cover">
+                                    @php
+                                        $imgSrc = str_starts_with($item->product_image, 'data:image')
+                                            ? $item->product_image
+                                            : (str_starts_with($item->product_image, 'http')
+                                                ? $item->product_image
+                                                : asset('storage/' . $item->product_image));
+                                    @endphp
+                                    <img src="{{ $imgSrc }}" class="w-full h-full object-cover">
                                 @elseif ($item->product && $item->product->primary_image)
                                     <img src="{{ $item->product->primary_image->url }}" class="w-full h-full object-cover">
                                 @else
@@ -103,23 +273,6 @@
                                                 {{ $key }}: <span class="font-semibold">{{ $value }}</span>
                                             </span>
                                         @endforeach
-                                    </div>
-                                @endif
-
-                                @if ($item->print_type !== 'none')
-                                    <div class="mt-3 pt-3 border-t border-gray-100 flex flex-wrap items-center gap-3 text-xs">
-                                        @if ($item->print_zone_name)
-                                            <div class="flex items-center gap-1.5 text-gray-600">
-                                                <i class="fa-solid fa-vector-square text-gray-400 text-[10px]"></i>
-                                                <span>{{ $item->print_zone_name }}</span>
-                                            </div>
-                                        @endif
-                                        @if ($item->print_width && $item->print_height)
-                                            <div class="flex items-center gap-1.5 text-gray-600">
-                                                <i class="fa-solid fa-ruler-combined text-gray-400 text-[10px]"></i>
-                                                <span>{{ $item->print_width }}" × {{ $item->print_height }}"</span>
-                                            </div>
-                                        @endif
                                     </div>
                                 @endif
 
@@ -180,29 +333,6 @@
                                             @endforeach
                                         </div>
                                     </div>
-                                @elseif ($item->print_type !== 'none')
-                                    <div class="mt-3 pt-3 border-t border-gray-100">
-                                        <p class="text-xs text-amber-600 flex items-center gap-1.5">
-                                            <i class="fa-solid fa-triangle-exclamation"></i>
-                                            No design file uploaded
-                                        </p>
-                                    </div>
-                                @endif
-
-                                @if ($item->price_breakdown)
-                                    <details class="mt-3 text-xs">
-                                        <summary class="cursor-pointer text-gray-500 hover:text-gray-700 text-[10px]">
-                                            <i class="fa-solid fa-calculator mr-1"></i> Price breakdown
-                                        </summary>
-                                        <div class="mt-2 pl-4 space-y-0.5 text-[10px] text-gray-600">
-                                            @foreach ($item->price_breakdown as $key => $value)
-                                                <div class="flex items-center justify-between max-w-xs">
-                                                    <span>{{ $key }}</span>
-                                                    <span class="font-mono">${{ number_format((float) $value, 2) }}</span>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </details>
                                 @endif
 
                             </div>
@@ -226,24 +356,81 @@
                         @endif
                     </span>
                 </div>
-                @if ($order->discount > 0)
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-gray-600">Discount</span>
-                        <span class="font-medium text-rose-600">-${{ number_format($order->discount, 2) }}</span>
-                    </div>
-                @endif
-                @if ($order->tax > 0)
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-gray-600">Tax</span>
-                        <span class="font-medium text-gray-800">${{ number_format($order->tax, 2) }}</span>
-                    </div>
-                @endif
                 <div class="flex items-center justify-between pt-2 border-t border-gray-300">
                     <span class="font-semibold text-gray-800">Total</span>
                     <span class="font-bold text-lg text-indigo-600">${{ number_format($order->total, 2) }}</span>
                 </div>
             </div>
         </div>
+
+        @if ($order->transactions->count())
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                    <i class="fa-solid fa-credit-card text-indigo-500 text-sm"></i>
+                    <h3 class="font-semibold text-gray-800 text-sm">Payment Transactions ({{ $order->transactions->count() }})</h3>
+                </div>
+
+                <div class="divide-y divide-gray-100">
+                    @foreach ($order->transactions as $txn)
+                        <div class="p-5">
+                            <div class="flex items-start justify-between gap-3 mb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider
+                                        @if($txn->status_color === 'amber') bg-amber-100 text-amber-700
+                                        @elseif($txn->status_color === 'blue') bg-blue-100 text-blue-700
+                                        @elseif($txn->status_color === 'emerald') bg-emerald-100 text-emerald-700
+                                        @elseif($txn->status_color === 'rose') bg-rose-100 text-rose-700
+                                        @elseif($txn->status_color === 'purple') bg-purple-100 text-purple-700
+                                        @elseif($txn->status_color === 'indigo') bg-indigo-100 text-indigo-700
+                                        @else bg-gray-100 text-gray-700 @endif">
+                                        {{ $txn->status_label }}
+                                    </span>
+                                    <span class="text-xs font-mono text-gray-500">#{{ $txn->id }}</span>
+                                </div>
+                                <span class="font-bold text-gray-800">${{ number_format($txn->amount, 2) }}</span>
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                                <div>
+                                    <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Gateway</p>
+                                    <p class="font-medium text-gray-800">{{ $txn->gateway_id }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Mode</p>
+                                    <p class="font-medium text-gray-800 uppercase">{{ $txn->mode }}</p>
+                                </div>
+                                @if ($txn->reference_id)
+                                    <div>
+                                        <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Reference</p>
+                                        <p class="font-medium text-gray-800 font-mono text-[11px]">{{ $txn->reference_id }}</p>
+                                    </div>
+                                @endif
+                                @if ($txn->paid_at)
+                                    <div>
+                                        <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Paid</p>
+                                        <p class="font-medium text-emerald-600">{{ $txn->paid_at->format('d M Y, H:i') }}</p>
+                                    </div>
+                                @endif
+                            </div>
+
+                            @if ($txn->refunded_amount > 0)
+                                <div class="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
+                                    <span class="text-gray-600">Refunded</span>
+                                    <span class="font-semibold text-rose-600">${{ number_format($txn->refunded_amount, 2) }}</span>
+                                </div>
+                            @endif
+
+                            @if ($txn->error_message)
+                                <div class="mt-3 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                                    <i class="fa-solid fa-circle-exclamation mr-1"></i>
+                                    {{ $txn->error_message }}
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
@@ -272,6 +459,9 @@
                                             <i class="fa-solid fa-arrow-right text-[8px] text-gray-400"></i>
                                         @endif
                                         <span class="text-xs font-semibold text-gray-800">{{ $log->to_status_label }}</span>
+                                        @if ($log->is_public)
+                                            <span class="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-semibold">PUBLIC</span>
+                                        @endif
                                     </div>
                                     <p class="text-[10px] text-gray-500 mt-0.5">
                                         {{ $log->created_at->format('d M Y, H:i') }}
@@ -295,6 +485,44 @@
     </div>
 
     <div class="space-y-6">
+
+        @if ($order->tracking_token)
+            <div class="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-5">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-500 text-white flex items-center justify-center">
+                        <i class="fa-solid fa-location-dot text-xs"></i>
+                    </div>
+                    <h3 class="font-semibold text-indigo-900 text-sm">Tracking Link</h3>
+                </div>
+
+                <input type="text"
+                       readonly
+                       value="{{ route('track.show', ['token' => $order->tracking_token]) }}"
+                       id="trackingUrl"
+                       class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-[11px] font-mono text-gray-700 focus:outline-none mb-3">
+
+                <div class="flex gap-2">
+                    <button type="button"
+                            onclick="copyTrackLink(this)"
+                            data-link="{{ route('track.show', ['token' => $order->tracking_token]) }}"
+                            class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-copy text-[10px]"></i>
+                        <span>Copy</span>
+                    </button>
+                    <a href="{{ route('track.show', ['token' => $order->tracking_token]) }}"
+                       target="_blank"
+                       class="flex-1 bg-white hover:bg-indigo-50 border border-indigo-300 text-indigo-700 text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        <span>Open</span>
+                    </a>
+                </div>
+
+                <p class="text-[10px] text-indigo-700 mt-3 leading-relaxed">
+                    <i class="fa-solid fa-circle-info mr-1"></i>
+                    Customer can use this link to track order status without logging in.
+                </p>
+            </div>
+        @endif
 
         <div class="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
             <h3 class="font-semibold text-gray-800 text-sm flex items-center gap-2">
@@ -320,6 +548,19 @@
                     <textarea name="note" rows="2" maxlength="500"
                               placeholder="Internal note..."
                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <label class="flex items-center gap-2 text-xs text-gray-700 cursor-pointer">
+                        <input type="checkbox" name="is_public" value="1" checked
+                               class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                        <span>Visible to customer</span>
+                    </label>
+                    <label class="flex items-center gap-2 text-xs text-gray-700 cursor-pointer">
+                        <input type="checkbox" name="notify_customer" value="1"
+                               class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                        <span>Email customer</span>
+                    </label>
                 </div>
 
                 <button type="submit"
@@ -454,6 +695,12 @@
                     <span class="text-gray-500">Payment Method</span>
                     <span class="font-medium text-gray-800 uppercase">{{ $order->payment_method }}</span>
                 </div>
+                @if ($order->payment_gateway_id)
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500">Gateway</span>
+                        <span class="font-medium text-gray-800 font-mono text-[11px]">{{ $order->payment_gateway_id }}</span>
+                    </div>
+                @endif
                 <div class="flex items-center justify-between">
                     <span class="text-gray-500">Source</span>
                     <span class="font-medium text-gray-800 uppercase">{{ $order->source }}</span>
@@ -492,5 +739,28 @@
     </div>
 
 </div>
+
+@push('scripts')
+<script>
+function copyTrackLink(btn) {
+    const link = btn.dataset.link;
+    if (!link) return;
+
+    navigator.clipboard.writeText(link).then(() => {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check text-xs"></i><span>Copied!</span>';
+        btn.classList.add('bg-emerald-500', 'text-white');
+        btn.classList.remove('bg-indigo-50', 'text-indigo-700', 'bg-indigo-600');
+
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.classList.remove('bg-emerald-500', 'text-white');
+        }, 1500);
+    }).catch(() => {
+        alert('Copy failed. Link: ' + link);
+    });
+}
+</script>
+@endpush
 
 @endsection
