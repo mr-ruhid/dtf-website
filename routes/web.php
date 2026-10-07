@@ -24,12 +24,11 @@ Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.show');
 
 Route::prefix('cart')->name('cart.')->group(function () {
-    Route::get('/', [CartController::class, 'index'])->name('index');
+    Route::get('/items', [CartController::class, 'items'])->name('items');
     Route::post('/add', [CartController::class, 'add'])->name('add');
     Route::put('/update/{key}', [CartController::class, 'update'])->name('update');
     Route::delete('/remove/{key}', [CartController::class, 'remove'])->name('remove');
     Route::post('/clear', [CartController::class, 'clear'])->name('clear');
-    Route::get('/count', [CartController::class, 'count'])->name('count');
 });
 
 Route::get('/{slug}', [ModelController::class, 'show'])->name('model.show');
