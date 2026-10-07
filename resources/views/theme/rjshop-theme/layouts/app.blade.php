@@ -42,6 +42,10 @@
     <link rel="stylesheet" href="{{ asset('theme/rjshop-theme/css/theme.css') }}">
     <link rel="stylesheet" href="{{ asset('theme/rjshop-theme/css/widgets.css') }}">
 
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+
     @stack('styles')
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased min-h-screen flex flex-col">
