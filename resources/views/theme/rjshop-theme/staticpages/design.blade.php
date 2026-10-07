@@ -9,7 +9,8 @@
          class="rj-dz"
          x-data="designStudio({
             zones: {{ \Illuminate\Support\Js::from($zones) }},
-            product: {{ \Illuminate\Support\Js::from($product) }}
+            product: {{ \Illuminate\Support\Js::from($product) }},
+            allProducts: {{ \Illuminate\Support\Js::from($allProducts) }}
          })">
 
     <div class="rj-dz-toolbar">
@@ -71,39 +72,46 @@
 
     <div class="rj-dz-body">
 
-        <aside class="rj-dz-left" x-show="product" x-cloak>
-            <template x-if="product">
-                <div class="rj-dz-left-inner">
-                    <div class="rj-dz-left-label">// Product Preview</div>
+        <aside class="rj-dz-left">
+            <div class="rj-dz-left-inner">
+                <div class="rj-dz-left-label">// Product</div>
 
-                    <div class="rj-dz-left-mock">
-                        <template x-if="product.image">
-                            <img :src="product.image" :alt="product.name" class="rj-dz-left-img">
-                        </template>
-                        <template x-if="!product.image">
-                            <div class="rj-dz-left-img-empty">
-                                <i class="fa-regular fa-image"></i>
-                            </div>
-                        </template>
-                        <div class="rj-dz-left-overlay">
-                            <span class="rj-dz-left-dot"></span>
-                            <span x-text="currentZone ? currentZone.label : 'Custom'"></span>
-                        </div>
-                    </div>
-
-                    <p class="rj-dz-left-name" x-text="product.name"></p>
-                    <p class="rj-dz-left-meta">
-                        <span x-text="'Base $' + Number(product.base_price).toFixed(2)"></span>
-                        <span class="rj-dz-left-sep">·</span>
-                        <span x-text="currentZone ? (currentZone.width_inch + '×' + currentZone.height_inch + ' in') : 'Custom'"></span>
-                    </p>
-
-                    <div class="rj-dz-left-tip">
-                        <i class="fa-solid fa-circle-info"></i>
-                        <span>Design will be printed on this sheet size.</span>
-                    </div>
+                <div class="rj-dz-select-wrap">
+                    <select class="rj-dz-select" x-ref="productSelect" @change="changeProduct($event)"></select>
+                    <i class="fa-solid fa-chevron-down"></i>
                 </div>
-            </template>
+
+                <template x-if="product">
+                    <div class="rj-dz-left-mock-wrap">
+                        <div class="rj-dz-left-mock">
+                            <template x-if="product.image">
+                                <img :src="product.image" :alt="product.name" class="rj-dz-left-img">
+                            </template>
+                            <template x-if="!product.image">
+                                <div class="rj-dz-left-img-empty">
+                                    <i class="fa-regular fa-image"></i>
+                                </div>
+                            </template>
+                            <div class="rj-dz-left-overlay">
+                                <span class="rj-dz-left-dot"></span>
+                                <span x-text="currentZone ? currentZone.label : 'Custom'"></span>
+                            </div>
+                        </div>
+
+                        <p class="rj-dz-left-name" x-text="product.name"></p>
+                        <p class="rj-dz-left-meta">
+                            <span x-text="'Base $' + Number(product.base_price).toFixed(2)"></span>
+                            <span class="rj-dz-left-sep">·</span>
+                            <span x-text="currentZone ? (currentZone.width_inch + '×' + currentZone.height_inch + ' in') : 'Custom'"></span>
+                        </p>
+                    </div>
+                </template>
+
+                <div class="rj-dz-left-tip">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>Switch product to change the sheet.</span>
+                </div>
+            </div>
         </aside>
 
         <div class="rj-dz-stage-wrap">
@@ -124,6 +132,23 @@
                     <i class="fa-solid fa-chevron-down"></i>
                 </div>
                 <p class="rj-dz-hint" x-text="currentZone ? (currentZone.width_inch + ' × ' + currentZone.height_inch + ' in') : ''"></p>
+            </div>
+
+            <div class="rj-dz-side-block">
+                <label class="rj-dz-label">
+                    Custom Size
+                    <span class="rj-dz-label-note">override</span>
+                </label>
+                <div class="rj-dz-custom">
+                    <input type="number" min="1" max="60" step="0.1" x-model.number="customW" placeholder="W" @input="applyCustom()">
+                    <span class="rj-dz-custom-sep">×</span>
+                    <input type="number" min="1" max="60" step="0.1" x-model.number="customH" placeholder="H" @input="applyCustom()">
+                    <span class="rj-dz-custom-unit">in</span>
+                </div>
+                <button type="button" class="rj-dz-custom-clear" x-show="isCustom" @click="clearCustom()">
+                    <i class="fa-solid fa-xmark"></i>
+                    <span>Clear custom</span>
+                </button>
             </div>
 
             <div class="rj-dz-side-block">
@@ -193,8 +218,7 @@
         border: 1px solid rgba(255,255,255,0.08);
         color: #d1d5db; font-size: 12px; font-weight: 600;
         cursor: pointer; transition: all .2s;
-        font-family: inherit;
-        white-space: nowrap;
+        font-family: inherit; white-space: nowrap;
     }
     .rj-dz-tb-btn:hover:not(:disabled) {
         background: rgba(99,102,241,0.12);
@@ -237,7 +261,7 @@
     }
 
     .rj-dz-left {
-        width: 220px; flex-shrink: 0;
+        width: 240px; flex-shrink: 0;
         background: #0a0715;
         border-right: 1px solid rgba(255,255,255,0.06);
         padding: 20px 16px;
@@ -254,6 +278,10 @@
         padding-bottom: 8px;
         border-bottom: 1px dashed rgba(244,114,182,0.2);
     }
+    .rj-dz-left-mock-wrap {
+        display: flex; flex-direction: column; gap: 10px;
+        margin-top: 4px;
+    }
     .rj-dz-left-mock {
         position: relative;
         aspect-ratio: 1;
@@ -262,9 +290,7 @@
         background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(236,72,153,0.06));
         border: 1px solid rgba(255,255,255,0.08);
     }
-    .rj-dz-left-img {
-        width: 100%; height: 100%; object-fit: cover;
-    }
+    .rj-dz-left-img { width: 100%; height: 100%; object-fit: cover; }
     .rj-dz-left-img-empty {
         width: 100%; height: 100%;
         display: flex; align-items: center; justify-content: center;
@@ -280,10 +306,8 @@
         border: 1px solid rgba(255,255,255,0.1);
         border-radius: 9999px;
         font-family: ui-monospace, monospace;
-        font-size: 9px;
-        text-transform: uppercase;
-        letter-spacing: .12em;
-        color: #fff;
+        font-size: 9px; text-transform: uppercase;
+        letter-spacing: .12em; color: #fff;
     }
     .rj-dz-left-dot {
         width: 6px; height: 6px; border-radius: 50%;
@@ -371,6 +395,11 @@
         letter-spacing: .22em; color: #818cf8;
         margin-bottom: 10px;
     }
+    .rj-dz-label-note {
+        color: #f472b6; font-size: 8px;
+        margin-left: 4px; opacity: .7;
+        letter-spacing: .1em;
+    }
     .rj-dz-select-wrap { position: relative; }
     .rj-dz-select {
         width: 100%;
@@ -399,6 +428,53 @@
         font-family: ui-monospace, monospace;
         font-size: 10px; color: #6b7280;
         margin: 8px 0 0; letter-spacing: .1em;
+    }
+
+    .rj-dz-custom {
+        display: flex; align-items: center; gap: 6px;
+    }
+    .rj-dz-custom input {
+        flex: 1; min-width: 0;
+        padding: 10px 8px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px;
+        color: #fff; font-size: 13px;
+        font-family: ui-monospace, monospace;
+        text-align: center;
+        outline: none;
+        -moz-appearance: textfield;
+        transition: all .2s;
+    }
+    .rj-dz-custom input::-webkit-outer-spin-button,
+    .rj-dz-custom input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .rj-dz-custom input:focus {
+        border-color: rgba(244,114,182,0.6);
+        background: rgba(244,114,182,0.06);
+    }
+    .rj-dz-custom-sep { color: #6b7280; font-family: ui-monospace, monospace; }
+    .rj-dz-custom-unit {
+        font-family: ui-monospace, monospace;
+        font-size: 10px; color: #6b7280;
+        letter-spacing: .1em;
+    }
+    .rj-dz-custom-clear {
+        margin-top: 8px;
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 10px;
+        background: rgba(244,114,182,0.08);
+        border: 1px solid rgba(244,114,182,0.25);
+        border-radius: 8px;
+        color: #f9a8d4; font-size: 10px;
+        font-family: ui-monospace, monospace;
+        text-transform: uppercase;
+        letter-spacing: .15em;
+        cursor: pointer;
+        transition: all .2s;
+    }
+    .rj-dz-custom-clear:hover {
+        background: rgba(244,114,182,0.15);
+        color: #fbcfe8;
     }
 
     .rj-dz-qty {
@@ -480,6 +556,7 @@
 <script>
 (function () {
     var DPI = 60;
+    var CUSTOM_ID = '__custom__';
 
     var FALLBACK_ZONES = [
         { id: 1, name: 'A4', slug: 'a4', width_inch: 8.3, height_inch: 11.7, label: 'A4 (8.3 × 11.7 in)', price_addon: 4.50 },
@@ -500,6 +577,11 @@
         return removeBgModulePromise;
     }
 
+    function getQuery(name) {
+        var params = new URLSearchParams(window.location.search);
+        return params.get(name);
+    }
+
     window.designStudio = function (config) {
         var incoming = (config.zones && config.zones.length) ? config.zones : FALLBACK_ZONES;
         var zones = incoming.map(function (z) {
@@ -514,10 +596,17 @@
             };
         });
 
+        var products = config.allProducts || [];
+        var initialProduct = config.product || null;
+
         return {
             zones: zones,
-            product: config.product || null,
+            products: products,
+            product: initialProduct,
             zoneId: zones[0] ? zones[0].id : null,
+            customW: null,
+            customH: null,
+            isCustom: false,
             qty: 1,
             items: [],
             hasActiveImage: false,
@@ -529,9 +618,23 @@
 
             init() {
                 this.$nextTick(() => {
+                    this.buildProductOptions();
                     this.buildZoneOptions();
+                    this.readQueryParams();
                     this.setupCanvas();
                 });
+            },
+
+            buildProductOptions() {
+                var s = this.$refs.productSelect;
+                if (!s || !this.products.length) return;
+
+                s.innerHTML = this.products.map(function (p) {
+                    var safe = String(p.name).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    return '<option value="' + p.id + '">' + safe + '</option>';
+                }).join('');
+
+                if (this.product) s.value = this.product.id;
             },
 
             buildZoneOptions() {
@@ -551,11 +654,40 @@
                 }
             },
 
+            readQueryParams() {
+                var w = parseFloat(getQuery('w'));
+                var h = parseFloat(getQuery('h'));
+
+                if (w > 0 && h > 0) {
+                    this.customW = w;
+                    this.customH = h;
+                    this.applyCustom();
+                }
+            },
+
             get currentZone() {
+                if (this.isCustom && this.customW > 0 && this.customH > 0) {
+                    return {
+                        id: CUSTOM_ID,
+                        name: 'Custom',
+                        slug: 'custom',
+                        width_inch: this.customW,
+                        height_inch: this.customH,
+                        label: 'Custom (' + this.customW + ' × ' + this.customH + ' in)',
+                        price_addon: this.calculateCustomPrice()
+                    };
+                }
+
                 if (!this.zones.length) return null;
                 if (!this.zoneId) return this.zones[0];
                 var found = this.zones.find(z => Number(z.id) === Number(this.zoneId));
                 return found || this.zones[0];
+            },
+
+            calculateCustomPrice() {
+                if (!this.customW || !this.customH) return 0;
+                var areaSqIn = this.customW * this.customH;
+                return Math.round((areaSqIn * 0.05) * 100) / 100;
             },
 
             get basePrice() {
@@ -631,11 +763,55 @@
             },
 
             changeZone() {
+                this.isCustom = false;
+                this.customW = null;
+                this.customH = null;
                 this.applyZoneSize();
                 if (!this.canvas) return;
                 this.canvas.getObjects().slice().forEach(o => this.canvas.remove(o));
                 this.syncCount();
                 this.syncActive();
+            },
+
+            applyCustom() {
+                if (!this.customW || !this.customH || this.customW <= 0 || this.customH <= 0) {
+                    this.isCustom = false;
+                    return;
+                }
+
+                this.isCustom = true;
+                this.zoneId = null;
+
+                if (this.$refs.zoneSelect) {
+                    this.$refs.zoneSelect.value = '';
+                }
+
+                this.applyZoneSize();
+            },
+
+            clearCustom() {
+                this.customW = null;
+                this.customH = null;
+                this.isCustom = false;
+                if (this.zones[0]) {
+                    this.zoneId = this.zones[0].id;
+                    if (this.$refs.zoneSelect) this.$refs.zoneSelect.value = this.zoneId;
+                }
+                this.applyZoneSize();
+            },
+
+            changeProduct(e) {
+                var id = Number(e.target.value);
+                var p = this.products.find(x => Number(x.id) === id);
+                if (!p) return;
+                this.product = p;
+
+                if (p.slug && !this.isCustom) {
+                    var url = new URL(window.location.href);
+                    url.pathname = '/design/' + p.slug;
+                    url.search = '';
+                    window.history.replaceState({}, '', url.toString());
+                }
             },
 
             onFiles(e) {
@@ -771,9 +947,13 @@
                 var snapshot = this.canvas.toDataURL({ format: 'jpeg', quality: 0.7 });
 
                 var attributes = {
-                    'Sheet Size': z ? z.label : 'Custom',
+                    'Sheet Size': z ? (z.width_inch + ' × ' + z.height_inch + ' in') : 'Custom',
                     'Items': this.items.length
                 };
+
+                if (this.isCustom) {
+                    attributes['Custom'] = 'yes';
+                }
 
                 var payload = {
                     product_id: this.product ? this.product.id : null,
@@ -782,7 +962,7 @@
                     qty: this.qty,
                     attributes: attributes,
                     print_type: 'custom_size',
-                    note: this.items.length + ' design item(s) on sheet',
+                    note: this.items.length + ' design item(s) · ' + (z ? (z.width_inch + '×' + z.height_inch + ' in') : ''),
                     image: snapshot
                 };
 
