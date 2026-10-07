@@ -24,7 +24,7 @@
         if ($pav->attribute->type !== 'color' && !$sizeAttr) $sizeAttr = $pav->attribute;
     }
 
-        $colors = collect();
+    $colors = collect();
     if ($colorAttr) {
         $colors = $product->attributeValues
             ->where('attribute_id', $colorAttr->id)
@@ -65,6 +65,7 @@
 
 <section class="rj-ap-hero"
          x-data="apparelProduct({
+            productId: {{ $product->id }},
             basePrice: {{ (float) $basePrice }},
             defaultImage: '{{ $defaultImageUrl }}',
             colors: {{ \Illuminate\Support\Js::from($colors) }},
@@ -217,10 +218,13 @@
                 </div>
 
                 <div class="rj-ap-actions">
-                    <button type="button" @click="addToCart()" class="rj-ap-btn rj-ap-btn-primary">
+                    <button type="button"
+                            @click="addToCart()"
+                            :disabled="adding"
+                            class="rj-ap-btn rj-ap-btn-primary">
                         <span class="rj-ap-btn-left">
-                            <i class="fa-solid fa-bag-shopping"></i>
-                            <span>Add to Cart</span>
+                            <i class="fa-solid" :class="adding ? 'fa-spinner fa-spin' : 'fa-bag-shopping'"></i>
+                            <span x-text="adding ? 'Adding...' : 'Add to Cart'"></span>
                         </span>
                         <span class="rj-ap-btn-price">$<span x-text="totalPrice.toFixed(2)"></span></span>
                     </button>
@@ -529,6 +533,9 @@
         box-shadow: 0 0 40px rgba(192, 132, 252, 0.4);
         transform: translateY(-1px);
     }
+    .rj-ap-btn-primary:disabled {
+        opacity: 0.7; cursor: wait; transform: none;
+    }
     .rj-ap-btn-left {
         display: inline-flex; align-items: center; gap: 0.5rem;
     }
@@ -583,6 +590,7 @@
 <script>
 function apparelProduct(config) {
     return {
+        productId: config.productId,
         basePrice: config.basePrice,
         defaultImage: config.defaultImage || '',
         colors: config.colors || [],
@@ -593,6 +601,7 @@ function apparelProduct(config) {
         selectedColor: null,
         selectedSize: null,
         qty: 1,
+        adding: false,
 
         get displayImage() {
             if (this.selectedColor && this.selectedColor.image) {
@@ -645,21 +654,47 @@ function apparelProduct(config) {
             this.qty = Math.max(1, (this.qty || 1) - 1);
         },
 
-        addToCart() {
+        async addToCart() {
+            if (this.adding) return;
+
             if (this.colors.length && !this.selectedColor) {
-                alert('Please choose a color');
+                this.flash('Please choose a color');
                 return;
             }
             if (this.sizes.length && !this.selectedSize) {
-                alert('Please choose a size');
+                this.flash('Please choose a size');
                 return;
             }
-            alert('Added to cart:\n' +
-                '{{ $product->name }}\n' +
-                (this.selectedColor ? 'Color: ' + this.selectedColor.name + '\n' : '') +
-                (this.selectedSize ? 'Size: ' + this.selectedSize.name + '\n' : '') +
-                'Qty: ' + this.qty + '\n' +
-                'Total: $' + this.totalPrice.toFixed(2));
+
+            this.adding = true;
+
+            const attributes = {};
+            if (this.selectedColor) attributes['Color'] = this.selectedColor.name;
+            if (this.selectedSize) attributes['Size'] = this.selectedSize.name;
+
+            const payload = {
+                product_id: this.productId,
+                unit_price: this.finalPrice,
+                qty: this.qty,
+                attributes: attributes,
+                print_type: 'apparel'
+            };
+
+            try {
+                await Alpine.store('cart').add(payload);
+            } catch (e) {
+                this.flash('Could not add to cart');
+            }
+
+            this.adding = false;
+        },
+
+        flash(msg) {
+            const el = document.createElement('div');
+            el.textContent = msg;
+            el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0a0715;color:#fff;padding:12px 24px;border-radius:9999px;border:1px solid rgba(99,102,241,0.4);font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.6);';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 2200);
         }
     }
 }
