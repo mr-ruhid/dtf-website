@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\ModelController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageController;
+use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\PrintZoneController;
 use App\Http\Controllers\Admin\ProductController;
@@ -185,6 +186,11 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::post('support/{ticket}/reply', [SupportController::class, 'reply'])->name('support.reply');
         Route::delete('support/{ticket}', [SupportController::class, 'destroy'])->name('support.destroy');
         Route::delete('support/{ticket}/attachments/{attachment}', [SupportController::class, 'deleteAttachment'])->name('support.attachments.destroy');
+
+        Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
+        Route::get('payments/{id}', [PaymentController::class, 'show'])->name('payments.show');
+        Route::put('payments/{id}', [PaymentController::class, 'update'])->name('payments.update');
+        Route::put('payments/{id}/toggle', [PaymentController::class, 'toggle'])->name('payments.toggle');
 
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
 
