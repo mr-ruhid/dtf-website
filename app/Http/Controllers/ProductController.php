@@ -43,6 +43,10 @@ class ProductController extends Controller
             ->limit(6)
             ->get();
 
-        return view('theme.rjshop-theme.staticpages.product', compact('product', 'relatedProducts', 'faqs'));
+        $view = $product->print_type === 'apparel'
+            ? 'theme.rjshop-theme.staticpages.product-apparel'
+            : 'theme.rjshop-theme.staticpages.product';
+
+        return view($view, compact('product', 'relatedProducts', 'faqs'));
     }
 }
