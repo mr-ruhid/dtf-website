@@ -14,13 +14,9 @@ class CartController extends Controller
         $this->cart = $cart;
     }
 
-    public function index()
+    public function items()
     {
-        $items = $this->cart->all();
-        $subtotal = $this->cart->subtotal();
-        $count = $this->cart->count();
-
-        return view('theme.rjshop-theme.staticpages.cart', compact('items', 'subtotal', 'count'));
+        return response()->json($this->payload());
     }
 
     public function add(Request $request)
@@ -35,19 +31,9 @@ class CartController extends Controller
             'note' => 'nullable|string|max:500',
         ]);
 
-        $key = $this->cart->add($validated);
+        $this->cart->add($validated);
 
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'key' => $key,
-                'count' => $this->cart->count(),
-                'subtotal' => $this->cart->subtotal(),
-                'message' => 'Added to cart',
-            ]);
-        }
-
-        return redirect()->route('cart.index')->with('success', 'Added to cart');
+        return response()->json($this->payload());
     }
 
     public function update(Request $request, string $key)
@@ -56,50 +42,32 @@ class CartController extends Controller
             'qty' => 'required|integer|min:1|max:999',
         ]);
 
-        $ok = $this->cart->update($key, (int) $validated['qty']);
+        $this->cart->update($key, (int) $validated['qty']);
 
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json([
-                'success' => $ok,
-                'count' => $this->cart->count(),
-                'subtotal' => $this->cart->subtotal(),
-            ]);
-        }
-
-        return redirect()->route('cart.index');
+        return response()->json($this->payload());
     }
 
-    public function remove(Request $request, string $key)
+    public function remove(string $key)
     {
         $this->cart->remove($key);
 
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'count' => $this->cart->count(),
-                'subtotal' => $this->cart->subtotal(),
-            ]);
-        }
-
-        return redirect()->route('cart.index')->with('success', 'Item removed');
+        return response()->json($this->payload());
     }
 
-    public function clear(Request $request)
+    public function clear()
     {
         $this->cart->clear();
 
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json(['success' => true, 'count' => 0, 'subtotal' => 0]);
-        }
-
-        return redirect()->route('cart.index');
+        return response()->json($this->payload());
     }
 
-    public function count()
+    protected function payload(): array
     {
-        return response()->json([
+        return [
+            'success' => true,
+            'items' => array_values($this->cart->all()),
             'count' => $this->cart->count(),
             'subtotal' => $this->cart->subtotal(),
-        ]);
+        ];
     }
 }
