@@ -12,22 +12,48 @@
     $options = $product->options->where('status', 1);
     $prices = $product->prices;
     $basePrice = $product->sale_price ?: $product->base_price;
-    $isDesignable = $product->print_type === 'custom_size';
+
+    $isDesignable = $product->print_type === 'custom_size'
+        || $product->printZones->where('status', 1)->count() > 0;
 
     $defaultZone = $product->printZones->where('status', 1)->sortBy('sort_order')->first();
     $defaultW = $defaultZone ? (float) ($defaultZone->max_width_inch ?: 12) : 12;
     $defaultH = $defaultZone ? (float) ($defaultZone->max_height_inch ?: 12) : 12;
+    $defaultZonePrice = $defaultZone ? (float) $defaultZone->price_addon : 0;
+
+    $startingPrice = (float) $basePrice;
+
+    if ($startingPrice <= 0 && $prices->count()) {
+        $firstTier = $prices->sortBy('min_qty')->first();
+        $startingPrice = (float) $firstTier->price;
+    }
+
+    if ($startingPrice <= 0 && $defaultZonePrice > 0) {
+        $startingPrice = $defaultZonePrice;
+    }
+
+    if ($startingPrice <= 0 && $isDesignable) {
+        $startingPrice = max(4.50, round($defaultW * $defaultH * 0.05, 2));
+    }
+
+    if ($startingPrice <= 0) {
+        $startingPrice = 4.50;
+    }
+
+    $displayOptions = $isDesignable
+        ? $options->where('type', '!=', 'measurement')
+        : $options;
 @endphp
 
 <section class="rj-sp-hero"
          x-data="standardProduct({
             productId: {{ $product->id }},
             slug: '{{ $product->slug }}',
-            basePrice: {{ (float) $basePrice }},
+            basePrice: {{ (float) $startingPrice }},
             requiresDesign: {{ $isDesignable ? 'true' : 'false' }},
             defaultW: {{ $defaultW }},
             defaultH: {{ $defaultH }},
-            options: {{ \Illuminate\Support\Js::from($options->map(function ($o) {
+            options: {{ \Illuminate\Support\Js::from($displayOptions->map(function ($o) {
                 return [
                     'id' => $o->id,
                     'name' => $o->name,
@@ -149,9 +175,9 @@
                     </div>
                 @endif
 
-                @if($options->count())
+                @if($displayOptions->count())
                     <div class="rj-sp-options">
-                        @foreach($options as $option)
+                        @foreach($displayOptions as $option)
                             <div class="rj-sp-option">
                                 <label class="rj-sp-option-label">
                                     {{ $option->name }}
@@ -184,14 +210,6 @@
                                     <input type="number" class="rj-sp-input"
                                            placeholder="0"
                                            @input="pickOptionText({{ $option->id }}, $event.target.value)">
-                                @elseif($option->type === 'measurement')
-                                    <div class="rj-sp-measure">
-                                        <input type="number" class="rj-sp-input" placeholder="Width"
-                                               @input="pickOptionText({{ $option->id }}, 'W:' + $event.target.value)">
-                                        <span class="rj-sp-measure-sep">×</span>
-                                        <input type="number" class="rj-sp-input" placeholder="Height"
-                                               @input="pickOptionText({{ $option->id }}, 'H:' + $event.target.value)">
-                                    </div>
                                 @endif
                             </div>
                         @endforeach
@@ -201,7 +219,7 @@
                 @if($isDesignable)
                     <div class="rj-sp-qty-row">
                         <label class="rj-sp-option-label">
-                            Select Size
+                            Sheet Size
                             <span class="rj-sp-req">*</span>
                         </label>
                         <div class="rj-sp-measure-2">
@@ -610,7 +628,6 @@
         background: rgba(99, 102, 241, 0.05);
     }
 
-    .rj-sp-measure { display: flex; align-items: center; gap: 0.5rem; }
     .rj-sp-measure-2 {
         display: flex; align-items: center; gap: 0.5rem;
         position: relative;
@@ -906,8 +923,19 @@ function standardProduct(config) {
             return total;
         },
 
+        get designPrice() {
+            if (!this.requiresDesign) return 0;
+
+            const baseArea = 144;
+            const area = Math.max(1, (this.designW || 12) * (this.designH || 12));
+            const ratio = Math.max(1, area / baseArea);
+
+            return Math.round(this.basePrice * ratio * 100) / 100;
+        },
+
         get finalPrice() {
-            return parseFloat(this.basePrice) + this.optionsAddon;
+            const base = this.requiresDesign ? this.designPrice : parseFloat(this.basePrice);
+            return base + this.optionsAddon;
         },
 
         get totalPrice() {
