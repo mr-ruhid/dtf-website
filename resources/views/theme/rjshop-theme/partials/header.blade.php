@@ -36,19 +36,38 @@
             mobileOpen: false,
             scrolled: false,
             hideSub: false,
+            _rafPending: false,
+            _ticking: false,
             updateSub() {
-                const hero = document.getElementById('rjHero');
-                const y = window.scrollY;
+                if (this._rafPending) return;
+                this._rafPending = true;
 
-                if (hero) {
-                    const rect = hero.getBoundingClientRect();
-                    this.hideSub = rect.bottom < 100;
-                } else {
-                    this.hideSub = y > 100;
-                }
+                requestAnimationFrame(() => {
+                    this._rafPending = false;
+
+                    const hero = document.getElementById('rjHero');
+                    const y = window.scrollY;
+                    const HIDE_AT = 80;
+                    const SHOW_AT = 160;
+                    const SCROLLED_AT = 20;
+
+                    this.scrolled = y > SCROLLED_AT;
+
+                    let target;
+                    if (hero) {
+                        const bottom = hero.getBoundingClientRect().bottom;
+                        target = this.hideSub ? (bottom < SHOW_AT) : (bottom < HIDE_AT);
+                    } else {
+                        target = this.hideSub ? (y > SHOW_AT) : (y > HIDE_AT);
+                    }
+
+                    if (target !== this.hideSub) {
+                        this.hideSub = target;
+                    }
+                });
             }
         }"
-        @scroll.window="scrolled = window.scrollY > 20; updateSub()"
+        @scroll.window.passive="updateSub()"
         x-init="updateSub()"
         :class="scrolled ? 'bg-[#05030f]/95 backdrop-blur-xl shadow-[0_4px_30px_rgba(99,102,241,0.15)]' : 'bg-[#05030f]'"
         class="sticky top-0 z-50 transition-all duration-300 border-b border-indigo-500/20">
@@ -121,7 +140,14 @@
                 @endforeach
             </nav>
 
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1.5">
+                <a href="{{ route('track.form') }}"
+                   class="hidden sm:inline-flex items-center gap-2 h-10 px-3.5 rounded-full text-gray-300 hover:text-white hover:bg-white/10 transition text-xs font-semibold"
+                   aria-label="Track Order">
+                    <i class="fa-solid fa-location-dot text-sm"></i>
+                    <span class="hidden lg:inline">Track Order</span>
+                </a>
+
                 <button type="button"
                         class="w-10 h-10 flex items-center justify-center rounded-full text-gray-300 hover:text-white hover:bg-white/10 transition"
                         aria-label="Search">
@@ -171,6 +197,12 @@
                     <span>{{ $item->label }}</span>
                 </a>
             @endforeach
+
+            <a href="{{ route('track.form') }}"
+               class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-emerald-300 hover:bg-emerald-500/10 transition border-t border-white/5 mt-2 pt-4">
+                <i class="fa-solid fa-location-dot text-xs"></i>
+                <span>Track Order</span>
+            </a>
         </nav>
     </div>
 </header>
