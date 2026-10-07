@@ -8,7 +8,13 @@
 
 @php
     $images = $product->images;
+    $firstImage = $images->first();
     $basePrice = $product->sale_price ?: $product->base_price;
+
+    $imgUrl = function ($path) {
+        if (!$path) return null;
+        return str_starts_with($path, 'http') ? $path : asset('storage/' . $path);
+    };
 
     $colorAttr = null;
     $sizeAttr = null;
@@ -22,13 +28,15 @@
     if ($colorAttr) {
         $colors = $product->attributeValues
             ->where('attribute_id', $colorAttr->id)
-            ->map(function ($pav) {
+            ->sortBy(fn($pav) => $pav->attributeValue->sort_order ?? 0)
+            ->map(function ($pav) use ($imgUrl) {
+                $av = $pav->attributeValue;
                 return [
                     'id' => $pav->id,
                     'value_id' => $pav->attribute_value_id,
-                    'name' => $pav->attributeValue->value ?? '',
-                    'color_code' => $pav->attributeValue->color_code ?? '#000000',
-                    'image' => $pav->image_url ?: null,
+                    'name' => $av->value ?? '',
+                    'color_code' => $av->color_code ?? '#000000',
+                    'image' => $imgUrl($pav->image),
                     'price_override' => $pav->price_override,
                 ];
             })
@@ -39,21 +47,26 @@
     if ($sizeAttr) {
         $sizes = $product->attributeValues
             ->where('attribute_id', $sizeAttr->id)
+            ->sortBy(fn($pav) => $pav->attributeValue->sort_order ?? 0)
             ->map(function ($pav) {
+                $av = $pav->attributeValue;
                 return [
                     'id' => $pav->id,
                     'value_id' => $pav->attribute_value_id,
-                    'name' => $pav->attributeValue->value ?? '',
+                    'name' => $av->value ?? '',
                     'price_override' => $pav->price_override,
                 ];
             })
             ->values();
     }
+
+    $defaultImageUrl = $firstImage ? $firstImage->url : '';
 @endphp
 
 <section class="rj-ap-hero"
          x-data="apparelProduct({
             basePrice: {{ (float) $basePrice }},
+            defaultImage: '{{ $defaultImageUrl }}',
             colors: {{ \Illuminate\Support\Js::from($colors) }},
             sizes: {{ \Illuminate\Support\Js::from($sizes) }}
          })">
@@ -75,39 +88,32 @@
         <div class="rj-ap-layout">
 
             <div class="rj-ap-gallery">
-                <div class="rj-ap-thumbs">
-                    @forelse($images as $index => $image)
-                        <button type="button"
-                                @click="setImage('{{ $image->url }}', {{ $index }})"
-                                :class="!selectedColor && activeThumb === {{ $index }} ? 'rj-ap-thumb-active' : ''"
-                                class="rj-ap-thumb">
-                            <img src="{{ $image->url }}" alt="{{ $product->name }}">
-                        </button>
-                    @empty
-                        <div class="rj-ap-thumb rj-ap-thumb-placeholder">
-                            <i class="fa-regular fa-image"></i>
-                        </div>
-                    @endforelse
-                </div>
+                @if($images->count())
+                    <div class="rj-ap-thumbs">
+                        @foreach($images as $index => $image)
+                            <button type="button"
+                                    @click="pickThumb({{ $index }}, '{{ $image->url }}')"
+                                    :class="activeThumb === {{ $index }} ? 'rj-ap-thumb-active' : ''"
+                                    class="rj-ap-thumb">
+                                <img src="{{ $image->url }}" alt="{{ $product->name }}">
+                            </button>
+                        @endforeach
+                    </div>
+                @endif
 
                 <div class="rj-ap-main">
-                    <template x-if="!selectedColor">
-                        @php $firstImage = $images->first(); @endphp
-                        @if($firstImage)
-                            <img :src="currentImage" alt="{{ $product->name }}" class="rj-ap-img">
-                        @else
-                            <div class="rj-ap-img-placeholder">
-                                <i class="fa-regular fa-image"></i>
-                                <span>No image available</span>
-                            </div>
-                        @endif
+                    <template x-if="displayImage">
+                        <img :src="displayImage" :alt="selectedColor ? selectedColor.name : '{{ $product->name }}'" class="rj-ap-img">
                     </template>
 
-                    <template x-if="selectedColor">
-                        <img :src="selectedColor.image" :alt="selectedColor.name" class="rj-ap-img">
+                    <template x-if="!displayImage">
+                        <div class="rj-ap-img-placeholder">
+                            <i class="fa-regular fa-image"></i>
+                            <span>No image available</span>
+                        </div>
                     </template>
 
-                    <div class="rj-ap-color-badge" x-show="selectedColor" x-cloak>
+                    <div class="rj-ap-color-badge" x-show="selectedColor && selectedColor.image" x-cloak>
                         <span class="rj-ap-color-badge-dot" :style="'background:' + (selectedColor ? selectedColor.color_code : '#000')"></span>
                         <span x-text="selectedColor ? selectedColor.name : ''"></span>
                     </div>
@@ -157,9 +163,7 @@
                         <div class="rj-ap-block-head">
                             <label class="rj-ap-block-label">
                                 Color
-                                @if($colorAttr->type === 'color')
-                                    <span class="rj-ap-selected" x-text="selectedColor ? selectedColor.name : 'Choose a color'"></span>
-                                @endif
+                                <span class="rj-ap-selected" x-text="selectedColor ? selectedColor.name : 'Choose a color'"></span>
                             </label>
                         </div>
 
@@ -214,8 +218,10 @@
 
                 <div class="rj-ap-actions">
                     <button type="button" @click="addToCart()" class="rj-ap-btn rj-ap-btn-primary">
-                        <i class="fa-solid fa-bag-shopping"></i>
-                        <span>Add to Cart</span>
+                        <span class="rj-ap-btn-left">
+                            <i class="fa-solid fa-bag-shopping"></i>
+                            <span>Add to Cart</span>
+                        </span>
                         <span class="rj-ap-btn-price">$<span x-text="totalPrice.toFixed(2)"></span></span>
                     </button>
                     <a href="{{ url('contact-us') }}" class="rj-ap-btn rj-ap-btn-outline">
@@ -291,30 +297,42 @@
         display: grid; grid-template-columns: 1fr; gap: 2rem;
     }
     @media (min-width: 900px) {
-        .rj-ap-layout { grid-template-columns: 1fr 1fr; gap: 3rem; }
+        .rj-ap-layout {
+            grid-template-columns: minmax(0, 480px) 1fr;
+            gap: 3rem;
+            align-items: flex-start;
+        }
     }
 
-    .rj-ap-gallery { display: flex; gap: 1rem; }
-    .rj-ap-thumbs { display: flex; flex-direction: column; gap: 0.5rem; flex-shrink: 0; }
+    .rj-ap-gallery {
+        display: flex; gap: 0.75rem;
+        width: 100%;
+        max-width: 480px;
+    }
+
+    .rj-ap-thumbs {
+        display: flex; flex-direction: column; gap: 0.5rem; flex-shrink: 0;
+    }
     .rj-ap-thumb {
-        width: 60px; height: 60px; border-radius: 10px; overflow: hidden;
+        width: 54px; height: 54px; border-radius: 10px; overflow: hidden;
         background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);
         cursor: pointer; transition: all 0.3s ease; padding: 0;
     }
     .rj-ap-thumb img { width: 100%; height: 100%; object-fit: cover; }
     .rj-ap-thumb:hover { border-color: rgba(99, 102, 241, 0.4); }
     .rj-ap-thumb-active { border-color: #6366f1 !important; box-shadow: 0 0 16px -4px rgba(99, 102, 241, 0.6); }
-    .rj-ap-thumb-placeholder {
-        display: flex; align-items: center; justify-content: center;
-        color: #4b5563; font-size: 1.25rem;
-    }
 
     .rj-ap-main {
         flex: 1; border-radius: 16px; overflow: hidden; position: relative;
-        background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #f8f7f4;
+        border: 1px solid rgba(255, 255, 255, 0.08);
         aspect-ratio: 1;
+        display: flex; align-items: center; justify-content: center;
+        max-width: 400px;
     }
-    .rj-ap-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rj-ap-img {
+        width: 100%; height: 100%; object-fit: contain; display: block;
+    }
     .rj-ap-img-placeholder {
         width: 100%; height: 100%; display: flex; flex-direction: column;
         align-items: center; justify-content: center; gap: 0.75rem;
@@ -336,7 +354,7 @@
         box-shadow: 0 0 8px 1px rgba(255, 255, 255, 0.3);
     }
 
-    .rj-ap-info { display: flex; flex-direction: column; gap: 1.25rem; }
+    .rj-ap-info { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
 
     .rj-ap-badge {
         display: inline-flex; align-items: center; gap: 0.5rem;
@@ -352,18 +370,18 @@
     }
 
     .rj-ap-title {
-        font-size: clamp(1.75rem, 3.5vw, 2.75rem);
-        font-weight: 900; line-height: 1.1; letter-spacing: -0.02em;
+        font-size: clamp(1.5rem, 3vw, 2.25rem);
+        font-weight: 900; line-height: 1.15; letter-spacing: -0.02em;
         color: #fff; margin: 0;
     }
 
     .rj-ap-price-row { display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; }
     .rj-ap-price {
-        font-size: 2rem; font-weight: 900; color: #fff;
+        font-size: 1.75rem; font-weight: 900; color: #fff;
         font-family: ui-monospace, monospace;
     }
     .rj-ap-price-old {
-        font-size: 1.125rem; color: #6b7280; text-decoration: line-through;
+        font-size: 1rem; color: #6b7280; text-decoration: line-through;
         font-family: ui-monospace, monospace;
     }
     .rj-ap-save {
@@ -374,18 +392,18 @@
     }
 
     .rj-ap-desc {
-        font-size: 1rem; color: #9ca3af; line-height: 1.7;
+        font-size: 0.9375rem; color: #9ca3af; line-height: 1.7;
         margin: 0; font-weight: 300;
     }
 
     .rj-ap-features {
         display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem;
-        padding: 1rem 0; border-top: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 0.875rem 0; border-top: 1px solid rgba(255, 255, 255, 0.06);
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
     .rj-ap-feature {
         display: inline-flex; align-items: center; gap: 0.5rem;
-        font-size: 12.5px; color: #d1d5db;
+        font-size: 12px; color: #d1d5db;
     }
     .rj-ap-feature i {
         font-size: 9px; color: #34d399;
@@ -394,7 +412,7 @@
         display: flex; align-items: center; justify-content: center;
     }
 
-    .rj-ap-block { display: flex; flex-direction: column; gap: 0.75rem; }
+    .rj-ap-block { display: flex; flex-direction: column; gap: 0.625rem; }
     .rj-ap-block-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
     .rj-ap-block-label {
         font-size: 11px; font-weight: 600; color: #e5e7eb;
@@ -466,6 +484,7 @@
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 12px; overflow: hidden;
+        align-self: flex-start;
     }
     .rj-ap-qty-btn {
         width: 44px; height: 44px;
@@ -501,18 +520,25 @@
     }
     .rj-ap-btn i { font-size: 12px; }
     .rj-ap-btn-primary {
-        background: #fff; color: #05030f; justify-content: space-between;
-        padding-left: 1.5rem; padding-right: 1.5rem;
+        background: #fff; color: #05030f;
+        justify-content: space-between;
+        padding-left: 1.5rem; padding-right: 1rem;
     }
     .rj-ap-btn-primary:hover {
         background: #eef2ff;
         box-shadow: 0 0 40px rgba(192, 132, 252, 0.4);
         transform: translateY(-1px);
     }
+    .rj-ap-btn-left {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+    }
     .rj-ap-btn-price {
-        font-family: ui-monospace, monospace; font-size: 14px;
-        padding: 4px 12px; background: rgba(5, 3, 15, 0.1);
+        font-family: ui-monospace, monospace; font-size: 13px;
+        padding: 5px 12px;
+        background: linear-gradient(135deg, #6366f1, #a855f7);
+        color: #fff;
         border-radius: 9999px;
+        font-weight: 700;
     }
     .rj-ap-btn-outline {
         background: rgba(255, 255, 255, 0.03);
@@ -558,33 +584,41 @@
 function apparelProduct(config) {
     return {
         basePrice: config.basePrice,
-        colors: config.colors,
-        sizes: config.sizes,
+        defaultImage: config.defaultImage || '',
+        colors: config.colors || [],
+        sizes: config.sizes || [],
 
         activeThumb: 0,
-        currentImage: '{{ $images->first()->url ?? '' }}',
+        thumbImage: config.defaultImage || '',
         selectedColor: null,
         selectedSize: null,
         qty: 1,
 
+        get displayImage() {
+            if (this.selectedColor && this.selectedColor.image) {
+                return this.selectedColor.image;
+            }
+            return this.thumbImage || this.defaultImage || '';
+        },
+
         get finalPrice() {
             let price = this.basePrice;
-            if (this.selectedColor && this.selectedColor.price_override !== null) {
+            if (this.selectedColor && this.selectedColor.price_override !== null && this.selectedColor.price_override !== undefined) {
                 price = parseFloat(this.selectedColor.price_override);
-            } else if (this.selectedSize && this.selectedSize.price_override !== null) {
+            } else if (this.selectedSize && this.selectedSize.price_override !== null && this.selectedSize.price_override !== undefined) {
                 price = parseFloat(this.selectedSize.price_override);
             }
             return price;
         },
 
         get totalPrice() {
-            return this.finalPrice * this.qty;
+            return this.finalPrice * (this.qty || 1);
         },
 
-        setImage(url, index) {
+        pickThumb(index, url) {
             this.selectedColor = null;
-            this.currentImage = url;
             this.activeThumb = index;
+            this.thumbImage = url;
         },
 
         pickColor(color) {
