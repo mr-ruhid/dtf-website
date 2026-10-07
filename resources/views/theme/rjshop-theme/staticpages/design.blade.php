@@ -5,7 +5,8 @@
 
 @section('content')
 
-<section class="rj-dz"
+<section id="rjHero"
+         class="rj-dz"
          x-data="designStudio({
             zones: {{ \Illuminate\Support\Js::from($zones) }},
             product: {{ \Illuminate\Support\Js::from($product) }}
@@ -73,7 +74,7 @@
         <div class="rj-dz-stage-wrap">
             <div class="rj-dz-stage" x-ref="stage">
                 <canvas id="designCanvas"></canvas>
-                <div class="rj-dz-empty" x-show="items.length === 0" x-cloak>
+                <div class="rj-dz-empty" x-show="items.length === 0">
                     <i class="fa-regular fa-image"></i>
                     <p>Upload artwork to start</p>
                 </div>
@@ -94,7 +95,7 @@
                 <p class="rj-dz-hint" x-text="currentZone ? (currentZone.width_inch + ' × ' + currentZone.height_inch + ' in') : ''"></p>
             </div>
 
-            <div class="rj-dz-side-block" x-show="product">
+            <div class="rj-dz-side-block" x-show="product" x-cloak>
                 <label class="rj-dz-label">Product</label>
                 <div class="rj-dz-product">
                     <template x-if="product && product.image">
@@ -147,13 +148,13 @@
 
 <style>
     .rj-dz {
-        position: fixed;
-        inset: 0;
-        top: 64px;
+        position: relative;
         background: #05030f;
         color: #fff;
         display: flex;
         flex-direction: column;
+        height: calc(100vh - 80px);
+        min-height: 640px;
         overflow: hidden;
     }
     .rj-dz-toolbar {
@@ -162,9 +163,10 @@
         background: #0a0715;
         border-bottom: 1px solid rgba(255,255,255,0.06);
         flex-shrink: 0;
+        overflow-x: auto;
     }
-    .rj-dz-tb-group { display: inline-flex; align-items: center; gap: 6px; }
-    .rj-dz-tb-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.08); margin: 0 6px; }
+    .rj-dz-tb-group { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .rj-dz-tb-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.08); margin: 0 6px; flex-shrink: 0; }
     .rj-dz-tb-spacer { flex: 1; }
     .rj-dz-tb-btn {
         display: inline-flex; align-items: center; gap: 8px;
@@ -174,6 +176,7 @@
         color: #d1d5db; font-size: 12px; font-weight: 600;
         cursor: pointer; transition: all .2s;
         font-family: inherit;
+        white-space: nowrap;
     }
     .rj-dz-tb-btn:hover:not(:disabled) {
         background: rgba(99,102,241,0.12);
@@ -203,6 +206,7 @@
         display: inline-flex; align-items: center; gap: 8px;
         font-family: ui-monospace, monospace; font-size: 11px;
         color: #6b7280; text-transform: uppercase; letter-spacing: .15em;
+        flex-shrink: 0;
     }
     .rj-dz-dot {
         width: 6px; height: 6px; border-radius: 50%;
@@ -211,7 +215,7 @@
     }
 
     .rj-dz-body {
-        flex: 1; display: flex; overflow: hidden;
+        flex: 1; display: flex; overflow: hidden; min-height: 0;
     }
 
     .rj-dz-stage-wrap {
@@ -244,6 +248,7 @@
     .rj-dz-stage .canvas-container {
         border-radius: 8px;
         overflow: hidden;
+        display: block !important;
     }
     .rj-dz-empty {
         position: absolute; inset: 0;
@@ -391,7 +396,7 @@
     .rj-dz-add:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
 
     @media (max-width: 900px) {
-        .rj-dz { top: 56px; }
+        .rj-dz { height: calc(100vh - 64px); }
         .rj-dz-sidebar { width: 260px; }
         .rj-dz-tb-btn span { display: none; }
     }
@@ -404,17 +409,29 @@ import removeBg from 'https://esm.sh/@imgly/background-removal@1.4.5';
 
 const DPI = 60;
 
+const FALLBACK_ZONES = [
+    { id: 1, name: 'A4', slug: 'a4', width_inch: 8.3, height_inch: 11.7, label: 'A4 (8.3 × 11.7 in)', price_addon: 4.50 },
+    { id: 2, name: 'A3', slug: 'a3', width_inch: 11.7, height_inch: 16.5, label: 'A3 (11.7 × 16.5 in)', price_addon: 7.50 },
+    { id: 3, name: '12 × 12', slug: '12x12', width_inch: 12, height_inch: 12, label: '12 × 12 in', price_addon: 6.00 },
+    { id: 4, name: '12 × 24', slug: '12x24', width_inch: 12, height_inch: 24, label: '12 × 24 in', price_addon: 10.00 },
+    { id: 5, name: '13 × 19', slug: '13x19', width_inch: 13, height_inch: 19, label: '13 × 19 in', price_addon: 9.00 },
+    { id: 6, name: '22 × 24', slug: '22x24', width_inch: 22, height_inch: 24, label: '22 × 24 in', price_addon: 18.00 },
+];
+
 window.designStudio = function (config) {
+    const zones = (config.zones && config.zones.length) ? config.zones : FALLBACK_ZONES;
+
     return {
-        zones: config.zones || [],
+        zones: zones,
         product: config.product || null,
-        zoneId: (config.zones && config.zones[0]) ? config.zones[0].id : null,
+        zoneId: zones[0].id,
         qty: 1,
         items: [],
         hasActiveImage: false,
         bgWorking: false,
         adding: false,
         zoomLevel: 1,
+        fitScale: 1,
         canvas: null,
 
         init() {
@@ -422,7 +439,9 @@ window.designStudio = function (config) {
         },
 
         get currentZone() {
-            return this.zones.find(z => z.id === this.zoneId) || null;
+            if (!this.zoneId) return this.zones[0] || null;
+            const found = this.zones.find(z => Number(z.id) === Number(this.zoneId));
+            return found || this.zones[0] || null;
         },
 
         get basePrice() {
@@ -437,7 +456,7 @@ window.designStudio = function (config) {
 
         setupCanvas() {
             const el = document.getElementById('designCanvas');
-            if (!el) return;
+            if (!el || typeof fabric === 'undefined') return;
 
             this.canvas = new fabric.Canvas('designCanvas', {
                 backgroundColor: '#ffffff',
@@ -475,7 +494,6 @@ window.designStudio = function (config) {
             this.canvas.setHeight(h);
             this.canvas.renderAll();
             this.fitStage();
-            this.resetView();
         },
 
         fitStage() {
@@ -491,15 +509,18 @@ window.designStudio = function (config) {
             const cw = this.canvas.getWidth();
             const ch = this.canvas.getHeight();
 
+            if (cw <= 0 || ch <= 0) return;
+
             const fit = Math.min(maxW / cw, maxH / ch, 1);
-            stage.style.transform = `scale(${fit * this.zoomLevel})`;
             this.fitScale = fit;
+            stage.style.transform = `scale(${fit * this.zoomLevel})`;
         },
 
         changeZone() {
             this.applyZoneSize();
             this.canvas.getObjects().slice().forEach(o => this.canvas.remove(o));
             this.syncCount();
+            this.syncActive();
         },
 
         onFiles(e) {
