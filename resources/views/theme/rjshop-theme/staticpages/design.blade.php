@@ -109,7 +109,7 @@
 
                 <div class="rj-dz-left-tip">
                     <i class="fa-solid fa-circle-info"></i>
-                    <span>Switch product to change the sheet.</span>
+                    <span>Only DTF Transfers, UV Stickers and Special Films support custom design.</span>
                 </div>
             </div>
         </aside>
@@ -128,7 +128,7 @@
             <div class="rj-dz-side-block">
                 <label class="rj-dz-label">Sheet Size</label>
                 <div class="rj-dz-select-wrap">
-                    <select class="rj-dz-select" x-ref="zoneSelect" x-model="zoneId" @change="changeZone()"></select>
+                    <select class="rj-dz-select" x-ref="zoneSelect" @change="changeZone($event)"></select>
                     <i class="fa-solid fa-chevron-down"></i>
                 </div>
                 <p class="rj-dz-hint" x-text="currentZone ? (currentZone.width_inch + ' × ' + currentZone.height_inch + ' in') : ''"></p>
@@ -556,7 +556,6 @@
 <script>
 (function () {
     var DPI = 60;
-    var CUSTOM_ID = '__custom__';
 
     var FALLBACK_ZONES = [
         { id: 1, name: 'A4', slug: 'a4', width_inch: 8.3, height_inch: 11.7, label: 'A4 (8.3 × 11.7 in)', price_addon: 4.50 },
@@ -615,19 +614,33 @@
             zoomLevel: 1,
             fitScale: 1,
             canvas: null,
+            ready: false,
 
             init() {
-                this.$nextTick(() => {
-                    this.buildProductOptions();
-                    this.buildZoneOptions();
-                    this.readQueryParams();
-                    this.setupCanvas();
+                var self = this;
+
+                this.buildProductOptions();
+                this.buildZoneOptions();
+
+                this.$nextTick(function () {
+                    self.setupCanvas();
+
+                    self.$nextTick(function () {
+                        self.readQueryParams();
+                        self.ready = true;
+                    });
                 });
             },
 
             buildProductOptions() {
                 var s = this.$refs.productSelect;
-                if (!s || !this.products.length) return;
+                if (!s) return;
+
+                if (!this.products.length) {
+                    s.innerHTML = '<option value="">— No designable products —</option>';
+                    s.disabled = true;
+                    return;
+                }
 
                 s.innerHTML = this.products.map(function (p) {
                     var safe = String(p.name).replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -641,10 +654,14 @@
                 var s = this.$refs.zoneSelect;
                 if (!s) return;
 
-                s.innerHTML = this.zones.map(function (z) {
+                var opts = this.zones.map(function (z) {
                     var safe = String(z.label).replace(/</g, '&lt;').replace(/>/g, '&gt;');
                     return '<option value="' + z.id + '">' + safe + '</option>';
-                }).join('');
+                });
+
+                opts.push('<option value="__custom__">Custom size (see below)</option>');
+
+                s.innerHTML = opts.join('');
 
                 if (this.zoneId) {
                     s.value = this.zoneId;
@@ -661,14 +678,20 @@
                 if (w > 0 && h > 0) {
                     this.customW = w;
                     this.customH = h;
-                    this.applyCustom();
+                    this.isCustom = true;
+
+                    if (this.$refs.zoneSelect) {
+                        this.$refs.zoneSelect.value = '__custom__';
+                    }
+
+                    this.applyZoneSize();
                 }
             },
 
             get currentZone() {
                 if (this.isCustom && this.customW > 0 && this.customH > 0) {
                     return {
-                        id: CUSTOM_ID,
+                        id: '__custom__',
                         name: 'Custom',
                         slug: 'custom',
                         width_inch: this.customW,
@@ -710,14 +733,15 @@
                     selection: true
                 });
 
-                this.canvas.on('selection:created', () => this.syncActive());
-                this.canvas.on('selection:updated', () => this.syncActive());
-                this.canvas.on('selection:cleared', () => this.syncActive());
-                this.canvas.on('object:added', () => this.syncCount());
-                this.canvas.on('object:removed', () => this.syncCount());
+                var self = this;
+                this.canvas.on('selection:created', function () { self.syncActive(); });
+                this.canvas.on('selection:updated', function () { self.syncActive(); });
+                this.canvas.on('selection:cleared', function () { self.syncActive(); });
+                this.canvas.on('object:added', function () { self.syncCount(); });
+                this.canvas.on('object:removed', function () { self.syncCount(); });
 
                 this.applyZoneSize();
-                window.addEventListener('resize', () => this.fitStage());
+                window.addEventListener('resize', function () { self.fitStage(); });
             },
 
             syncActive() {
@@ -726,7 +750,7 @@
             },
 
             syncCount() {
-                this.items = this.canvas ? this.canvas.getObjects().filter(o => o.type === 'image') : [];
+                this.items = this.canvas ? this.canvas.getObjects().filter(function (o) { return o.type === 'image'; }) : [];
             },
 
             applyZoneSize() {
@@ -762,11 +786,27 @@
                 stage.style.transform = 'scale(' + (fit * this.zoomLevel) + ')';
             },
 
-            changeZone() {
+            changeZone(e) {
+                var val = e && e.target ? e.target.value : this.zoneId;
+
+                if (val === '__custom__') {
+                    if (this.customW > 0 && this.customH > 0) {
+                        this.isCustom = true;
+                        this.zoneId = null;
+                        this.applyZoneSize();
+                    } else {
+                        this.isCustom = true;
+                        this.zoneId = null;
+                    }
+                    return;
+                }
+
                 this.isCustom = false;
                 this.customW = null;
                 this.customH = null;
+                this.zoneId = Number(val);
                 this.applyZoneSize();
+
                 if (!this.canvas) return;
                 this.canvas.getObjects().slice().forEach(o => this.canvas.remove(o));
                 this.syncCount();
@@ -775,7 +815,6 @@
 
             applyCustom() {
                 if (!this.customW || !this.customH || this.customW <= 0 || this.customH <= 0) {
-                    this.isCustom = false;
                     return;
                 }
 
@@ -783,7 +822,7 @@
                 this.zoneId = null;
 
                 if (this.$refs.zoneSelect) {
-                    this.$refs.zoneSelect.value = '';
+                    this.$refs.zoneSelect.value = '__custom__';
                 }
 
                 this.applyZoneSize();
@@ -806,10 +845,9 @@
                 if (!p) return;
                 this.product = p;
 
-                if (p.slug && !this.isCustom) {
+                if (p.slug) {
                     var url = new URL(window.location.href);
                     url.pathname = '/design/' + p.slug;
-                    url.search = '';
                     window.history.replaceState({}, '', url.toString());
                 }
             },
@@ -822,16 +860,18 @@
 
             addImageFromFile(file) {
                 var reader = new FileReader();
-                reader.onload = ev => this.addImageFromSrc(ev.target.result);
+                var self = this;
+                reader.onload = function (ev) { self.addImageFromSrc(ev.target.result); };
                 reader.readAsDataURL(file);
             },
 
             addImageFromSrc(src, replaceObj) {
                 if (!this.canvas) return;
+                var self = this;
 
-                fabric.Image.fromURL(src, (img) => {
-                    var cw = this.canvas.getWidth();
-                    var ch = this.canvas.getHeight();
+                fabric.Image.fromURL(src, function (img) {
+                    var cw = self.canvas.getWidth();
+                    var ch = self.canvas.getHeight();
 
                     var maxW = cw * 0.6;
                     var maxH = ch * 0.6;
@@ -858,14 +898,14 @@
                             scaleY: replaceObj.scaleY,
                             angle: replaceObj.angle
                         });
-                        this.canvas.remove(replaceObj);
+                        self.canvas.remove(replaceObj);
                     }
 
-                    this.canvas.add(img);
-                    this.canvas.setActiveObject(img);
-                    this.canvas.renderAll();
-                    this.syncActive();
-                    this.syncCount();
+                    self.canvas.add(img);
+                    self.canvas.setActiveObject(img);
+                    self.canvas.renderAll();
+                    self.syncActive();
+                    self.syncCount();
                 }, { crossOrigin: 'anonymous' });
             },
 
@@ -993,7 +1033,7 @@
                 el.textContent = msg;
                 el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0a0715;color:#fff;padding:12px 24px;border-radius:9999px;border:1px solid rgba(99,102,241,0.4);font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.6);';
                 document.body.appendChild(el);
-                setTimeout(() => el.remove(), 2200);
+                setTimeout(function () { el.remove(); }, 2200);
             }
         };
     };
