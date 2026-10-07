@@ -22,14 +22,24 @@ class CartController extends Controller
     public function add(Request $request)
     {
         $validated = $request->validate([
-            'product_id' => 'required|integer|exists:products,id',
-            'unit_price' => 'required|numeric|min:0',
-            'qty' => 'nullable|integer|min:1|max:999',
+            'product_id' => 'nullable|integer|exists:products,id',
+            'name' => 'nullable|string|max:255',
+            'slug' => 'nullable|string|max:255',
+            'image' => 'nullable|string',
+            'unit_price' => 'nullable|numeric|min:0',
+            'qty' => 'nullable|integer|min:1|max:9999',
             'attributes' => 'nullable|array',
             'options' => 'nullable|array',
             'print_type' => 'nullable|string|max:50',
             'note' => 'nullable|string|max:500',
         ]);
+
+        if (empty($validated['product_id']) && empty($validated['name'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Either product_id or name is required',
+            ], 422);
+        }
 
         $this->cart->add($validated);
 
@@ -39,7 +49,7 @@ class CartController extends Controller
     public function update(Request $request, string $key)
     {
         $validated = $request->validate([
-            'qty' => 'required|integer|min:1|max:999',
+            'qty' => 'required|integer|min:1|max:9999',
         ]);
 
         $this->cart->update($key, (int) $validated['qty']);
