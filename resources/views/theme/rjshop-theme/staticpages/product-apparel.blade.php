@@ -24,19 +24,19 @@
         if ($pav->attribute->type !== 'color' && !$sizeAttr) $sizeAttr = $pav->attribute;
     }
 
-    $colors = collect();
+        $colors = collect();
     if ($colorAttr) {
         $colors = $product->attributeValues
             ->where('attribute_id', $colorAttr->id)
             ->sortBy(fn($pav) => $pav->attributeValue->sort_order ?? 0)
-            ->map(function ($pav) use ($imgUrl) {
+            ->map(function ($pav) {
                 $av = $pav->attributeValue;
                 return [
                     'id' => $pav->id,
                     'value_id' => $pav->attribute_value_id,
                     'name' => $av->value ?? '',
                     'color_code' => $av->color_code ?? '#000000',
-                    'image' => $imgUrl($pav->image),
+                    'image' => $pav->image_url,
                     'price_override' => $pav->price_override,
                 ];
             })
