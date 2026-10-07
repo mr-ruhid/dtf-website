@@ -5,12 +5,23 @@
 
 @section('content')
 
+@php
+    $pricing = [
+        'enabled' => \App\Models\Setting::get('design_custom_enabled', '1') == '1',
+        'per_sq_inch' => (float) \App\Models\Setting::get('design_custom_price_per_sq_inch', '0.05'),
+        'min_price' => (float) \App\Models\Setting::get('design_custom_min_price', '4.50'),
+        'min_inch' => (float) \App\Models\Setting::get('design_custom_min_inch', '1'),
+        'max_inch' => (float) \App\Models\Setting::get('design_custom_max_inch', '60'),
+    ];
+@endphp
+
 <section id="rjHero"
          class="rj-dz"
          x-data="designStudio({
             zones: {{ \Illuminate\Support\Js::from($zones) }},
             product: {{ \Illuminate\Support\Js::from($product) }},
-            allProducts: {{ \Illuminate\Support\Js::from($allProducts) }}
+            allProducts: {{ \Illuminate\Support\Js::from($allProducts) }},
+            pricing: {{ \Illuminate\Support\Js::from($pricing) }}
          })">
 
     <div class="rj-dz-toolbar">
@@ -134,15 +145,15 @@
                 <p class="rj-dz-hint" x-text="currentZone ? (currentZone.width_inch + ' × ' + currentZone.height_inch + ' in') : ''"></p>
             </div>
 
-            <div class="rj-dz-side-block">
+            <div class="rj-dz-side-block" x-show="pricing.enabled" x-cloak>
                 <label class="rj-dz-label">
                     Custom Size
                     <span class="rj-dz-label-note">override</span>
                 </label>
                 <div class="rj-dz-custom">
-                    <input type="number" min="1" max="60" step="0.1" x-model.number="customW" placeholder="W" @input="applyCustom()">
+                    <input type="number" :min="pricing.min_inch" :max="pricing.max_inch" step="0.1" x-model.number="customW" placeholder="W" @input="applyCustom()">
                     <span class="rj-dz-custom-sep">×</span>
-                    <input type="number" min="1" max="60" step="0.1" x-model.number="customH" placeholder="H" @input="applyCustom()">
+                    <input type="number" :min="pricing.min_inch" :max="pricing.max_inch" step="0.1" x-model.number="customH" placeholder="H" @input="applyCustom()">
                     <span class="rj-dz-custom-unit">in</span>
                 </div>
                 <button type="button" class="rj-dz-custom-clear" x-show="isCustom" @click="clearCustom()">
@@ -165,7 +176,11 @@
             <div class="rj-dz-side-total">
                 <div class="rj-dz-total-row">
                     <span>Sheet</span>
-                    <span x-text="'$' + basePrice.toFixed(2)"></span>
+                    <span x-text="'$' + sheetPrice.toFixed(2)"></span>
+                </div>
+                <div class="rj-dz-total-row">
+                    <span>Product</span>
+                    <span x-text="'$' + productPrice.toFixed(2)"></span>
                 </div>
                 <div class="rj-dz-total-row">
                     <span>Items</span>
@@ -556,6 +571,7 @@
 <script>
 (function () {
     var DPI = 60;
+    var CUSTOM_ID = '__custom__';
 
     var FALLBACK_ZONES = [
         { id: 1, name: 'A4', slug: 'a4', width_inch: 8.3, height_inch: 11.7, label: 'A4 (8.3 × 11.7 in)', price_addon: 4.50 },
@@ -597,11 +613,19 @@
 
         var products = config.allProducts || [];
         var initialProduct = config.product || null;
+        var pricing = config.pricing || {
+            enabled: true,
+            per_sq_inch: 0.05,
+            min_price: 4.50,
+            min_inch: 1,
+            max_inch: 60
+        };
 
         return {
             zones: zones,
             products: products,
             product: initialProduct,
+            pricing: pricing,
             zoneId: zones[0] ? zones[0].id : null,
             customW: null,
             customH: null,
@@ -659,7 +683,9 @@
                     return '<option value="' + z.id + '">' + safe + '</option>';
                 });
 
-                opts.push('<option value="__custom__">Custom size (see below)</option>');
+                if (this.pricing.enabled) {
+                    opts.push('<option value="' + CUSTOM_ID + '">Custom size (see below)</option>');
+                }
 
                 s.innerHTML = opts.join('');
 
@@ -675,13 +701,13 @@
                 var w = parseFloat(getQuery('w'));
                 var h = parseFloat(getQuery('h'));
 
-                if (w > 0 && h > 0) {
+                if (w > 0 && h > 0 && this.pricing.enabled) {
                     this.customW = w;
                     this.customH = h;
                     this.isCustom = true;
 
                     if (this.$refs.zoneSelect) {
-                        this.$refs.zoneSelect.value = '__custom__';
+                        this.$refs.zoneSelect.value = CUSTOM_ID;
                     }
 
                     this.applyZoneSize();
@@ -691,7 +717,7 @@
             get currentZone() {
                 if (this.isCustom && this.customW > 0 && this.customH > 0) {
                     return {
-                        id: '__custom__',
+                        id: CUSTOM_ID,
                         name: 'Custom',
                         slug: 'custom',
                         width_inch: this.customW,
@@ -709,14 +735,26 @@
 
             calculateCustomPrice() {
                 if (!this.customW || !this.customH) return 0;
+
+                var perSqInch = Number(this.pricing.per_sq_inch) || 0;
+                var minPrice = Number(this.pricing.min_price) || 0;
                 var areaSqIn = this.customW * this.customH;
-                return Math.round((areaSqIn * 0.05) * 100) / 100;
+                var calculated = areaSqIn * perSqInch;
+
+                return Math.round(Math.max(calculated, minPrice) * 100) / 100;
+            },
+
+            get sheetPrice() {
+                if (!this.currentZone) return 0;
+                return Number(this.currentZone.price_addon) || 0;
+            },
+
+            get productPrice() {
+                return this.product ? Number(this.product.base_price) || 0 : 0;
             },
 
             get basePrice() {
-                var zoneAddon = this.currentZone ? Number(this.currentZone.price_addon) : 0;
-                var productBase = this.product ? Number(this.product.base_price) : 0;
-                return zoneAddon + productBase;
+                return this.sheetPrice + this.productPrice;
             },
 
             get totalPrice() {
@@ -789,14 +827,11 @@
             changeZone(e) {
                 var val = e && e.target ? e.target.value : this.zoneId;
 
-                if (val === '__custom__') {
+                if (val === CUSTOM_ID) {
+                    this.isCustom = true;
+                    this.zoneId = null;
                     if (this.customW > 0 && this.customH > 0) {
-                        this.isCustom = true;
-                        this.zoneId = null;
                         this.applyZoneSize();
-                    } else {
-                        this.isCustom = true;
-                        this.zoneId = null;
                     }
                     return;
                 }
@@ -814,15 +849,21 @@
             },
 
             applyCustom() {
-                if (!this.customW || !this.customH || this.customW <= 0 || this.customH <= 0) {
-                    return;
-                }
+                if (!this.customW || !this.customH) return;
+
+                var min = Number(this.pricing.min_inch) || 1;
+                var max = Number(this.pricing.max_inch) || 60;
+
+                if (this.customW < min) this.customW = min;
+                if (this.customH < min) this.customH = min;
+                if (this.customW > max) this.customW = max;
+                if (this.customH > max) this.customH = max;
 
                 this.isCustom = true;
                 this.zoneId = null;
 
                 if (this.$refs.zoneSelect) {
-                    this.$refs.zoneSelect.value = '__custom__';
+                    this.$refs.zoneSelect.value = CUSTOM_ID;
                 }
 
                 this.applyZoneSize();
