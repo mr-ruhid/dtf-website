@@ -98,6 +98,47 @@
             border-radius: 4px;
             border: 1px solid rgba(251,191,36,0.3);
         }
+
+        .nav-payments{
+            position:relative;
+            background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(59,130,246,0.06) 100%);
+            border: 1px solid rgba(16,185,129,0.2);
+            border-radius: 12px;
+            margin-top: 6px;
+            transition: all .3s cubic-bezier(.4,0,.2,1);
+        }
+        .nav-payments:hover{
+            background: linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(59,130,246,0.12) 100%);
+            border-color: rgba(16,185,129,0.4);
+            box-shadow: 0 0 20px -4px rgba(16,185,129,0.35);
+        }
+        .nav-payments.active{
+            background: linear-gradient(135deg, rgba(16,185,129,0.18) 0%, rgba(59,130,246,0.15) 100%);
+            border-color: rgba(16,185,129,0.5);
+            box-shadow: 0 0 24px -4px rgba(16,185,129,0.4);
+        }
+        .nav-payments .icon-box{
+            background: linear-gradient(135deg,#10b981,#3b82f6);
+            color:#fff;
+            box-shadow: 0 4px 12px -2px rgba(16,185,129,0.5);
+        }
+        .nav-payments.active .icon-box,
+        .nav-payments:hover .icon-box{
+            background: linear-gradient(135deg,#34d399,#60a5fa);
+            transform: scale(1.05);
+        }
+        .nav-payments .badge-pay{
+            font-family: ui-monospace, monospace;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #6ee7b7;
+            background: rgba(16,185,129,0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(16,185,129,0.3);
+        }
     </style>
     @stack('styles')
 </head>
@@ -239,9 +280,30 @@
                 </a>
 
                 <a href="{{ route('admin.settings.index') }}"
-                   class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings*') ? 'active' : '' }}">
+                   class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings.index') ? 'active' : '' }}">
                     <div class="icon-box"><i class="fa-solid fa-sliders"></i></div>
                     <span x-show="sidebarOpen" class="text-[13px] font-medium">Settings</span>
+                </a>
+
+                <a href="{{ route('admin.settings.design-pricing') }}"
+                   class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings.design-pricing*') ? 'active' : '' }}">
+                    <div class="icon-box"><i class="fa-solid fa-calculator"></i></div>
+                    <span x-show="sidebarOpen" class="text-[13px] font-medium flex-1">Design Pricing</span>
+                    <span x-show="sidebarOpen" class="text-[9px] bg-pink-500/20 text-pink-300 font-bold px-1.5 py-0.5 rounded">NEW</span>
+                </a>
+
+                <div x-show="sidebarOpen" class="flex items-center gap-2 px-3 mt-5 mb-2">
+                    <span class="text-[9px] uppercase tracking-[0.15em] text-emerald-500 font-bold">Finance</span>
+                    <div class="flex-1" style="height:1px;background:linear-gradient(90deg,rgba(16,185,129,0.5),transparent);"></div>
+                </div>
+
+                <a href="{{ route('admin.payments.index') }}"
+                   class="nav-payments nav-item flex items-center gap-3 px-3 py-2.5 {{ request()->routeIs('admin.payments*') ? 'active' : '' }}">
+                    <div class="icon-box"><i class="fa-solid fa-credit-card"></i></div>
+                    <div x-show="sidebarOpen" class="flex-1 flex items-center justify-between min-w-0">
+                        <span class="text-[13px] font-semibold text-emerald-100">Payments</span>
+                        <span class="badge-pay">New</span>
+                    </div>
                 </a>
 
                 <div x-show="sidebarOpen" class="flex items-center gap-2 px-3 mt-5 mb-2">
@@ -431,9 +493,26 @@
                 <div class="icon-box"><i class="fa-solid fa-headset"></i></div>
                 <span class="text-[13px] font-medium">Technical Support</span>
             </a>
-            <a href="{{ route('admin.settings.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings*') ? 'active' : '' }}">
+            <a href="{{ route('admin.settings.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings.index') ? 'active' : '' }}">
                 <div class="icon-box"><i class="fa-solid fa-sliders"></i></div>
                 <span class="text-[13px] font-medium">Settings</span>
+            </a>
+            <a href="{{ route('admin.settings.design-pricing') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings.design-pricing*') ? 'active' : '' }}">
+                <div class="icon-box"><i class="fa-solid fa-calculator"></i></div>
+                <span class="text-[13px] font-medium flex-1">Design Pricing</span>
+                <span class="text-[9px] bg-pink-500/20 text-pink-300 font-bold px-1.5 py-0.5 rounded">NEW</span>
+            </a>
+
+            <div class="flex items-center gap-2 px-3 mt-5 mb-2">
+                <span class="text-[9px] uppercase tracking-[0.15em] text-emerald-500 font-bold">Finance</span>
+                <div class="flex-1" style="height:1px;background:linear-gradient(90deg,rgba(16,185,129,0.5),transparent);"></div>
+            </div>
+            <a href="{{ route('admin.payments.index') }}" class="nav-payments nav-item flex items-center gap-3 px-3 py-2.5 {{ request()->routeIs('admin.payments*') ? 'active' : '' }}">
+                <div class="icon-box"><i class="fa-solid fa-credit-card"></i></div>
+                <div class="flex-1 flex items-center justify-between min-w-0">
+                    <span class="text-[13px] font-semibold text-emerald-100">Payments</span>
+                    <span class="badge-pay">New</span>
+                </div>
             </a>
 
             <div class="flex items-center gap-2 px-3 mt-5 mb-2">
