@@ -983,8 +983,7 @@ function standardProduct(config) {
         },
 
         get finalPrice() {
-            const base = this.requiresDesign ? this.sheetPrice : this.basePrice;
-            return Math.max(0, base + this.optionsAddon);
+            return Math.max(0, this.basePrice + this.sheetPrice + this.optionsAddon);
         },
 
         get totalPrice() {
