@@ -91,6 +91,15 @@
                 'fg' => 'rgb(225,29,72)',
             ],
             [
+                'route' => 'admin.settings.design-pricing',
+                'label' => 'Design Pricing',
+                'desc' => 'Custom size formula',
+                'icon' => 'fa-calculator',
+                'bg' => 'rgba(236,72,153,0.1)',
+                'fg' => 'rgb(219,39,119)',
+                'badge' => 'NEW',
+            ],
+            [
                 'route' => 'admin.settings.system',
                 'label' => 'System Info',
                 'desc' => 'PHP, Laravel, server status',
@@ -157,8 +166,8 @@
 
                 @if (!empty($card['badge']))
                     <span class="absolute top-4 right-4 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider
-                        {{ $card['badge'] === 'ACTIVE' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600' }}">
-                        <span class="w-1 h-1 rounded-full {{ $card['badge'] === 'ACTIVE' ? 'bg-amber-500 animate-pulse' : 'bg-gray-400' }}"></span>
+                        {{ $card['badge'] === 'ACTIVE' ? 'bg-amber-100 text-amber-700' : ($card['badge'] === 'NEW' ? 'bg-pink-100 text-pink-700' : 'bg-gray-100 text-gray-600') }}">
+                        <span class="w-1 h-1 rounded-full {{ $card['badge'] === 'ACTIVE' ? 'bg-amber-500 animate-pulse' : ($card['badge'] === 'NEW' ? 'bg-pink-500' : 'bg-gray-400') }}"></span>
                         {{ $card['badge'] }}
                     </span>
                 @endif

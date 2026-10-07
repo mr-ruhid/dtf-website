@@ -239,16 +239,9 @@
                 </a>
 
                 <a href="{{ route('admin.settings.index') }}"
-                   class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings.index') ? 'active' : '' }}">
+                   class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings*') ? 'active' : '' }}">
                     <div class="icon-box"><i class="fa-solid fa-sliders"></i></div>
                     <span x-show="sidebarOpen" class="text-[13px] font-medium">Settings</span>
-                </a>
-
-                <a href="{{ route('admin.settings.design-pricing') }}"
-                   class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings.design-pricing*') ? 'active' : '' }}">
-                    <div class="icon-box"><i class="fa-solid fa-calculator"></i></div>
-                    <span x-show="sidebarOpen" class="text-[13px] font-medium flex-1">Design Pricing</span>
-                    <span x-show="sidebarOpen" class="text-[9px] bg-pink-500/20 text-pink-300 font-bold px-1.5 py-0.5 rounded">NEW</span>
                 </a>
 
                 <div x-show="sidebarOpen" class="flex items-center gap-2 px-3 mt-5 mb-2">
@@ -438,14 +431,9 @@
                 <div class="icon-box"><i class="fa-solid fa-headset"></i></div>
                 <span class="text-[13px] font-medium">Technical Support</span>
             </a>
-            <a href="{{ route('admin.settings.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings.index') ? 'active' : '' }}">
+            <a href="{{ route('admin.settings.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings*') ? 'active' : '' }}">
                 <div class="icon-box"><i class="fa-solid fa-sliders"></i></div>
                 <span class="text-[13px] font-medium">Settings</span>
-            </a>
-            <a href="{{ route('admin.settings.design-pricing') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings.design-pricing*') ? 'active' : '' }}">
-                <div class="icon-box"><i class="fa-solid fa-calculator"></i></div>
-                <span class="text-[13px] font-medium flex-1">Design Pricing</span>
-                <span class="text-[9px] bg-pink-500/20 text-pink-300 font-bold px-1.5 py-0.5 rounded">NEW</span>
             </a>
 
             <div class="flex items-center gap-2 px-3 mt-5 mb-2">
