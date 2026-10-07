@@ -1,397 +1,678 @@
 @extends('theme.rjshop-theme.layouts.app')
 
 @section('meta_title', 'Design Studio')
-@section('meta_description', 'Upload your design and get instant pricing')
+@section('meta_description', 'Build your gang sheet')
 
 @section('content')
 
-<section class="relative bg-[#05030f] min-h-screen text-white overflow-hidden">
-    <div class="absolute inset-0 opacity-[0.03]" style="background-image: linear-gradient(rgba(99,102,241,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.5) 1px, transparent 1px); background-size: 50px 50px;"></div>
-    <div class="absolute top-0 left-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none"></div>
-    <div class="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-pink-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+<section class="rj-dz"
+         x-data="designStudio({
+            zones: {{ \Illuminate\Support\Js::from($zones) }},
+            product: {{ \Illuminate\Support\Js::from($product) }}
+         })">
 
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
+    <div class="rj-dz-toolbar">
+        <div class="rj-dz-tb-group">
+            <label class="rj-dz-tb-btn rj-dz-tb-primary">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>Upload</span>
+                <input type="file" accept="image/png,image/jpeg,image/webp" multiple class="hidden" @change="onFiles($event)">
+            </label>
 
-        <div class="text-center mb-10">
-            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10 mb-4">
-                <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
-                <span class="font-mono text-[10px] uppercase tracking-[0.25em] text-indigo-300">Design Studio</span>
-            </div>
-            <h1 class="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-3">
-                Build your <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">gang sheet</span>
-            </h1>
-            <p class="text-gray-400 max-w-xl mx-auto">Upload your artwork, arrange it on the canvas, and see instant pricing.</p>
+            <button type="button" class="rj-dz-tb-btn" @click="removeBg()" :disabled="!hasActiveImage || bgWorking">
+                <i class="fa-solid" :class="bgWorking ? 'fa-spinner fa-spin' : 'fa-wand-magic-sparkles'"></i>
+                <span x-text="bgWorking ? 'Working...' : 'Remove BG'"></span>
+            </button>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="rj-dz-tb-sep"></div>
 
-            <div class="lg:col-span-2">
-
-                <div class="bg-white/[0.02] border border-white/10 rounded-2xl p-4 mb-4">
-                    <div class="flex flex-wrap items-center gap-3">
-                        <label class="cursor-pointer inline-flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] transition-all">
-                            <i class="fa-solid fa-cloud-arrow-up"></i>
-                            <span>Upload Image</span>
-                            <input type="file" id="imageInput" accept="image/png,image/jpeg,image/webp" class="hidden" multiple>
-                        </label>
-
-                        <div class="h-8 w-px bg-white/10"></div>
-
-                        <div class="flex items-center gap-2">
-                            <label class="text-xs text-gray-400 font-mono uppercase tracking-wider">Size</label>
-                            <select id="sheetSize" class="bg-white/5 border border-white/10 rounded-lg text-sm text-white px-3 py-2 focus:outline-none focus:border-indigo-500/60">
-                                <option value="a4">A4 (8.3 × 11.7 in)</option>
-                                <option value="a3">A3 (11.7 × 16.5 in)</option>
-                                <option value="12x12">12 × 12 in</option>
-                                <option value="12x24">12 × 24 in</option>
-                                <option value="13x19">13 × 19 in</option>
-                                <option value="22x24">22 × 24 in</option>
-                            </select>
-                        </div>
-
-                        <div class="h-8 w-px bg-white/10"></div>
-
-                        <button id="clearBtn" class="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-lg transition">
-                            <i class="fa-solid fa-trash text-xs"></i>
-                            <span>Clear</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="relative bg-white/[0.02] border border-white/10 rounded-2xl p-4 overflow-hidden">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-                            <span class="font-mono text-[10px] uppercase tracking-widest text-gray-500">Canvas</span>
-                        </div>
-                        <div class="font-mono text-[10px] text-gray-500">
-                            <span id="dimensions">0 × 0</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-center bg-[#0a0715] rounded-xl p-4 relative" style="min-height: 500px;">
-                        <div id="sheetFrame" class="relative bg-white rounded-md shadow-2xl transition-all" style="width: 400px; height: 565px;">
-                            <canvas id="designCanvas" width="400" height="565" class="absolute inset-0 w-full h-full rounded-md"></canvas>
-                            <div id="dropHint" class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none opacity-30">
-                                <i class="fa-solid fa-image text-gray-400 text-5xl mb-3"></i>
-                                <p class="text-gray-500 text-sm">Drop image here or click Upload</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-center gap-2 mt-3 text-[10px] text-gray-500 font-mono uppercase tracking-wider">
-                        <i class="fa-solid fa-arrows-up-down-left-right"></i>
-                        <span>Drag to move</span>
-                        <span class="mx-2">·</span>
-                        <i class="fa-solid fa-expand"></i>
-                        <span>Scroll to resize</span>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="lg:col-span-1">
-                <div class="bg-white/[0.02] border border-white/10 rounded-2xl p-6 sticky top-24">
-                    <div class="flex items-center gap-2 mb-5">
-                        <span class="font-mono text-[10px] uppercase tracking-widest text-indigo-400">// Order Summary</span>
-                    </div>
-
-                    <div class="space-y-3 mb-6">
-                        <div class="flex items-center justify-between text-sm">
-                            <span class="text-gray-400">Sheet size</span>
-                            <span id="summarySize" class="font-mono text-white">A4</span>
-                        </div>
-                        <div class="flex items-center justify-between text-sm">
-                            <span class="text-gray-400">Images</span>
-                            <span id="summaryCount" class="font-mono text-white">0</span>
-                        </div>
-                        <div class="flex items-center justify-between text-sm">
-                            <span class="text-gray-400">Coverage</span>
-                            <span id="summaryCoverage" class="font-mono text-white">0%</span>
-                        </div>
-                    </div>
-
-                    <div class="border-t border-white/10 pt-5 mb-6">
-                        <div class="flex items-end justify-between mb-2">
-                            <span class="text-gray-400 text-sm">Total</span>
-                            <div class="text-right">
-                                <span class="text-3xl font-black text-white">$<span id="totalPrice">0.00</span></span>
-                            </div>
-                        </div>
-                        <div class="font-mono text-[10px] text-gray-500 text-right">per sheet</div>
-                    </div>
-
-                    <div class="space-y-3 mb-5">
-                        <div>
-                            <label class="block font-mono text-[10px] uppercase tracking-widest text-gray-500 mb-2">Quantity</label>
-                            <div class="flex items-center gap-2">
-                                <button id="qtyMinus" class="w-10 h-10 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition">−</button>
-                                <input type="number" id="qty" value="1" min="1" max="999" class="flex-1 bg-white/5 border border-white/10 rounded-lg text-center text-white font-mono py-2.5 focus:outline-none focus:border-indigo-500/60">
-                                <button id="qtyPlus" class="w-10 h-10 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition">+</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button id="addToCartBtn" class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold py-4 rounded-xl hover:shadow-[0_0_40px_rgba(168,85,247,0.5)] hover:scale-[1.02] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100" disabled>
-                        <i class="fa-solid fa-cart-plus"></i>
-                        <span>Add to Cart</span>
-                    </button>
-
-                    <div class="mt-4 text-center font-mono text-[10px] text-gray-600 uppercase tracking-widest">
-                        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full inline-block mr-1.5 animate-pulse"></span>
-                        Ready to print
-                    </div>
-                </div>
-            </div>
-
+        <div class="rj-dz-tb-group">
+            <button type="button" class="rj-dz-tb-btn" @click="flipH()" :disabled="!hasActiveImage" title="Flip">
+                <i class="fa-solid fa-left-right"></i>
+            </button>
+            <button type="button" class="rj-dz-tb-btn" @click="rotate(90)" :disabled="!hasActiveImage" title="Rotate">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+            <button type="button" class="rj-dz-tb-btn" @click="layerUp()" :disabled="!hasActiveImage" title="Bring forward">
+                <i class="fa-solid fa-arrow-up"></i>
+            </button>
+            <button type="button" class="rj-dz-tb-btn" @click="layerDown()" :disabled="!hasActiveImage" title="Send backward">
+                <i class="fa-solid fa-arrow-down"></i>
+            </button>
+            <button type="button" class="rj-dz-tb-btn rj-dz-tb-danger" @click="removeActive()" :disabled="!hasActiveImage" title="Delete">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
         </div>
+
+        <div class="rj-dz-tb-sep"></div>
+
+        <div class="rj-dz-tb-group">
+            <button type="button" class="rj-dz-tb-btn" @click="zoom(-1)" title="Zoom out">
+                <i class="fa-solid fa-magnifying-glass-minus"></i>
+            </button>
+            <span class="rj-dz-tb-zoom" x-text="Math.round(zoomLevel * 100) + '%'"></span>
+            <button type="button" class="rj-dz-tb-btn" @click="zoom(1)" title="Zoom in">
+                <i class="fa-solid fa-magnifying-glass-plus"></i>
+            </button>
+            <button type="button" class="rj-dz-tb-btn" @click="resetView()" title="Reset">
+                <i class="fa-solid fa-arrows-rotate"></i>
+            </button>
+        </div>
+
+        <div class="rj-dz-tb-spacer"></div>
+
+        <div class="rj-dz-tb-info">
+            <span class="rj-dz-dot"></span>
+            <span x-text="items.length + ' ' + (items.length === 1 ? 'item' : 'items')"></span>
+        </div>
+    </div>
+
+    <div class="rj-dz-body">
+
+        <div class="rj-dz-stage-wrap">
+            <div class="rj-dz-stage" x-ref="stage">
+                <canvas id="designCanvas"></canvas>
+                <div class="rj-dz-empty" x-show="items.length === 0" x-cloak>
+                    <i class="fa-regular fa-image"></i>
+                    <p>Upload artwork to start</p>
+                </div>
+            </div>
+        </div>
+
+        <aside class="rj-dz-sidebar">
+            <div class="rj-dz-side-block">
+                <label class="rj-dz-label">Sheet Size</label>
+                <div class="rj-dz-select-wrap">
+                    <select class="rj-dz-select" x-model="zoneId" @change="changeZone()">
+                        <template x-for="z in zones" :key="z.id">
+                            <option :value="z.id" x-text="z.label"></option>
+                        </template>
+                    </select>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <p class="rj-dz-hint" x-text="currentZone ? (currentZone.width_inch + ' × ' + currentZone.height_inch + ' in') : ''"></p>
+            </div>
+
+            <div class="rj-dz-side-block" x-show="product">
+                <label class="rj-dz-label">Product</label>
+                <div class="rj-dz-product">
+                    <template x-if="product && product.image">
+                        <img :src="product.image" :alt="product.name">
+                    </template>
+                    <div>
+                        <p class="rj-dz-product-name" x-text="product ? product.name : ''"></p>
+                        <p class="rj-dz-product-meta" x-text="product ? ('Base $' + Number(product.base_price).toFixed(2)) : ''"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rj-dz-side-block">
+                <label class="rj-dz-label">Quantity</label>
+                <div class="rj-dz-qty">
+                    <button type="button" @click="decQty()">−</button>
+                    <input type="number" x-model.number="qty" min="1" max="999">
+                    <button type="button" @click="incQty()">+</button>
+                </div>
+            </div>
+
+            <div class="rj-dz-side-spacer"></div>
+
+            <div class="rj-dz-side-total">
+                <div class="rj-dz-total-row">
+                    <span>Sheet</span>
+                    <span x-text="'$' + basePrice.toFixed(2)"></span>
+                </div>
+                <div class="rj-dz-total-row">
+                    <span>Items</span>
+                    <span x-text="items.length"></span>
+                </div>
+                <div class="rj-dz-total-row rj-dz-total-grand">
+                    <span>Total</span>
+                    <span x-text="'$' + totalPrice.toFixed(2)"></span>
+                </div>
+            </div>
+
+            <button type="button"
+                    class="rj-dz-add"
+                    :disabled="items.length === 0 || adding"
+                    @click="addToCart()">
+                <i class="fa-solid" :class="adding ? 'fa-spinner fa-spin' : 'fa-cart-plus'"></i>
+                <span x-text="adding ? 'Adding...' : 'Add to Cart'"></span>
+            </button>
+        </aside>
+
     </div>
 </section>
 
 <style>
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .rj-dz {
+        position: fixed;
+        inset: 0;
+        top: 64px;
+        background: #05030f;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .rj-dz-toolbar {
+        display: flex; align-items: center; gap: 8px;
+        padding: 10px 16px;
+        background: #0a0715;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        flex-shrink: 0;
+    }
+    .rj-dz-tb-group { display: inline-flex; align-items: center; gap: 6px; }
+    .rj-dz-tb-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.08); margin: 0 6px; }
+    .rj-dz-tb-spacer { flex: 1; }
+    .rj-dz-tb-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 8px 12px; border-radius: 8px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: #d1d5db; font-size: 12px; font-weight: 600;
+        cursor: pointer; transition: all .2s;
+        font-family: inherit;
+    }
+    .rj-dz-tb-btn:hover:not(:disabled) {
+        background: rgba(99,102,241,0.12);
+        border-color: rgba(99,102,241,0.4);
+        color: #fff;
+    }
+    .rj-dz-tb-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .rj-dz-tb-primary {
+        background: linear-gradient(135deg, #6366f1, #a855f7);
+        border-color: transparent; color: #fff;
+    }
+    .rj-dz-tb-primary:hover:not(:disabled) {
+        background: linear-gradient(135deg, #7c7ff5, #b966f9);
+        box-shadow: 0 0 24px rgba(99,102,241,0.5);
+        border-color: transparent;
+    }
+    .rj-dz-tb-danger:hover:not(:disabled) {
+        background: rgba(244,63,94,0.12);
+        border-color: rgba(244,63,94,0.4);
+        color: #fda4af;
+    }
+    .rj-dz-tb-zoom {
+        font-family: ui-monospace, monospace; font-size: 11px;
+        color: #9ca3af; min-width: 44px; text-align: center;
+    }
+    .rj-dz-tb-info {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-family: ui-monospace, monospace; font-size: 11px;
+        color: #6b7280; text-transform: uppercase; letter-spacing: .15em;
+    }
+    .rj-dz-dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: #34d399;
+        box-shadow: 0 0 8px 2px rgba(52,211,153,0.7);
+    }
+
+    .rj-dz-body {
+        flex: 1; display: flex; overflow: hidden;
+    }
+
+    .rj-dz-stage-wrap {
+        flex: 1; position: relative;
+        display: flex; align-items: center; justify-content: center;
+        padding: 24px; overflow: hidden;
+        background:
+            radial-gradient(circle at 30% 40%, rgba(99,102,241,0.06), transparent 60%),
+            radial-gradient(circle at 70% 60%, rgba(236,72,153,0.05), transparent 60%),
+            #05030f;
+    }
+    .rj-dz-stage-wrap::before {
+        content: ""; position: absolute; inset: 0;
+        background-image:
+            linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+    }
+    .rj-dz-stage {
+        position: relative;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow:
+            0 0 0 1px rgba(99,102,241,0.2),
+            0 30px 80px -20px rgba(0,0,0,0.8),
+            0 0 60px rgba(99,102,241,0.15);
+        transform-origin: center center;
+    }
+    .rj-dz-stage .canvas-container {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .rj-dz-empty {
+        position: absolute; inset: 0;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        gap: 12px;
+        color: #9ca3af; pointer-events: none;
+        text-align: center;
+    }
+    .rj-dz-empty i { font-size: 42px; opacity: .25; }
+    .rj-dz-empty p { font-size: 13px; margin: 0; }
+
+    .rj-dz-sidebar {
+        width: 320px; flex-shrink: 0;
+        background: #0a0715;
+        border-left: 1px solid rgba(255,255,255,0.06);
+        padding: 20px;
+        display: flex; flex-direction: column;
+        overflow-y: auto;
+    }
+    .rj-dz-side-block { margin-bottom: 20px; }
+    .rj-dz-side-spacer { flex: 1; }
+    .rj-dz-label {
+        display: block;
+        font-family: ui-monospace, monospace;
+        font-size: 10px; text-transform: uppercase;
+        letter-spacing: .22em; color: #818cf8;
+        margin-bottom: 10px;
+    }
+    .rj-dz-select-wrap { position: relative; }
+    .rj-dz-select {
+        width: 100%;
+        padding: 12px 40px 12px 14px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 10px;
+        color: #fff; font-size: 13px;
+        font-family: inherit;
+        appearance: none; -webkit-appearance: none;
+        outline: none; cursor: pointer;
+        transition: all .2s;
+    }
+    .rj-dz-select:focus {
+        border-color: rgba(99,102,241,0.6);
+        background: rgba(99,102,241,0.06);
+        box-shadow: 0 0 20px rgba(99,102,241,0.2);
+    }
+    .rj-dz-select option { background: #0a0715; color: #fff; }
+    .rj-dz-select-wrap i {
+        position: absolute; right: 14px; top: 50%;
+        transform: translateY(-50%);
+        color: #6b7280; font-size: 10px; pointer-events: none;
+    }
+    .rj-dz-hint {
+        font-family: ui-monospace, monospace;
+        font-size: 10px; color: #6b7280;
+        margin: 8px 0 0; letter-spacing: .1em;
+    }
+
+    .rj-dz-product {
+        display: flex; gap: 12px; align-items: center;
+        padding: 10px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 10px;
+    }
+    .rj-dz-product img {
+        width: 44px; height: 44px; border-radius: 8px;
+        object-fit: cover;
+        border: 1px solid rgba(255,255,255,0.08);
+        flex-shrink: 0;
+    }
+    .rj-dz-product-name {
+        font-size: 13px; font-weight: 600; color: #fff;
+        margin: 0 0 2px; line-height: 1.3;
+    }
+    .rj-dz-product-meta {
+        font-family: ui-monospace, monospace;
+        font-size: 10px; color: #818cf8;
+        margin: 0; letter-spacing: .05em;
+    }
+
+    .rj-dz-qty {
+        display: inline-flex; align-items: center;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 10px; overflow: hidden;
+    }
+    .rj-dz-qty button {
+        width: 42px; height: 42px;
+        background: transparent; border: none;
+        color: #d1d5db; font-size: 18px; font-weight: 600;
+        cursor: pointer; transition: all .2s;
+    }
+    .rj-dz-qty button:hover { background: rgba(99,102,241,0.15); color: #fff; }
+    .rj-dz-qty input {
+        width: 64px; height: 42px;
+        background: transparent;
+        border: none;
+        border-left: 1px solid rgba(255,255,255,0.08);
+        border-right: 1px solid rgba(255,255,255,0.08);
+        color: #fff; text-align: center;
+        font-family: ui-monospace, monospace;
+        font-size: 14px; font-weight: 600;
+        outline: none; -moz-appearance: textfield;
+    }
+    .rj-dz-qty input::-webkit-outer-spin-button,
+    .rj-dz-qty input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+    .rj-dz-side-total {
+        padding: 16px 0;
+        border-top: 1px solid rgba(255,255,255,0.06);
+        margin-bottom: 16px;
+    }
+    .rj-dz-total-row {
+        display: flex; justify-content: space-between;
+        font-size: 12px; color: #9ca3af;
+        padding: 4px 0;
+        font-family: ui-monospace, monospace;
+    }
+    .rj-dz-total-grand {
+        font-size: 18px; font-weight: 800;
+        color: #fff; padding-top: 12px;
+        margin-top: 8px;
+        border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .rj-dz-add {
+        width: 100%;
+        display: inline-flex; align-items: center; justify-content: center;
+        gap: 10px;
+        padding: 16px;
+        background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+        border: none; border-radius: 12px;
+        color: #fff; font-size: 14px; font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all .3s;
+        box-shadow: 0 10px 30px -10px rgba(168,85,247,0.5);
+    }
+    .rj-dz-add:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 40px -10px rgba(168,85,247,0.7);
+    }
+    .rj-dz-add:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    @media (max-width: 900px) {
+        .rj-dz { top: 56px; }
+        .rj-dz-sidebar { width: 260px; }
+        .rj-dz-tb-btn span { display: none; }
+    }
 </style>
 
-<script>
-(function() {
-    var canvas = document.getElementById('designCanvas');
-    var ctx = canvas.getContext('2d');
-    var dropHint = document.getElementById('dropHint');
-    var imageInput = document.getElementById('imageInput');
-    var sheetSize = document.getElementById('sheetSize');
-    var sheetFrame = document.getElementById('sheetFrame');
-    var clearBtn = document.getElementById('clearBtn');
-    var dimensions = document.getElementById('dimensions');
-    var summarySize = document.getElementById('summarySize');
-    var summaryCount = document.getElementById('summaryCount');
-    var summaryCoverage = document.getElementById('summaryCoverage');
-    var totalPrice = document.getElementById('totalPrice');
-    var qtyInput = document.getElementById('qty');
-    var qtyMinus = document.getElementById('qtyMinus');
-    var qtyPlus = document.getElementById('qtyPlus');
-    var addToCartBtn = document.getElementById('addToCartBtn');
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 
-    var sizes = {
-        a4: { w: 400, h: 565, label: 'A4', basePrice: 4.50 },
-        a3: { w: 565, h: 800, label: 'A3', basePrice: 7.50 },
-        '12x12': { w: 565, h: 565, label: '12×12', basePrice: 6.00 },
-        '12x24': { w: 565, h: 1130, label: '12×24', basePrice: 10.00 },
-        '13x19': { w: 612, h: 894, label: '13×19', basePrice: 9.00 },
-        '22x24': { w: 1035, h: 1130, label: '22×24', basePrice: 18.00 }
-    };
+<script type="module">
+import removeBg from 'https://esm.sh/@imgly/background-removal@1.4.5';
 
-    var images = [];
-    var activeImage = null;
-    var dragging = false;
-    var dragOffset = { x: 0, y: 0 };
-    var currentSize = 'a4';
+const DPI = 60;
 
-    function resizeCanvas() {
-        var s = sizes[currentSize];
-        canvas.width = s.w;
-        canvas.height = s.h;
-        sheetFrame.style.width = Math.min(s.w, 500) + 'px';
-        sheetFrame.style.height = (Math.min(s.w, 500) / s.w * s.h) + 'px';
-        dimensions.textContent = s.w + ' × ' + s.h + ' px';
-        summarySize.textContent = s.label;
-        draw();
-    }
+window.designStudio = function (config) {
+    return {
+        zones: config.zones || [],
+        product: config.product || null,
+        zoneId: (config.zones && config.zones[0]) ? config.zones[0].id : null,
+        qty: 1,
+        items: [],
+        hasActiveImage: false,
+        bgWorking: false,
+        adding: false,
+        zoomLevel: 1,
+        canvas: null,
 
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        init() {
+            this.$nextTick(() => this.setupCanvas());
+        },
 
-        var scale = canvas.width / parseFloat(sheetFrame.style.width || canvas.width);
-        var displayScale = canvas.width / (parseFloat(sheetFrame.style.width) || canvas.width);
+        get currentZone() {
+            return this.zones.find(z => z.id === this.zoneId) || null;
+        },
 
-        images.forEach(function(img, i) {
-            var x = img.x * displayScale;
-            var y = img.y * displayScale;
-            var w = img.w * displayScale;
-            var h = img.h * displayScale;
-            var rot = img.rotation || 0;
+        get basePrice() {
+            const zoneAddon = this.currentZone ? Number(this.currentZone.price_addon) : 0;
+            const productBase = this.product ? Number(this.product.base_price) : 0;
+            return zoneAddon + productBase;
+        },
 
-            ctx.save();
-            ctx.translate(x + w / 2, y + h / 2);
-            ctx.rotate(rot * Math.PI / 180);
-            ctx.drawImage(img.el, -w / 2, -h / 2, w, h);
+        get totalPrice() {
+            return this.basePrice * (this.qty || 1);
+        },
 
-            if (i === images.indexOf(activeImage)) {
-                ctx.strokeStyle = '#6366f1';
-                ctx.lineWidth = 2 / displayScale;
-                ctx.setLineDash([6 / displayScale, 4 / displayScale]);
-                ctx.strokeRect(-w / 2 - 4, -h / 2 - 4, w + 8, h + 8);
-                ctx.setLineDash([]);
+        setupCanvas() {
+            const el = document.getElementById('designCanvas');
+            if (!el) return;
 
-                ctx.fillStyle = '#6366f1';
-                var handles = [[-w/2 - 4, -h/2 - 4], [w/2 + 4, -h/2 - 4], [-w/2 - 4, h/2 + 4], [w/2 + 4, h/2 + 4]];
-                var hs = 8 / displayScale;
-                handles.forEach(function(h) {
-                    ctx.fillRect(h[0] - hs/2, h[1] - hs/2, hs, hs);
+            this.canvas = new fabric.Canvas('designCanvas', {
+                backgroundColor: '#ffffff',
+                preserveObjectStacking: true,
+                selection: true,
+            });
+
+            this.canvas.on('selection:created', () => this.syncActive());
+            this.canvas.on('selection:updated', () => this.syncActive());
+            this.canvas.on('selection:cleared', () => this.syncActive());
+            this.canvas.on('object:added', () => this.syncCount());
+            this.canvas.on('object:removed', () => this.syncCount());
+
+            this.applyZoneSize();
+            window.addEventListener('resize', () => this.fitStage());
+        },
+
+        syncActive() {
+            const obj = this.canvas ? this.canvas.getActiveObject() : null;
+            this.hasActiveImage = !!(obj && obj.type === 'image');
+        },
+
+        syncCount() {
+            this.items = this.canvas ? this.canvas.getObjects().filter(o => o.type === 'image') : [];
+        },
+
+        applyZoneSize() {
+            const z = this.currentZone;
+            if (!z || !this.canvas) return;
+
+            const w = Math.max(1, Math.round(Number(z.width_inch) * DPI));
+            const h = Math.max(1, Math.round(Number(z.height_inch) * DPI));
+
+            this.canvas.setWidth(w);
+            this.canvas.setHeight(h);
+            this.canvas.renderAll();
+            this.fitStage();
+            this.resetView();
+        },
+
+        fitStage() {
+            const stage = this.$refs.stage;
+            if (!stage || !this.canvas) return;
+
+            const wrap = stage.parentElement;
+            if (!wrap) return;
+
+            const pad = 48;
+            const maxW = wrap.clientWidth - pad;
+            const maxH = wrap.clientHeight - pad;
+            const cw = this.canvas.getWidth();
+            const ch = this.canvas.getHeight();
+
+            const fit = Math.min(maxW / cw, maxH / ch, 1);
+            stage.style.transform = `scale(${fit * this.zoomLevel})`;
+            this.fitScale = fit;
+        },
+
+        changeZone() {
+            this.applyZoneSize();
+            this.canvas.getObjects().slice().forEach(o => this.canvas.remove(o));
+            this.syncCount();
+        },
+
+        onFiles(e) {
+            const files = Array.from(e.target.files || []);
+            files.forEach(f => this.addImageFromFile(f));
+            e.target.value = '';
+        },
+
+        addImageFromFile(file) {
+            const reader = new FileReader();
+            reader.onload = ev => this.addImageFromSrc(ev.target.result);
+            reader.readAsDataURL(file);
+        },
+
+        addImageFromSrc(src, replaceObj = null) {
+            if (!this.canvas) return;
+
+            fabric.Image.fromURL(src, (img) => {
+                const cw = this.canvas.getWidth();
+                const ch = this.canvas.getHeight();
+
+                const maxW = cw * 0.6;
+                const maxH = ch * 0.6;
+                const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+
+                img.set({
+                    left: cw / 2 - (img.width * scale) / 2,
+                    top: ch / 2 - (img.height * scale) / 2,
+                    scaleX: scale,
+                    scaleY: scale,
+                    cornerColor: '#6366f1',
+                    cornerStrokeColor: '#fff',
+                    borderColor: '#6366f1',
+                    cornerSize: 12,
+                    cornerStyle: 'circle',
+                    transparentCorners: false,
                 });
+
+                if (replaceObj) {
+                    img.set({
+                        left: replaceObj.left,
+                        top: replaceObj.top,
+                        scaleX: replaceObj.scaleX,
+                        scaleY: replaceObj.scaleY,
+                        angle: replaceObj.angle,
+                    });
+                    this.canvas.remove(replaceObj);
+                }
+
+                this.canvas.add(img);
+                this.canvas.setActiveObject(img);
+                this.canvas.renderAll();
+                this.syncActive();
+                this.syncCount();
+            }, { crossOrigin: 'anonymous' });
+        },
+
+        async removeBg() {
+            const active = this.canvas ? this.canvas.getActiveObject() : null;
+            if (!active || active.type !== 'image') return;
+
+            this.bgWorking = true;
+
+            try {
+                const src = active.getSrc();
+                const blob = await removeBg(src);
+                const url = URL.createObjectURL(blob);
+                this.addImageFromSrc(url, active);
+            } catch (e) {
+                this.toast('Background removal failed');
             }
-            ctx.restore();
-        });
 
-        var totalArea = 0;
-        images.forEach(function(img) { totalArea += img.w * img.h; });
-        var coverage = Math.min(100, Math.round(totalArea / (canvas.width * canvas.height) * 100));
-        summaryCoverage.textContent = coverage + '%';
+            this.bgWorking = false;
+        },
 
-        updatePrice(coverage);
-    }
+        flipH() {
+            const a = this.canvas ? this.canvas.getActiveObject() : null;
+            if (!a) return;
+            a.set('flipX', !a.flipX);
+            this.canvas.renderAll();
+        },
 
-    function updatePrice(coverage) {
-        var s = sizes[currentSize];
-        var price = s.basePrice;
-        if (coverage > 30) price += (coverage - 30) * 0.08;
-        price = price * Math.max(1, Math.log2(images.length + 1));
-        totalPrice.textContent = price.toFixed(2);
-    }
+        rotate(deg) {
+            const a = this.canvas ? this.canvas.getActiveObject() : null;
+            if (!a) return;
+            a.rotate(((a.angle || 0) + deg) % 360);
+            this.canvas.renderAll();
+        },
 
-    function addImage(file) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            var img = new Image();
-            img.onload = function() {
-                var displayScale = canvas.width / (parseFloat(sheetFrame.style.width) || canvas.width);
-                var maxW = canvas.width * 0.6;
-                var maxH = canvas.height * 0.6;
-                var ratio = Math.min(maxW / img.width, maxH / img.height, 1);
-                var w = img.width * ratio / displayScale;
-                var h = img.height * ratio / displayScale;
+        layerUp() {
+            const a = this.canvas ? this.canvas.getActiveObject() : null;
+            if (!a) return;
+            this.canvas.bringForward(a);
+            this.canvas.renderAll();
+        },
 
-                var obj = {
-                    el: img,
-                    x: canvas.width / displayScale / 2 - w / 2,
-                    y: canvas.height / displayScale / 2 - h / 2,
-                    w: w,
-                    h: h,
-                    rotation: 0
-                };
-                images.push(obj);
-                activeImage = obj;
-                dropHint.style.opacity = '0';
-                summaryCount.textContent = images.length;
-                addToCartBtn.disabled = false;
-                draw();
+        layerDown() {
+            const a = this.canvas ? this.canvas.getActiveObject() : null;
+            if (!a) return;
+            this.canvas.sendBackwards(a);
+            this.canvas.renderAll();
+        },
+
+        removeActive() {
+            const a = this.canvas ? this.canvas.getActiveObject() : null;
+            if (!a) return;
+            this.canvas.remove(a);
+            this.canvas.discardActiveObject();
+            this.canvas.renderAll();
+            this.syncActive();
+            this.syncCount();
+        },
+
+        zoom(dir) {
+            this.zoomLevel = Math.max(0.25, Math.min(3, this.zoomLevel + dir * 0.15));
+            this.fitStage();
+        },
+
+        resetView() {
+            this.zoomLevel = 1;
+            this.fitStage();
+        },
+
+        incQty() { this.qty = Math.min(999, (this.qty || 1) + 1); },
+        decQty() { this.qty = Math.max(1, (this.qty || 1) - 1); },
+
+        async addToCart() {
+            if (this.items.length === 0 || this.adding) return;
+
+            this.adding = true;
+
+            const z = this.currentZone;
+            const snapshot = this.canvas.toDataURL({ format: 'jpeg', quality: 0.7 });
+
+            const attributes = {
+                'Sheet Size': z ? z.label : 'Custom',
+                'Items': this.items.length,
             };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
 
-    function getCanvasCoords(e) {
-        var rect = sheetFrame.getBoundingClientRect();
-        var clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        var clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        var x = clientX - rect.left;
-        var y = clientY - rect.top;
-        var scale = canvas.width / rect.width;
-        return { x: x * scale, y: y * scale, displayScale: scale };
-    }
+            const payload = {
+                product_id: this.product ? this.product.id : null,
+                name: this.product ? this.product.name : ('Custom Gang Sheet — ' + (z ? z.label : 'Custom')),
+                unit_price: this.basePrice,
+                qty: this.qty,
+                attributes: attributes,
+                print_type: 'custom_size',
+                note: this.items.length + ' design item(s) on sheet',
+                image: snapshot,
+            };
 
-    function hitTest(cx, cy) {
-        for (var i = images.length - 1; i >= 0; i--) {
-            var img = images[i];
-            if (cx >= img.x && cx <= img.x + img.w && cy >= img.y && cy <= img.y + img.h) {
-                return img;
+            try {
+                const store = window.Alpine && window.Alpine.store('cart');
+                if (store) {
+                    await store.add(payload);
+                } else {
+                    this.toast('Cart not ready');
+                }
+            } catch (e) {
+                this.toast('Could not add to cart');
             }
-        }
-        return null;
-    }
 
-    sheetFrame.addEventListener('mousedown', function(e) {
-        var c = getCanvasCoords(e);
-        var hit = hitTest(c.x, c.y);
-        if (hit) {
-            activeImage = hit;
-            dragging = true;
-            dragOffset.x = c.x - hit.x;
-            dragOffset.y = c.y - hit.y;
-            draw();
-        }
-    });
+            this.adding = false;
+        },
 
-    window.addEventListener('mousemove', function(e) {
-        if (!dragging || !activeImage) return;
-        var c = getCanvasCoords(e);
-        activeImage.x = c.x - dragOffset.x;
-        activeImage.y = c.y - dragOffset.y;
-        draw();
-    });
-
-    window.addEventListener('mouseup', function() {
-        dragging = false;
-    });
-
-    sheetFrame.addEventListener('wheel', function(e) {
-        if (!activeImage) return;
-        e.preventDefault();
-        var factor = e.deltaY > 0 ? 0.95 : 1.05;
-        activeImage.w *= factor;
-        activeImage.h *= factor;
-        draw();
-    }, { passive: false });
-
-    sheetFrame.addEventListener('touchstart', function(e) {
-        var c = getCanvasCoords(e);
-        var hit = hitTest(c.x, c.y);
-        if (hit) {
-            activeImage = hit;
-            dragging = true;
-            dragOffset.x = c.x - hit.x;
-            dragOffset.y = c.y - hit.y;
-            draw();
-        }
-    }, { passive: true });
-
-    sheetFrame.addEventListener('touchmove', function(e) {
-        if (!dragging || !activeImage) return;
-        var c = getCanvasCoords(e);
-        activeImage.x = c.x - dragOffset.x;
-        activeImage.y = c.y - dragOffset.y;
-        draw();
-    }, { passive: true });
-
-    sheetFrame.addEventListener('touchend', function() {
-        dragging = false;
-    });
-
-    imageInput.addEventListener('change', function(e) {
-        Array.from(e.target.files).forEach(addImage);
-    });
-
-    sheetSize.addEventListener('change', function() {
-        currentSize = this.value;
-        resizeCanvas();
-    });
-
-    clearBtn.addEventListener('click', function() {
-        images = [];
-        activeImage = null;
-        summaryCount.textContent = '0';
-        summaryCoverage.textContent = '0%';
-        totalPrice.textContent = '0.00';
-        addToCartBtn.disabled = true;
-        dropHint.style.opacity = '0.3';
-        draw();
-    });
-
-    qtyMinus.addEventListener('click', function() {
-        var v = parseInt(qtyInput.value) || 1;
-        if (v > 1) qtyInput.value = v - 1;
-    });
-    qtyPlus.addEventListener('click', function() {
-        var v = parseInt(qtyInput.value) || 1;
-        qtyInput.value = v + 1;
-    });
-
-    addToCartBtn.addEventListener('click', function() {
-        alert('Added to cart: ' + images.length + ' design(s), ' + qtyInput.value + ' sheet(s)');
-    });
-
-    resizeCanvas();
-})();
+        toast(msg) {
+            const el = document.createElement('div');
+            el.textContent = msg;
+            el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0a0715;color:#fff;padding:12px 24px;border-radius:9999px;border:1px solid rgba(99,102,241,0.4);font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.6);';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 2200);
+        },
+    };
+};
 </script>
 
 @endsection
