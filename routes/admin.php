@@ -173,8 +173,10 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
         Route::put('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
         Route::put('orders/{order}/payment', [OrderController::class, 'updatePayment'])->name('orders.payment');
+        Route::post('orders/{order}/mark-paid', [OrderController::class, 'markAsPaid'])->name('orders.mark-paid');
         Route::delete('orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
         Route::delete('orders/{order}/designs/{design}', [OrderController::class, 'deleteDesign'])->name('orders.designs.destroy');
+        Route::delete('orders/{order}/transactions/{transaction}/receipt', [OrderController::class, 'deleteReceipt'])->name('orders.receipt.delete');
 
         Route::get('support', [SupportController::class, 'index'])->name('support.index');
         Route::get('support/{ticket}', [SupportController::class, 'show'])->name('support.show');
