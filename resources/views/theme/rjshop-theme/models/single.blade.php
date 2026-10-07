@@ -22,11 +22,11 @@
     $defaultZonePrice = $defaultZone ? (float) $defaultZone->price_addon : 0;
 
     $pricing = [
-        'enabled' => (\App\Models\Setting::get('design_custom_enabled') ?: '1') == '1',
-        'per_sq_inch' => (float) (\App\Models\Setting::get('design_custom_price_per_sq_inch') ?: '0.05'),
-        'min_price' => (float) (\App\Models\Setting::get('design_custom_min_price') ?: '4.50'),
-        'min_inch' => (float) (\App\Models\Setting::get('design_custom_min_inch') ?: '1'),
-        'max_inch' => (float) (\App\Models\Setting::get('design_custom_max_inch') ?: '60'),
+        'enabled' => (\App\Models\Setting::get('design_custom_enabled') ?? '1') == '1',
+        'per_sq_inch' => (float) (\App\Models\Setting::get('design_custom_price_per_sq_inch') ?? '0.05'),
+        'min_price' => (float) (\App\Models\Setting::get('design_custom_min_price') ?? '4.50'),
+        'min_inch' => (float) (\App\Models\Setting::get('design_custom_min_inch') ?? '1'),
+        'max_inch' => (float) (\App\Models\Setting::get('design_custom_max_inch') ?? '60'),
     ];
 
     $startingPrice = (float) $basePrice;
@@ -983,7 +983,8 @@ function standardProduct(config) {
         },
 
         get finalPrice() {
-            return Math.max(0, this.basePrice + this.sheetPrice + this.optionsAddon);
+            const base = this.requiresDesign ? this.sheetPrice : this.basePrice;
+            return Math.max(0, base + this.optionsAddon);
         },
 
         get totalPrice() {
