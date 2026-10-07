@@ -92,37 +92,39 @@
 
         <div class="rj-sp-layout">
 
-            <div class="rj-sp-gallery" x-data="{ active: 0 }">
-                <div class="rj-sp-thumbs">
-                    @forelse($images as $index => $image)
-                        <button type="button"
-                                @click="active = {{ $index }}"
-                                :class="active === {{ $index }} ? 'rj-sp-thumb-active' : ''"
-                                class="rj-sp-thumb">
-                            <img src="{{ $image->url }}" alt="{{ $product->name }}">
-                        </button>
-                    @empty
-                        <div class="rj-sp-thumb rj-sp-thumb-placeholder">
-                            <i class="fa-regular fa-image"></i>
-                        </div>
-                    @endforelse
-                </div>
+            <div class="rj-sp-gallery-col">
+                <div class="rj-sp-gallery" x-data="{ active: 0 }">
+                    <div class="rj-sp-thumbs">
+                        @forelse($images as $index => $image)
+                            <button type="button"
+                                    @click="active = {{ $index }}"
+                                    :class="active === {{ $index }} ? 'rj-sp-thumb-active' : ''"
+                                    class="rj-sp-thumb">
+                                <img src="{{ $image->url }}" alt="{{ $product->name }}">
+                            </button>
+                        @empty
+                            <div class="rj-sp-thumb rj-sp-thumb-placeholder">
+                                <i class="fa-regular fa-image"></i>
+                            </div>
+                        @endforelse
+                    </div>
 
-                <div class="rj-sp-main-img">
-                    @forelse($images as $index => $image)
-                        <img src="{{ $image->url }}"
-                             alt="{{ $product->name }}"
-                             class="rj-sp-img"
-                             x-show="active === {{ $index }}"
-                             x-transition:enter="transition ease-out duration-300"
-                             x-transition:enter-start="opacity-0"
-                             x-transition:enter-end="opacity-100">
-                    @empty
-                        <div class="rj-sp-img-placeholder">
-                            <i class="fa-regular fa-image"></i>
-                            <span>No image available</span>
-                        </div>
-                    @endforelse
+                    <div class="rj-sp-main-img">
+                        @forelse($images as $index => $image)
+                            <img src="{{ $image->url }}"
+                                 alt="{{ $product->name }}"
+                                 class="rj-sp-img"
+                                 x-show="active === {{ $index }}"
+                                 x-transition:enter="transition ease-out duration-300"
+                                 x-transition:enter-start="opacity-0"
+                                 x-transition:enter-end="opacity-100">
+                        @empty
+                            <div class="rj-sp-img-placeholder">
+                                <i class="fa-regular fa-image"></i>
+                                <span>No image available</span>
+                            </div>
+                        @endforelse
+                    </div>
                 </div>
             </div>
 
@@ -168,20 +170,24 @@
                     </span>
                 </div>
 
-                @if($prices->count())
-                    <div class="rj-sp-tiers">
-                        <div class="rj-sp-tiers-label">// Quantity Pricing</div>
-                        <div class="rj-sp-tiers-grid">
+                @if($prices->count() > 1)
+                    <div class="rj-sp-volume-box">
+                        <div class="rj-sp-volume-head">
+                            <i class="fa-solid fa-tags"></i>
+                            <span>// Volume Pricing</span>
+                        </div>
+                        <div class="rj-sp-volume-chips">
                             @foreach($prices as $tier)
-                                <div class="rj-sp-tier">
-                                    <span class="rj-sp-tier-qty">
-                                        {{ $tier->min_qty }}@if($tier->max_qty)–{{ $tier->max_qty }}@else+@endif
-                                    </span>
-                                    <span class="rj-sp-tier-price">${{ number_format($tier->price, 2) }}</span>
-                                    <span class="rj-sp-tier-unit">each</span>
-                                </div>
+                                <span class="rj-sp-volume-chip">
+                                    <strong>{{ $tier->min_qty }}@if($tier->max_qty)–{{ $tier->max_qty }}@else+@endif</strong>
+                                    <span class="rj-sp-volume-price">${{ number_format($tier->price, 2) }}</span>
+                                </span>
                             @endforeach
                         </div>
+                        <p class="rj-sp-volume-note">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span>Final price calculated at checkout based on total quantity.</span>
+                        </p>
                     </div>
                 @endif
 
@@ -472,12 +478,25 @@
 
     .rj-sp-layout {
         display: grid; grid-template-columns: 1fr; gap: 2rem;
+        align-items: start;
     }
     @media (min-width: 900px) {
         .rj-sp-layout { grid-template-columns: 1fr 1fr; gap: 3rem; }
     }
 
-    .rj-sp-gallery { display: flex; gap: 1rem; }
+    .rj-sp-gallery-col {
+        position: relative;
+    }
+    @media (min-width: 900px) {
+        .rj-sp-gallery-col {
+            position: sticky;
+            top: 100px;
+            align-self: start;
+            height: fit-content;
+        }
+    }
+
+    .rj-sp-gallery { display: flex; gap: 1rem; width: 100%; }
     .rj-sp-thumbs {
         display: flex; flex-direction: column; gap: 0.5rem; flex-shrink: 0;
     }
@@ -507,7 +526,7 @@
     }
     .rj-sp-img-placeholder span { font-size: 12px; }
 
-    .rj-sp-info { display: flex; flex-direction: column; gap: 1.25rem; }
+    .rj-sp-info { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
 
     .rj-sp-badge {
         display: inline-flex; align-items: center; gap: 0.5rem;
@@ -565,37 +584,53 @@
         display: flex; align-items: center; justify-content: center;
     }
 
-    .rj-sp-tiers-label {
-        font-family: ui-monospace, monospace; font-size: 10px;
-        text-transform: uppercase; letter-spacing: 0.3em;
-        color: #818cf8; margin-bottom: 0.75rem;
+    .rj-sp-volume-box {
+        padding: 14px 16px;
+        background: rgba(99, 102, 241, 0.04);
+        border: 1px solid rgba(99, 102, 241, 0.15);
+        border-radius: 12px;
     }
-    .rj-sp-tiers-grid {
-        display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-        gap: 0.5rem;
+    .rj-sp-volume-head {
+        display: flex; align-items: center; gap: 8px;
+        margin-bottom: 10px;
+        font-family: ui-monospace, monospace;
+        font-size: 10px; text-transform: uppercase;
+        letter-spacing: 0.22em; color: #818cf8;
     }
-    .rj-sp-tier {
-        padding: 0.75rem; background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 10px;
-        display: flex; flex-direction: column; gap: 2px;
-        transition: all 0.3s ease;
+    .rj-sp-volume-head i { font-size: 11px; }
+    .rj-sp-volume-chips {
+        display: flex; flex-wrap: wrap; gap: 6px;
     }
-    .rj-sp-tier:hover {
-        border-color: rgba(99, 102, 241, 0.4);
-        background: rgba(99, 102, 241, 0.05);
+    .rj-sp-volume-chip {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 5px 12px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 9999px;
+        font-family: ui-monospace, monospace;
+        font-size: 11px;
+        transition: all 0.2s ease;
     }
-    .rj-sp-tier-qty {
-        font-family: ui-monospace, monospace; font-size: 11px;
-        color: #9ca3af; letter-spacing: 0.05em;
+    .rj-sp-volume-chip:hover {
+        background: rgba(99, 102, 241, 0.08);
+        border-color: rgba(99, 102, 241, 0.3);
     }
-    .rj-sp-tier-price {
-        font-family: ui-monospace, monospace; font-size: 16px;
-        font-weight: 700; color: #fff;
+    .rj-sp-volume-chip strong {
+        color: #9ca3af; font-weight: 600;
     }
-    .rj-sp-tier-unit {
-        font-family: ui-monospace, monospace; font-size: 9px;
-        color: #4b5563; text-transform: uppercase; letter-spacing: 0.1em;
+    .rj-sp-volume-price {
+        color: #fff; font-weight: 700;
     }
+    .rj-sp-volume-note {
+        display: flex; align-items: flex-start; gap: 6px;
+        margin: 12px 0 0;
+        font-size: 10.5px;
+        color: #6b7280;
+        font-family: ui-monospace, monospace;
+        letter-spacing: 0.05em;
+        line-height: 1.6;
+    }
+    .rj-sp-volume-note i { color: #818cf8; font-size: 10px; margin-top: 2px; }
 
     .rj-sp-options { display: flex; flex-direction: column; gap: 1rem; }
     .rj-sp-option { display: flex; flex-direction: column; gap: 0.5rem; }
