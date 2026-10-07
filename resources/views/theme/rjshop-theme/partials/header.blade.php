@@ -36,6 +36,16 @@
             mobileOpen: false,
             scrolled: false,
             hideSub: false,
+            cartCount: {{ app(\App\Services\CartService::class)->count() }},
+            async refreshCart() {
+                try {
+                    const r = await fetch('{{ route('cart.count') }}', {
+                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    const d = await r.json();
+                    this.cartCount = d.count || 0;
+                } catch (e) {}
+            },
             updateSub() {
                 const hero = document.getElementById('rjHero');
                 const y = window.scrollY;
@@ -49,6 +59,7 @@
             }
         }"
         @scroll.window="scrolled = window.scrollY > 20; updateSub()"
+        @cart-updated.window="refreshCart()"
         x-init="updateSub()"
         :class="scrolled ? 'bg-[#05030f]/95 backdrop-blur-xl shadow-[0_4px_30px_rgba(99,102,241,0.15)]' : 'bg-[#05030f]'"
         class="sticky top-0 z-50 transition-all duration-300 border-b border-indigo-500/20">
@@ -128,11 +139,14 @@
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
 
-                <a href="#"
+                <a href="{{ route('cart.index') }}"
                    class="relative w-10 h-10 flex items-center justify-center rounded-full text-gray-300 hover:text-white hover:bg-white/10 transition"
                    aria-label="Cart">
                     <i class="fa-solid fa-bag-shopping"></i>
-                    <span class="absolute -top-0.5 -right-0.5 bg-gradient-to-br from-indigo-500 to-pink-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-[#05030f]">0</span>
+                    <span x-show="cartCount > 0"
+                          x-cloak
+                          x-text="cartCount"
+                          class="absolute -top-0.5 -right-0.5 bg-gradient-to-br from-indigo-500 to-pink-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-[#05030f]"></span>
                 </a>
 
                 <button @click="mobileOpen = !mobileOpen"
