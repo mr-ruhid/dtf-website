@@ -36,8 +36,19 @@
             mobileOpen: false,
             scrolled: false,
             hideSub: false,
+            _heroBottom: 0,
             _rafPending: false,
-            _ticking: false,
+
+            measureHero() {
+                const hero = document.getElementById('rjHero');
+                if (hero) {
+                    const rect = hero.getBoundingClientRect();
+                    this._heroBottom = rect.bottom + window.scrollY;
+                } else {
+                    this._heroBottom = 0;
+                }
+            },
+
             updateSub() {
                 if (this._rafPending) return;
                 this._rafPending = true;
@@ -45,30 +56,32 @@
                 requestAnimationFrame(() => {
                     this._rafPending = false;
 
-                    const hero = document.getElementById('rjHero');
                     const y = window.scrollY;
-                    const HIDE_AT = 80;
-                    const SHOW_AT = 160;
-                    const SCROLLED_AT = 20;
+                    this.scrolled = y > 20;
 
-                    this.scrolled = y > SCROLLED_AT;
-
-                    let target;
-                    if (hero) {
-                        const bottom = hero.getBoundingClientRect().bottom;
-                        target = this.hideSub ? (bottom < SHOW_AT) : (bottom < HIDE_AT);
-                    } else {
-                        target = this.hideSub ? (y > SHOW_AT) : (y > HIDE_AT);
+                    if (!this._heroBottom) {
+                        if (this.hideSub) {
+                            if (y < 60) this.hideSub = false;
+                        } else {
+                            if (y > 120) this.hideSub = true;
+                        }
+                        return;
                     }
 
-                    if (target !== this.hideSub) {
-                        this.hideSub = target;
+                    const HIDE_AT = this._heroBottom - 100;
+                    const SHOW_AT = this._heroBottom - 260;
+
+                    if (this.hideSub) {
+                        if (y < SHOW_AT) this.hideSub = false;
+                    } else {
+                        if (y > HIDE_AT) this.hideSub = true;
                     }
                 });
             }
         }"
+        x-init="$nextTick(() => { measureHero(); updateSub(); })"
         @scroll.window.passive="updateSub()"
-        x-init="updateSub()"
+        @resize.window.debounce.200ms="measureHero(); updateSub()"
         :class="scrolled ? 'bg-[#05030f]/95 backdrop-blur-xl shadow-[0_4px_30px_rgba(99,102,241,0.15)]' : 'bg-[#05030f]'"
         class="sticky top-0 z-50 transition-all duration-300 border-b border-indigo-500/20">
 
