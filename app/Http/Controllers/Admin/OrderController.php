@@ -6,12 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Order;
 use App\Models\OrderDesign;
-use App\Models\OrderItem;
+use App\Payment\Registry\PaymentGatewayRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class OrderController extends Controller
 {
+    protected PaymentGatewayRegistry $registry;
+
+    public function __construct(PaymentGatewayRegistry $registry)
+    {
+        $this->registry = $registry;
+    }
+
     public function index(Request $request)
     {
         $query = Order::with(['zone', 'branch'])->withCount('items');
@@ -60,11 +67,16 @@ class OrderController extends Controller
             'items.designs',
             'items.printZone',
             'statusLogs',
+            'transactions',
             'zone',
             'branch',
         ]);
 
-        return view('admin.order.show', compact('order'));
+        $gateway = $order->payment_gateway_id
+            ? $this->registry->get($order->payment_gateway_id)
+            : null;
+
+        return view('admin.order.show', compact('order', 'gateway'));
     }
 
     public function updateStatus(Request $request, Order $order)
@@ -72,13 +84,17 @@ class OrderController extends Controller
         $data = $request->validate([
             'status' => ['required', 'in:pending,confirmed,processing,shipped,delivered,cancelled,refunded'],
             'note' => ['nullable', 'string', 'max:500'],
+            'notify_customer' => ['nullable', 'boolean'],
+            'is_public' => ['nullable', 'boolean'],
         ]);
 
         $order->updateStatus(
             $data['status'],
             $data['note'] ?? null,
             auth()->id(),
-            auth()->user()->name ?? 'Admin'
+            auth()->user()->name ?? 'Admin',
+            $request->boolean('notify_customer'),
+            $request->boolean('is_public', true)
         );
 
         return back()->with('status', 'Order status updated to ' . $order->fresh()->status_label . '.');
@@ -95,6 +111,45 @@ class OrderController extends Controller
         $order->update($data);
 
         return back()->with('status', 'Payment information updated.');
+    }
+
+    public function markAsPaid(Request $request, Order $order)
+    {
+        if (!$order->payment_gateway_id) {
+            return back()->withErrors(['error' => 'This order has no payment gateway assigned.']);
+        }
+
+        $gateway = $this->registry->get($order->payment_gateway_id);
+
+        if (!$gateway) {
+            return back()->withErrors(['error' => 'Payment gateway is not available.']);
+        }
+
+        if (!method_exists($gateway, 'markAsPaid')) {
+            return back()->withErrors(['error' => 'This gateway does not support manual payment marking.']);
+        }
+
+        $validated = $request->validate([
+            'reference' => ['nullable', 'string', 'max:100'],
+            'note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $gateway->markAsPaid(
+            $order,
+            $validated['reference'] ?? null,
+            $validated['note'] ?? null
+        );
+
+        $order->updateStatus(
+            'confirmed',
+            'Payment confirmed by admin' . (!empty($validated['reference']) ? ' (ref: ' . $validated['reference'] . ')' : ''),
+            auth()->id(),
+            auth()->user()->name ?? 'Admin',
+            true,
+            true
+        );
+
+        return back()->with('status', 'Order marked as paid successfully.');
     }
 
     public function destroy(Order $order)
@@ -121,6 +176,31 @@ class OrderController extends Controller
         $design->delete();
 
         return back()->with('status', 'Design file deleted.');
+    }
+
+    public function deleteReceipt(Order $order, int $transaction)
+    {
+        $txn = $order->transactions()->findOrFail($transaction);
+
+        $payload = $txn->response_payload ?? [];
+        $receipt = $payload['receipt'] ?? null;
+
+        if ($receipt && !empty($receipt['file_path'])) {
+            $path = $receipt['file_path'];
+
+            if (!str_starts_with($path, 'http')) {
+                Storage::disk('public')->delete($path);
+            }
+        }
+
+        unset($payload['receipt']);
+
+        $txn->update([
+            'response_payload' => $payload,
+            'status' => $txn->status === 'processing' ? 'pending' : $txn->status,
+        ]);
+
+        return back()->with('status', 'Receipt file deleted.');
     }
 
     public function apiDocs()
