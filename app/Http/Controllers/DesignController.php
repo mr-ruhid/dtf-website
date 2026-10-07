@@ -7,6 +7,12 @@ use App\Models\PrintZone;
 
 class DesignController extends Controller
 {
+    protected array $designableModels = [
+        'DTF Transfers',
+        'UV Stickers',
+        'Special Films',
+    ];
+
     public function index(?string $slug = null)
     {
         $zones = PrintZone::where('status', 1)
@@ -16,7 +22,7 @@ class DesignController extends Controller
         $product = null;
 
         if ($slug) {
-            $product = Product::with(['printZones', 'images'])
+            $product = Product::with(['printZones', 'images', 'model'])
                 ->where('slug', $slug)
                 ->where('status', 1)
                 ->first();
@@ -44,8 +50,12 @@ class DesignController extends Controller
             ];
         })->values();
 
-        $allProducts = Product::with('images')
+        $allProducts = Product::with(['images', 'model'])
             ->where('status', 1)
+            ->whereHas('model', function ($q) {
+                $q->whereIn('name', $this->designableModels)
+                  ->where('status', 1);
+            })
             ->orderBy('name')
             ->get()
             ->map(function (Product $p) {
@@ -56,6 +66,8 @@ class DesignController extends Controller
                     'base_price' => (float) ($p->sale_price ?: $p->base_price),
                     'image' => $p->images->first()?->url,
                     'print_type' => $p->print_type,
+                    'model_name' => $p->model?->name,
+                    'model_slug' => $p->model?->slug,
                 ];
             })
             ->values();
@@ -70,6 +82,8 @@ class DesignController extends Controller
                 'base_price' => (float) ($product->sale_price ?: $product->base_price),
                 'image' => $product->images->first()?->url,
                 'print_type' => $product->print_type,
+                'model_name' => $product->model?->name,
+                'model_slug' => $product->model?->slug,
             ];
         }
 
