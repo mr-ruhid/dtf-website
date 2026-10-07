@@ -60,7 +60,7 @@
                     <div class="rj-cat-body">
                         <h3 class="rj-cat-title">{{ $category->name }}</h3>
                         @if($category->children->count())
-                            <p class="rj-cat-meta">{{ $category->children->count() }} subcategories</p>
+                            <p class="rj-cat-meta">{{ $category->children->count() }} subs</p>
                         @endif
                     </div>
                 </a>
@@ -192,22 +192,23 @@
     }
 
     .rj-cat-grid {
-        display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.625rem;
     }
-    @media (min-width: 640px) { .rj-cat-grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (min-width: 1024px) { .rj-cat-grid { grid-template-columns: repeat(4, 1fr); } }
+    @media (min-width: 640px) { .rj-cat-grid { grid-template-columns: repeat(4, 1fr); } }
+    @media (min-width: 1024px) { .rj-cat-grid { grid-template-columns: repeat(6, 1fr); gap: 0.75rem; } }
+    @media (min-width: 1280px) { .rj-cat-grid { grid-template-columns: repeat(8, 1fr); } }
 
     .rj-cat-card {
         display: flex; flex-direction: column; overflow: hidden;
         background: rgba(255, 255, 255, 0.015);
         border: 1px solid rgba(255, 255, 255, 0.07);
-        border-radius: 14px; text-decoration: none; color: inherit;
-        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        border-radius: 10px; text-decoration: none; color: inherit;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .rj-cat-card:hover {
-        transform: translateY(-3px);
+        transform: translateY(-2px);
         border-color: rgba(99, 102, 241, 0.4);
-        box-shadow: 0 16px 32px -12px rgba(99, 102, 241, 0.3);
+        box-shadow: 0 12px 24px -10px rgba(99, 102, 241, 0.3);
     }
     .rj-cat-img {
         position: relative; aspect-ratio: 1; overflow: hidden; background: #0a0715;
@@ -219,7 +220,7 @@
     .rj-cat-card:hover .rj-cat-img img { transform: scale(1.06); }
     .rj-cat-placeholder {
         width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-        color: rgba(255, 255, 255, 0.06); font-size: 2rem;
+        color: rgba(255, 255, 255, 0.06); font-size: 1.25rem;
         background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(236, 72, 153, 0.08));
     }
     .rj-cat-veil {
@@ -227,18 +228,20 @@
         background: linear-gradient(to top, rgba(5, 3, 15, 0.6) 0%, transparent 60%);
         pointer-events: none;
     }
-    .rj-cat-body { padding: 0.875rem 1rem; }
+    .rj-cat-body { padding: 0.5rem 0.625rem 0.625rem; }
     .rj-cat-title {
-        font-size: 14px; font-weight: 600; color: #fff;
-        line-height: 1.35; margin: 0;
+        font-size: 11.5px; font-weight: 600; color: #fff;
+        line-height: 1.3; margin: 0;
         transition: color 0.3s;
         display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+        text-overflow: ellipsis;
     }
     .rj-cat-card:hover .rj-cat-title { color: #a5b4fc; }
     .rj-cat-meta {
-        font-family: ui-monospace, monospace; font-size: 10px;
-        text-transform: uppercase; letter-spacing: 0.15em;
-        color: #6b7280; margin: 0.25rem 0 0;
+        font-family: ui-monospace, monospace; font-size: 8px;
+        text-transform: uppercase; letter-spacing: 0.1em;
+        color: #6b7280; margin: 0.15rem 0 0;
+        display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
     }
 
     .rj-prod-grid {
