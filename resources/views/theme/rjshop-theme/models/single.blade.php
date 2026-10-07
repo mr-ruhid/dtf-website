@@ -484,9 +484,7 @@
         .rj-sp-layout { grid-template-columns: 1fr 1fr; gap: 3rem; }
     }
 
-    .rj-sp-gallery-col {
-        position: relative;
-    }
+    .rj-sp-gallery-col { position: relative; }
     @media (min-width: 900px) {
         .rj-sp-gallery-col {
             position: sticky;
@@ -615,20 +613,13 @@
         background: rgba(99, 102, 241, 0.08);
         border-color: rgba(99, 102, 241, 0.3);
     }
-    .rj-sp-volume-chip strong {
-        color: #9ca3af; font-weight: 600;
-    }
-    .rj-sp-volume-price {
-        color: #fff; font-weight: 700;
-    }
+    .rj-sp-volume-chip strong { color: #9ca3af; font-weight: 600; }
+    .rj-sp-volume-price { color: #fff; font-weight: 700; }
     .rj-sp-volume-note {
         display: flex; align-items: flex-start; gap: 6px;
-        margin: 12px 0 0;
-        font-size: 10.5px;
-        color: #6b7280;
-        font-family: ui-monospace, monospace;
-        letter-spacing: 0.05em;
-        line-height: 1.6;
+        margin: 12px 0 0; font-size: 10.5px;
+        color: #6b7280; font-family: ui-monospace, monospace;
+        letter-spacing: 0.05em; line-height: 1.6;
     }
     .rj-sp-volume-note i { color: #818cf8; font-size: 10px; margin-top: 2px; }
 
@@ -697,10 +688,8 @@
     }
     .rj-sp-measure-hint {
         font-family: ui-monospace, monospace;
-        font-size: 10px;
-        color: #6b7280;
-        margin: 0.25rem 0 0;
-        letter-spacing: 0.1em;
+        font-size: 10px; color: #6b7280;
+        margin: 0.25rem 0 0; letter-spacing: 0.1em;
     }
 
     .rj-sp-qty-row { display: flex; flex-direction: column; gap: 0.5rem; }
@@ -916,10 +905,7 @@
         flex-shrink: 0; transition: background 0.3s ease;
     }
     .rj-sp-faq-q:hover .rj-sp-faq-icon { background: rgba(99, 102, 241, 0.15); }
-    .rj-sp-faq-icon i {
-        font-size: 11px; color: #9ca3af;
-        transition: all 0.3s ease;
-    }
+    .rj-sp-faq-icon i { font-size: 11px; color: #9ca3af; transition: all 0.3s ease; }
     .rj-sp-faq-q:hover .rj-sp-faq-icon i { color: #a5b4fc; }
     .rj-sp-faq-icon-rot { transform: rotate(45deg); color: #a5b4fc !important; }
     .rj-sp-faq-a {
@@ -940,19 +926,23 @@
 
 <script>
 function standardProduct(config) {
+    const p = config.pricing || {};
+
+    const pricing = {
+        enabled: p.enabled !== false && p.enabled !== 0 && p.enabled !== '0',
+        per_sq_inch: parseFloat(p.per_sq_inch) > 0 ? parseFloat(p.per_sq_inch) : 0.05,
+        min_price: parseFloat(p.min_price) > 0 ? parseFloat(p.min_price) : 4.50,
+        min_inch: parseFloat(p.min_inch) > 0 ? parseFloat(p.min_inch) : 1,
+        max_inch: parseFloat(p.max_inch) > 0 ? parseFloat(p.max_inch) : 60
+    };
+
     return {
         productId: config.productId,
         slug: config.slug,
-        basePrice: config.basePrice,
+        basePrice: parseFloat(config.basePrice) || 0,
         requiresDesign: config.requiresDesign,
         options: config.options || [],
-        pricing: config.pricing || {
-            enabled: true,
-            per_sq_inch: 0.05,
-            min_price: 4.50,
-            min_inch: 1,
-            max_inch: 60
-        },
+        pricing: pricing,
 
         selections: {},
         qty: 1,
@@ -963,8 +953,8 @@ function standardProduct(config) {
 
         get designHint() {
             if (!this.designW || !this.designH) return '';
-            const min = Number(this.pricing.min_inch) || 1;
-            const max = Number(this.pricing.max_inch) || 60;
+            const min = this.pricing.min_inch;
+            const max = this.pricing.max_inch;
             if (this.designW < min || this.designH < min) return 'Minimum ' + min + ' inch';
             if (this.designW > max || this.designH > max) return 'Maximum ' + max + ' inch';
             return this.designW + ' × ' + this.designH + ' in sheet';
@@ -973,12 +963,10 @@ function standardProduct(config) {
         get sheetPrice() {
             if (!this.requiresDesign) return 0;
 
-            const perSqInch = Number(this.pricing.per_sq_inch) || 0;
-            const minPrice = Number(this.pricing.min_price) || 0;
             const area = (this.designW || 12) * (this.designH || 12);
-            const calculated = area * perSqInch;
+            const calculated = area * this.pricing.per_sq_inch;
 
-            return Math.round(Math.max(calculated, minPrice) * 100) / 100;
+            return Math.round(Math.max(calculated, this.pricing.min_price) * 100) / 100;
         },
 
         get optionsAddon() {
@@ -995,8 +983,8 @@ function standardProduct(config) {
         },
 
         get finalPrice() {
-            const base = this.requiresDesign ? this.sheetPrice : parseFloat(this.basePrice);
-            return base + this.optionsAddon;
+            const base = this.requiresDesign ? this.sheetPrice : this.basePrice;
+            return Math.max(0, base + this.optionsAddon);
         },
 
         get totalPrice() {
@@ -1044,8 +1032,8 @@ function standardProduct(config) {
         decQty() { this.qty = Math.max(1, (this.qty || 1) - 1); },
 
         goToDesign() {
-            const min = Number(this.pricing.min_inch) || 1;
-            const max = Number(this.pricing.max_inch) || 60;
+            const min = this.pricing.min_inch;
+            const max = this.pricing.max_inch;
 
             if (!this.designW || !this.designH) {
                 this.flash('Please enter width and height');
@@ -1060,8 +1048,7 @@ function standardProduct(config) {
                 return;
             }
 
-            const url = '/design/' + this.slug + '?w=' + this.designW + '&h=' + this.designH;
-            window.location.href = url;
+            window.location.href = '/design/' + this.slug + '?w=' + this.designW + '&h=' + this.designH;
         },
 
         async addToCart() {
