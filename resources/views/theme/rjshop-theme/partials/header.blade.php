@@ -128,12 +128,16 @@
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
 
-                <a href="#"
-                   class="relative w-10 h-10 flex items-center justify-center rounded-full text-gray-300 hover:text-white hover:bg-white/10 transition"
-                   aria-label="Cart">
+                <button type="button"
+                        @click="$store.cart.open()"
+                        class="relative w-10 h-10 flex items-center justify-center rounded-full text-gray-300 hover:text-white hover:bg-white/10 transition"
+                        aria-label="Cart">
                     <i class="fa-solid fa-bag-shopping"></i>
-                    <span class="absolute -top-0.5 -right-0.5 bg-gradient-to-br from-indigo-500 to-pink-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-[#05030f]">0</span>
-                </a>
+                    <span x-show="$store.cart.count > 0"
+                          x-cloak
+                          x-text="$store.cart.count"
+                          class="absolute -top-0.5 -right-0.5 bg-gradient-to-br from-indigo-500 to-pink-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-[#05030f]"></span>
+                </button>
 
                 <button @click="mobileOpen = !mobileOpen"
                         class="md:hidden w-10 h-10 flex items-center justify-center rounded-full text-gray-300 hover:text-white hover:bg-white/10 transition"
@@ -170,6 +174,8 @@
         </nav>
     </div>
 </header>
+
+@include('theme.rjshop-theme.partials.cart-panel')
 
 @push('styles')
 <style>
