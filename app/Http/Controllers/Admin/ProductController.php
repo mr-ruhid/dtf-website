@@ -164,7 +164,7 @@ class ProductController extends Controller
                     'attribute_id' => $pav->attribute_id,
                     'attribute_value_id' => $pav->attribute_value_id,
                     'price_override' => $pav->price_override,
-                    'product_image_id' => $pav->product_image_id,
+                    'product_image_id' => null,
                     'image' => $pav->image,
                     'status' => $pav->status,
                 ]);
@@ -270,13 +270,29 @@ class ProductController extends Controller
 
     protected function savePrices(Product $product, Request $request): void
     {
-        if (!$request->filled('tiers')) {
+        if (!$request->has('tiers')) {
+            return;
+        }
+
+        $tiers = $request->input('tiers', []);
+
+        if (!is_array($tiers) || count($tiers) === 0) {
+            return;
+        }
+
+        $hasValidTier = false;
+        foreach ($tiers as $tier) {
+            if (!empty($tier['min_qty']) && isset($tier['price']) && $tier['price'] !== '') {
+                $hasValidTier = true;
+                break;
+            }
+        }
+
+        if (!$hasValidTier) {
             return;
         }
 
         $product->prices()->delete();
-
-        $tiers = $request->input('tiers', []);
 
         foreach ($tiers as $tier) {
             if (empty($tier['min_qty']) || !isset($tier['price']) || $tier['price'] === '') {
@@ -293,7 +309,30 @@ class ProductController extends Controller
 
     protected function saveAttributeValues(Product $product, Request $request): void
     {
-        if (!$request->filled('attribute_values')) {
+        if (!$request->has('attribute_values')) {
+            return;
+        }
+
+        $selected = $request->input('attribute_values', []);
+
+        if (!is_array($selected) || count($selected) === 0) {
+            return;
+        }
+
+        $hasAnyValue = false;
+        foreach ($selected as $attributeId => $values) {
+            if (!is_array($values)) {
+                continue;
+            }
+            foreach ($values as $valueData) {
+                if (!empty($valueData['value_id'])) {
+                    $hasAnyValue = true;
+                    break 2;
+                }
+            }
+        }
+
+        if (!$hasAnyValue) {
             return;
         }
 
@@ -303,8 +342,6 @@ class ProductController extends Controller
             ->keyBy(fn($pav) => $pav->attribute_id . '_' . $pav->attribute_value_id);
 
         $product->attributeValues()->delete();
-
-        $selected = $request->input('attribute_values', []);
 
         foreach ($selected as $attributeId => $values) {
             if (!is_array($values)) {
@@ -361,11 +398,16 @@ class ProductController extends Controller
 
     protected function savePrintZones(Product $product, Request $request): void
     {
-        if (!$request->has('print_zones') && !$request->has('print_type')) {
+        if (!$request->has('print_zones')) {
             return;
         }
 
         $zones = $request->input('print_zones', []);
+
+        if (!is_array($zones)) {
+            $zones = [];
+        }
+
         $product->printZones()->sync($zones);
     }
 
@@ -378,6 +420,18 @@ class ProductController extends Controller
         $options = $request->input('options', []);
 
         if (!is_array($options) || count($options) === 0) {
+            return;
+        }
+
+        $hasAnyName = false;
+        foreach ($options as $opt) {
+            if (!empty($opt['name'])) {
+                $hasAnyName = true;
+                break;
+            }
+        }
+
+        if (!$hasAnyName) {
             return;
         }
 

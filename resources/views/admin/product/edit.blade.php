@@ -20,11 +20,13 @@
         ];
     })->values();
 
-    $defaultPrices = $attributes->flatMap(function($a) {
-        return $a->activeValues->mapWithKeys(function($v) {
-            return [$v->id => (float) $v->price_adjustment];
-        });
-    });
+    // flatMap/collapse numeric key-ləri yenidən nömrələyir, ona görə sadə dövr işlədirik
+    $defaultPrices = [];
+    foreach ($attributes as $a) {
+        foreach ($a->activeValues as $v) {
+            $defaultPrices[$v->id] = (float) $v->price_adjustment;
+        }
+    }
 
     $dbOptions = $product->options->map(function($opt) {
         return [
@@ -93,6 +95,11 @@
         @csrf
         @method('PUT')
 
+        {{-- Bölmələrin göndərildiyini bildirən markerlər (boş siyahı = hamısını sil) --}}
+        <input type="hidden" name="tiers_submitted" value="1">
+        <input type="hidden" name="attributes_submitted" value="1">
+        <input type="hidden" name="options_submitted" value="1">
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             <div class="lg:col-span-2 space-y-6">
@@ -104,15 +111,14 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Product Name <span class="text-red-500">*</span></label>
-                        <input type="text" name="name" x-model="name" @input="generateSlug()" required
-                               value="{{ old('name', $product->name) }}"
+                        <input type="text" name="name" x-model="name" required
                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Slug</label>
-                            <input type="text" name="slug" x-model="slug" value="{{ old('slug', $product->slug) }}"
+                            <input type="text" name="slug" x-model="slug"
                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                         </div>
                         <div>
@@ -129,7 +135,7 @@
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                                 <option value="">Select model</option>
                                 @foreach ($models as $model)
-                                    <option value="{{ $model->id }}" {{ $product->model_id == $model->id ? 'selected' : '' }}>{{ $model->name }}</option>
+                                    <option value="{{ $model->id }}">{{ $model->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -139,7 +145,7 @@
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                                 <option value="">Select category</option>
                                 @foreach ($categories as $cat)
-                                    <option value="{{ $cat->id }}" {{ $product->category_id == $cat->id ? 'selected' : '' }}>
+                                    <option value="{{ $cat->id }}" {{ old('category_id', $product->category_id) == $cat->id ? 'selected' : '' }}>
                                         {{ $cat->model->name ?? '' }} → {{ $cat->name }}
                                     </option>
                                 @endforeach
@@ -151,10 +157,10 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Print Type <span class="text-red-500">*</span></label>
                         <select name="print_type" x-model="printType" required
                                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                            <option value="none" {{ $product->print_type === 'none' ? 'selected' : '' }}>None (Supplies, Films — no design upload)</option>
-                            <option value="apparel" {{ $product->print_type === 'apparel' ? 'selected' : '' }}>Apparel (Mockup + Zone selection)</option>
-                            <option value="custom_size" {{ $product->print_type === 'custom_size' ? 'selected' : '' }}>Custom Size (Customer enters W×H)</option>
-                            <option value="fixed_area" {{ $product->print_type === 'fixed_area' ? 'selected' : '' }}>Fixed Area (Simple design upload)</option>
+                            <option value="none">None (Supplies, Films — no design upload)</option>
+                            <option value="apparel">Apparel (Mockup + Zone selection)</option>
+                            <option value="custom_size">Custom Size (Customer enters W×H)</option>
+                            <option value="fixed_area">Fixed Area (Simple design upload)</option>
                         </select>
                     </div>
 
@@ -181,15 +187,12 @@
                             @foreach ($product->images as $image)
                                 <div class="group relative rounded-lg overflow-hidden border border-gray-200 aspect-square">
                                     <img src="{{ $image->url }}" class="w-full h-full object-cover">
-                                    <form method="POST" action="{{ route('admin.products.images.destroy', [$product, $image]) }}"
-                                          onsubmit="return confirm('Delete this image?')"
-                                          class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="button" onclick="this.closest('form').submit()" class="w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700">
-                                            <i class="fa-solid fa-trash text-[10px]"></i>
-                                        </button>
-                                    </form>
+                                    {{-- Düymə əsas formun içindədir, amma form="..." ilə xaricdəki silmə formasına bağlanır --}}
+                                    <button type="submit" form="delete-image-{{ $image->id }}"
+                                            onclick="return confirm('Delete this image?')"
+                                            class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700">
+                                        <i class="fa-solid fa-trash text-[10px]"></i>
+                                    </button>
                                     <span class="absolute bottom-2 left-2 px-2 py-0.5 rounded text-[10px] bg-gray-900/80 text-white font-mono">#{{ $image->id }}</span>
                                 </div>
                             @endforeach
@@ -268,6 +271,7 @@
                                     <span class="text-sm font-medium text-gray-700 flex-1" x-text="option.name || 'Untitled Option'"></span>
 
                                     <label class="flex items-center gap-1.5 text-[11px] text-gray-600 cursor-pointer">
+                                        <input type="hidden" :name="`options[${optIndex}][status]`" value="0">
                                         <input type="checkbox" :name="`options[${optIndex}][status]`" value="1" x-model="option.status"
                                                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5">
                                         Active
@@ -320,6 +324,7 @@
 
                                         <div class="flex items-end pb-1">
                                             <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                                <input type="hidden" :name="`options[${optIndex}][is_required]`" value="0">
                                                 <input type="checkbox" :name="`options[${optIndex}][is_required]`" value="1" x-model="option.is_required"
                                                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                                                 Required
@@ -356,6 +361,7 @@
                                                            placeholder="Sort">
 
                                                     <label class="flex items-center gap-1 text-[10px] text-gray-600 cursor-pointer">
+                                                        <input type="hidden" :name="`options[${optIndex}][values][${valIndex}][status]`" value="0">
                                                         <input type="checkbox" :name="`options[${optIndex}][values][${valIndex}][status]`" value="1" x-model="val.status"
                                                                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5">
                                                         On
@@ -414,7 +420,7 @@
                                                  :class="selectedAttributeValues['{{ $attribute->id }}']?.['{{ $value->id }}'] ? 'border-indigo-500 bg-indigo-50/50' : 'border-gray-200'">
                                                 <label class="cursor-pointer flex items-center gap-3 mb-2">
                                                     <input type="checkbox"
-                                                           @change="toggleAttributeValue({{ $attribute->id }}, {{ $value->id }}, '{{ $value->value }}', {{ $value->price_adjustment }})"
+                                                           @change="toggleAttributeValue({{ $attribute->id }}, {{ $value->id }}, @js($value->value), {{ $value->price_adjustment }})"
                                                            :checked="selectedAttributeValues['{{ $attribute->id }}']?.['{{ $value->id }}']"
                                                            class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
 
@@ -493,7 +499,7 @@
                                                  :class="selectedAttributeValues['{{ $attribute->id }}']?.['{{ $value->id }}'] ? 'border-indigo-500 bg-indigo-50/50' : 'border-gray-200'">
                                                 <label class="flex items-center gap-3 p-3 cursor-pointer">
                                                     <input type="checkbox"
-                                                           @change="toggleAttributeValue({{ $attribute->id }}, {{ $value->id }}, '{{ $value->value }}', {{ $value->price_adjustment }})"
+                                                           @change="toggleAttributeValue({{ $attribute->id }}, {{ $value->id }}, @js($value->value), {{ $value->price_adjustment }})"
                                                            :checked="selectedAttributeValues['{{ $attribute->id }}']?.['{{ $value->id }}']"
                                                            class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                                                     <span class="flex-1 text-sm text-gray-800">{{ $value->value }}</span>
@@ -661,19 +667,19 @@
                     <div class="space-y-3">
                         <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
                             <input type="hidden" name="status" value="0">
-                            <input type="checkbox" name="status" value="1" {{ $product->status ? 'checked' : '' }}
+                            <input type="checkbox" name="status" value="1" {{ old('status', $product->status) ? 'checked' : '' }}
                                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                             Active
                         </label>
                         <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
                             <input type="hidden" name="is_featured" value="0">
-                            <input type="checkbox" name="is_featured" value="1" {{ $product->is_featured ? 'checked' : '' }}
+                            <input type="checkbox" name="is_featured" value="1" {{ old('is_featured', $product->is_featured) ? 'checked' : '' }}
                                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                             Featured
                         </label>
                         <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
                             <input type="hidden" name="has_variants" value="0">
-                            <input type="checkbox" name="has_variants" value="1" {{ $product->has_variants ? 'checked' : '' }}
+                            <input type="checkbox" name="has_variants" value="1" {{ old('has_variants', $product->has_variants) ? 'checked' : '' }}
                                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                             Has Variants (Size × Color)
                         </label>
@@ -701,6 +707,15 @@
 
     </form>
 
+    {{-- Şəkil silmə formaları: əsas formun XARİCİNDƏ (iç-içə form problemi həll olunub) --}}
+    @foreach ($product->images as $image)
+        <form id="delete-image-{{ $image->id }}" method="POST"
+              action="{{ route('admin.products.images.destroy', [$product, $image]) }}" class="hidden">
+            @csrf
+            @method('DELETE')
+        </form>
+    @endforeach
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js"></script>
@@ -713,10 +728,10 @@ const productImagesList = @json($productImagesList);
 
 function productForm() {
     return {
-        name: '{{ $product->name }}',
-        slug: '{{ $product->slug }}',
-        modelId: '{{ $product->model_id }}',
-        printType: '{{ $product->print_type }}',
+        name: @json(old('name', $product->name)),
+        slug: @json(old('slug', $product->slug)),
+        modelId: @json((string) old('model_id', $product->model_id)),
+        printType: @json(old('print_type', $product->print_type)),
         tiers: [],
         selectedAttributeValues: {},
         options: [],
@@ -737,7 +752,7 @@ function productForm() {
             if (oldAttrValues) {
                 Object.keys(oldAttrValues).forEach(attrId => {
                     this.selectedAttributeValues[attrId] = {};
-                    oldAttrValues[attrId].forEach((v, idx) => {
+                    Object.values(oldAttrValues[attrId]).forEach((v, idx) => {
                         if (v.value_id) {
                             this.selectedAttributeValues[attrId][v.value_id] = {
                                 index: idx,
@@ -745,7 +760,8 @@ function productForm() {
                                 price_override: (v.price_override !== undefined && v.price_override !== '') ? parseFloat(v.price_override) : null,
                                 product_image_id: (v.product_image_id !== undefined && v.product_image_id !== '') ? parseInt(v.product_image_id) : null,
                                 temp_override: '',
-                                editing: false
+                                editing: false,
+                                default_price: defaultPrices[v.value_id] || 0
                             };
                         }
                     });
@@ -779,15 +795,15 @@ function productForm() {
                     name: o.name || '',
                     type: o.type || 'select',
                     price_addon: o.price_addon || 0,
-                    is_required: !!o.is_required,
+                    is_required: o.is_required === '1' || o.is_required === 1 || o.is_required === true,
                     sort_order: o.sort_order || 0,
-                    status: o.status !== undefined ? !!o.status : true,
+                    status: o.status !== undefined ? (o.status === '1' || o.status === 1 || o.status === true) : true,
                     values: (o.values || []).map(v => ({
                         id: v.id || null,
                         value: v.value || '',
                         price_addon: v.price_addon || 0,
                         sort_order: v.sort_order || 0,
-                        status: v.status !== undefined ? !!v.status : true,
+                        status: v.status !== undefined ? (v.status === '1' || v.status === 1 || v.status === true) : true,
                     }))
                 }));
             } else if (dbOptions.length) {
@@ -808,14 +824,6 @@ function productForm() {
                     }))
                 }));
             }
-        },
-
-        generateSlug() {
-            this.slug = this.name.toLowerCase()
-                .replace(/[^a-z0-9\s-]/g, '')
-                .replace(/\s+/g, '-')
-                .replace(/-+/g, '-')
-                .replace(/^-|-$/g, '');
         },
 
         addTier() {
@@ -883,7 +891,8 @@ function productForm() {
 
         startEditPrice(attrId, valueId) {
             const v = this.selectedAttributeValues[attrId][valueId];
-            v.temp_override = v.price_override !== null ? v.price_override : v.default_price;
+            const def = v.default_price !== undefined ? v.default_price : (defaultPrices[valueId] || 0);
+            v.temp_override = v.price_override !== null ? v.price_override : def;
             v.editing = true;
         },
 
