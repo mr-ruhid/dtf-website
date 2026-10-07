@@ -208,6 +208,9 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::post('settings/smtp', [SettingController::class, 'smtpUpdate'])->name('settings.smtp.update');
         Route::post('settings/smtp/test', [SettingController::class, 'smtpTest'])->name('settings.smtp.test');
 
+        Route::get('settings/design-pricing', [SettingController::class, 'designPricing'])->name('settings.design-pricing');
+        Route::post('settings/design-pricing', [SettingController::class, 'designPricingUpdate'])->name('settings.design-pricing.update');
+
         Route::get('settings/system', [SettingController::class, 'system'])->name('settings.system');
 
         Route::get('settings/maintenance', [SettingController::class, 'maintenance'])->name('settings.maintenance');
