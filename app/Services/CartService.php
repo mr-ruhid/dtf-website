@@ -84,15 +84,25 @@ class CartService
 
     protected function buildItem(array $data, string $key): array
     {
-        $product = Product::with('images')->find($data['product_id']);
+        $product = null;
 
-        $image = $product?->images->first()?->url ?? ($data['image'] ?? null);
-        $slug = $product?->slug ?? ($data['slug'] ?? null);
+        if (!empty($data['product_id'])) {
+            $product = Product::with('images')->find($data['product_id']);
+        }
+
+        $image = $product?->images->first()?->url
+            ?? ($data['image'] ?? null);
+
+        $name = $product?->name
+            ?? ($data['name'] ?? 'Custom Design');
+
+        $slug = $product?->slug
+            ?? ($data['slug'] ?? null);
 
         return [
             'key' => $key,
-            'product_id' => (int) $data['product_id'],
-            'name' => $product?->name ?? ($data['name'] ?? 'Product'),
+            'product_id' => $data['product_id'] ?? null,
+            'name' => $name,
             'slug' => $slug,
             'image' => $image,
             'unit_price' => round((float) ($data['unit_price'] ?? 0), 2),
@@ -109,6 +119,7 @@ class CartService
     {
         $payload = [
             'product_id' => $data['product_id'] ?? 0,
+            'name' => $data['name'] ?? null,
             'attributes' => $data['attributes'] ?? [],
             'options' => $data['options'] ?? [],
         ];
