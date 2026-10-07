@@ -71,6 +71,41 @@
 
     <div class="rj-dz-body">
 
+        <aside class="rj-dz-left" x-show="product" x-cloak>
+            <template x-if="product">
+                <div class="rj-dz-left-inner">
+                    <div class="rj-dz-left-label">// Product Preview</div>
+
+                    <div class="rj-dz-left-mock">
+                        <template x-if="product.image">
+                            <img :src="product.image" :alt="product.name" class="rj-dz-left-img">
+                        </template>
+                        <template x-if="!product.image">
+                            <div class="rj-dz-left-img-empty">
+                                <i class="fa-regular fa-image"></i>
+                            </div>
+                        </template>
+                        <div class="rj-dz-left-overlay">
+                            <span class="rj-dz-left-dot"></span>
+                            <span x-text="currentZone ? currentZone.label : 'Custom'"></span>
+                        </div>
+                    </div>
+
+                    <p class="rj-dz-left-name" x-text="product.name"></p>
+                    <p class="rj-dz-left-meta">
+                        <span x-text="'Base $' + Number(product.base_price).toFixed(2)"></span>
+                        <span class="rj-dz-left-sep">·</span>
+                        <span x-text="currentZone ? (currentZone.width_inch + '×' + currentZone.height_inch + ' in') : 'Custom'"></span>
+                    </p>
+
+                    <div class="rj-dz-left-tip">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>Your design will be printed on this sheet size.</span>
+                    </div>
+                </div>
+            </template>
+        </aside>
+
         <div class="rj-dz-stage-wrap">
             <div class="rj-dz-stage" x-ref="stage">
                 <canvas id="designCanvas"></canvas>
@@ -93,19 +128,6 @@
                     <i class="fa-solid fa-chevron-down"></i>
                 </div>
                 <p class="rj-dz-hint" x-text="currentZone ? (currentZone.width_inch + ' × ' + currentZone.height_inch + ' in') : ''"></p>
-            </div>
-
-            <div class="rj-dz-side-block" x-show="product" x-cloak>
-                <label class="rj-dz-label">Product</label>
-                <div class="rj-dz-product">
-                    <template x-if="product && product.image">
-                        <img :src="product.image" :alt="product.name">
-                    </template>
-                    <div>
-                        <p class="rj-dz-product-name" x-text="product ? product.name : ''"></p>
-                        <p class="rj-dz-product-meta" x-text="product ? ('Base $' + Number(product.base_price).toFixed(2)) : ''"></p>
-                    </div>
-                </div>
             </div>
 
             <div class="rj-dz-side-block">
@@ -218,6 +240,81 @@
         flex: 1; display: flex; overflow: hidden; min-height: 0;
     }
 
+    .rj-dz-left {
+        width: 220px; flex-shrink: 0;
+        background: #0a0715;
+        border-right: 1px solid rgba(255,255,255,0.06);
+        padding: 20px 16px;
+        overflow-y: auto;
+    }
+    .rj-dz-left-inner {
+        position: sticky; top: 0;
+        display: flex; flex-direction: column; gap: 12px;
+    }
+    .rj-dz-left-label {
+        font-family: ui-monospace, monospace;
+        font-size: 9px; text-transform: uppercase;
+        letter-spacing: .25em; color: #f472b6;
+        padding-bottom: 8px;
+        border-bottom: 1px dashed rgba(244,114,182,0.2);
+    }
+    .rj-dz-left-mock {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 12px;
+        overflow: hidden;
+        background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(236,72,153,0.06));
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+    .rj-dz-left-img {
+        width: 100%; height: 100%; object-fit: cover;
+    }
+    .rj-dz-left-img-empty {
+        width: 100%; height: 100%;
+        display: flex; align-items: center; justify-content: center;
+        color: rgba(255,255,255,0.08);
+        font-size: 2rem;
+    }
+    .rj-dz-left-overlay {
+        position: absolute; left: 8px; bottom: 8px;
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 4px 10px;
+        background: rgba(5,3,15,0.85);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 9999px;
+        font-family: ui-monospace, monospace;
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: .12em;
+        color: #fff;
+    }
+    .rj-dz-left-dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: #6366f1;
+        box-shadow: 0 0 6px 1px rgba(99,102,241,0.8);
+    }
+    .rj-dz-left-name {
+        font-size: 13px; font-weight: 700; color: #fff;
+        margin: 0; line-height: 1.3;
+    }
+    .rj-dz-left-meta {
+        font-family: ui-monospace, monospace;
+        font-size: 10px; color: #9ca3af;
+        margin: 0; display: flex; gap: 6px; align-items: center;
+        letter-spacing: .05em;
+    }
+    .rj-dz-left-sep { color: #4b5563; }
+    .rj-dz-left-tip {
+        display: flex; gap: 8px;
+        padding: 10px;
+        background: rgba(99,102,241,0.06);
+        border: 1px solid rgba(99,102,241,0.15);
+        border-radius: 10px;
+        font-size: 11px; color: #a5b4fc; line-height: 1.5;
+    }
+    .rj-dz-left-tip i { color: #818cf8; font-size: 11px; margin-top: 2px; }
+
     .rj-dz-stage-wrap {
         flex: 1; position: relative;
         display: flex; align-items: center; justify-content: center;
@@ -262,7 +359,7 @@
     .rj-dz-empty p { font-size: 13px; margin: 0; }
 
     .rj-dz-sidebar {
-        width: 320px; flex-shrink: 0;
+        width: 300px; flex-shrink: 0;
         background: #0a0715;
         border-left: 1px solid rgba(255,255,255,0.06);
         padding: 20px;
@@ -306,29 +403,6 @@
         font-family: ui-monospace, monospace;
         font-size: 10px; color: #6b7280;
         margin: 8px 0 0; letter-spacing: .1em;
-    }
-
-    .rj-dz-product {
-        display: flex; gap: 12px; align-items: center;
-        padding: 10px;
-        background: rgba(255,255,255,0.02);
-        border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 10px;
-    }
-    .rj-dz-product img {
-        width: 44px; height: 44px; border-radius: 8px;
-        object-fit: cover;
-        border: 1px solid rgba(255,255,255,0.08);
-        flex-shrink: 0;
-    }
-    .rj-dz-product-name {
-        font-size: 13px; font-weight: 600; color: #fff;
-        margin: 0 0 2px; line-height: 1.3;
-    }
-    .rj-dz-product-meta {
-        font-family: ui-monospace, monospace;
-        font-size: 10px; color: #818cf8;
-        margin: 0; letter-spacing: .05em;
     }
 
     .rj-dz-qty {
@@ -395,305 +469,320 @@
     }
     .rj-dz-add:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
 
+    @media (max-width: 1100px) {
+        .rj-dz-left { display: none !important; }
+    }
     @media (max-width: 900px) {
         .rj-dz { height: calc(100vh - 64px); }
-        .rj-dz-sidebar { width: 260px; }
+        .rj-dz-sidebar { width: 240px; }
         .rj-dz-tb-btn span { display: none; }
     }
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 
-<script type="module">
-import removeBg from 'https://esm.sh/@imgly/background-removal@1.4.5';
+<script>
+(function () {
+    var DPI = 60;
 
-const DPI = 60;
+    var FALLBACK_ZONES = [
+        { id: 1, name: 'A4', slug: 'a4', width_inch: 8.3, height_inch: 11.7, label: 'A4 (8.3 × 11.7 in)', price_addon: 4.50 },
+        { id: 2, name: 'A3', slug: 'a3', width_inch: 11.7, height_inch: 16.5, label: 'A3 (11.7 × 16.5 in)', price_addon: 7.50 },
+        { id: 3, name: '12 × 12', slug: '12x12', width_inch: 12, height_inch: 12, label: '12 × 12 in', price_addon: 6.00 },
+        { id: 4, name: '12 × 24', slug: '12x24', width_inch: 12, height_inch: 24, label: '12 × 24 in', price_addon: 10.00 },
+        { id: 5, name: '13 × 19', slug: '13x19', width_inch: 13, height_inch: 19, label: '13 × 19 in', price_addon: 9.00 },
+        { id: 6, name: '22 × 24', slug: '22x24', width_inch: 22, height_inch: 24, label: '22 × 24 in', price_addon: 18.00 }
+    ];
 
-const FALLBACK_ZONES = [
-    { id: 1, name: 'A4', slug: 'a4', width_inch: 8.3, height_inch: 11.7, label: 'A4 (8.3 × 11.7 in)', price_addon: 4.50 },
-    { id: 2, name: 'A3', slug: 'a3', width_inch: 11.7, height_inch: 16.5, label: 'A3 (11.7 × 16.5 in)', price_addon: 7.50 },
-    { id: 3, name: '12 × 12', slug: '12x12', width_inch: 12, height_inch: 12, label: '12 × 12 in', price_addon: 6.00 },
-    { id: 4, name: '12 × 24', slug: '12x24', width_inch: 12, height_inch: 24, label: '12 × 24 in', price_addon: 10.00 },
-    { id: 5, name: '13 × 19', slug: '13x19', width_inch: 13, height_inch: 19, label: '13 × 19 in', price_addon: 9.00 },
-    { id: 6, name: '22 × 24', slug: '22x24', width_inch: 22, height_inch: 24, label: '22 × 24 in', price_addon: 18.00 },
-];
+    var removeBgModulePromise = null;
 
-window.designStudio = function (config) {
-    const zones = (config.zones && config.zones.length) ? config.zones : FALLBACK_ZONES;
+    function loadRemoveBg() {
+        if (!removeBgModulePromise) {
+            removeBgModulePromise = import('https://esm.sh/@imgly/background-removal@1.4.5')
+                .then(function (m) { return m.default; });
+        }
+        return removeBgModulePromise;
+    }
 
-    return {
-        zones: zones,
-        product: config.product || null,
-        zoneId: zones[0].id,
-        qty: 1,
-        items: [],
-        hasActiveImage: false,
-        bgWorking: false,
-        adding: false,
-        zoomLevel: 1,
-        fitScale: 1,
-        canvas: null,
+    window.designStudio = function (config) {
+        var zones = (config.zones && config.zones.length) ? config.zones : FALLBACK_ZONES;
 
-        init() {
-            this.$nextTick(() => this.setupCanvas());
-        },
+        return {
+            zones: zones,
+            product: config.product || null,
+            zoneId: zones[0] ? zones[0].id : null,
+            qty: 1,
+            items: [],
+            hasActiveImage: false,
+            bgWorking: false,
+            adding: false,
+            zoomLevel: 1,
+            fitScale: 1,
+            canvas: null,
 
-        get currentZone() {
-            if (!this.zoneId) return this.zones[0] || null;
-            const found = this.zones.find(z => Number(z.id) === Number(this.zoneId));
-            return found || this.zones[0] || null;
-        },
+            init() {
+                this.$nextTick(() => this.setupCanvas());
+            },
 
-        get basePrice() {
-            const zoneAddon = this.currentZone ? Number(this.currentZone.price_addon) : 0;
-            const productBase = this.product ? Number(this.product.base_price) : 0;
-            return zoneAddon + productBase;
-        },
+            get currentZone() {
+                if (!this.zones.length) return null;
+                if (!this.zoneId) return this.zones[0];
+                var found = this.zones.find(z => Number(z.id) === Number(this.zoneId));
+                return found || this.zones[0];
+            },
 
-        get totalPrice() {
-            return this.basePrice * (this.qty || 1);
-        },
+            get basePrice() {
+                var zoneAddon = this.currentZone ? Number(this.currentZone.price_addon) : 0;
+                var productBase = this.product ? Number(this.product.base_price) : 0;
+                return zoneAddon + productBase;
+            },
 
-        setupCanvas() {
-            const el = document.getElementById('designCanvas');
-            if (!el || typeof fabric === 'undefined') return;
+            get totalPrice() {
+                return this.basePrice * (this.qty || 1);
+            },
 
-            this.canvas = new fabric.Canvas('designCanvas', {
-                backgroundColor: '#ffffff',
-                preserveObjectStacking: true,
-                selection: true,
-            });
+            setupCanvas() {
+                var el = document.getElementById('designCanvas');
+                if (!el || typeof fabric === 'undefined') return;
 
-            this.canvas.on('selection:created', () => this.syncActive());
-            this.canvas.on('selection:updated', () => this.syncActive());
-            this.canvas.on('selection:cleared', () => this.syncActive());
-            this.canvas.on('object:added', () => this.syncCount());
-            this.canvas.on('object:removed', () => this.syncCount());
-
-            this.applyZoneSize();
-            window.addEventListener('resize', () => this.fitStage());
-        },
-
-        syncActive() {
-            const obj = this.canvas ? this.canvas.getActiveObject() : null;
-            this.hasActiveImage = !!(obj && obj.type === 'image');
-        },
-
-        syncCount() {
-            this.items = this.canvas ? this.canvas.getObjects().filter(o => o.type === 'image') : [];
-        },
-
-        applyZoneSize() {
-            const z = this.currentZone;
-            if (!z || !this.canvas) return;
-
-            const w = Math.max(1, Math.round(Number(z.width_inch) * DPI));
-            const h = Math.max(1, Math.round(Number(z.height_inch) * DPI));
-
-            this.canvas.setWidth(w);
-            this.canvas.setHeight(h);
-            this.canvas.renderAll();
-            this.fitStage();
-        },
-
-        fitStage() {
-            const stage = this.$refs.stage;
-            if (!stage || !this.canvas) return;
-
-            const wrap = stage.parentElement;
-            if (!wrap) return;
-
-            const pad = 48;
-            const maxW = wrap.clientWidth - pad;
-            const maxH = wrap.clientHeight - pad;
-            const cw = this.canvas.getWidth();
-            const ch = this.canvas.getHeight();
-
-            if (cw <= 0 || ch <= 0) return;
-
-            const fit = Math.min(maxW / cw, maxH / ch, 1);
-            this.fitScale = fit;
-            stage.style.transform = `scale(${fit * this.zoomLevel})`;
-        },
-
-        changeZone() {
-            this.applyZoneSize();
-            this.canvas.getObjects().slice().forEach(o => this.canvas.remove(o));
-            this.syncCount();
-            this.syncActive();
-        },
-
-        onFiles(e) {
-            const files = Array.from(e.target.files || []);
-            files.forEach(f => this.addImageFromFile(f));
-            e.target.value = '';
-        },
-
-        addImageFromFile(file) {
-            const reader = new FileReader();
-            reader.onload = ev => this.addImageFromSrc(ev.target.result);
-            reader.readAsDataURL(file);
-        },
-
-        addImageFromSrc(src, replaceObj = null) {
-            if (!this.canvas) return;
-
-            fabric.Image.fromURL(src, (img) => {
-                const cw = this.canvas.getWidth();
-                const ch = this.canvas.getHeight();
-
-                const maxW = cw * 0.6;
-                const maxH = ch * 0.6;
-                const scale = Math.min(maxW / img.width, maxH / img.height, 1);
-
-                img.set({
-                    left: cw / 2 - (img.width * scale) / 2,
-                    top: ch / 2 - (img.height * scale) / 2,
-                    scaleX: scale,
-                    scaleY: scale,
-                    cornerColor: '#6366f1',
-                    cornerStrokeColor: '#fff',
-                    borderColor: '#6366f1',
-                    cornerSize: 12,
-                    cornerStyle: 'circle',
-                    transparentCorners: false,
+                this.canvas = new fabric.Canvas('designCanvas', {
+                    backgroundColor: '#ffffff',
+                    preserveObjectStacking: true,
+                    selection: true
                 });
 
-                if (replaceObj) {
+                this.canvas.on('selection:created', () => this.syncActive());
+                this.canvas.on('selection:updated', () => this.syncActive());
+                this.canvas.on('selection:cleared', () => this.syncActive());
+                this.canvas.on('object:added', () => this.syncCount());
+                this.canvas.on('object:removed', () => this.syncCount());
+
+                this.applyZoneSize();
+                window.addEventListener('resize', () => this.fitStage());
+            },
+
+            syncActive() {
+                var obj = this.canvas ? this.canvas.getActiveObject() : null;
+                this.hasActiveImage = !!(obj && obj.type === 'image');
+            },
+
+            syncCount() {
+                this.items = this.canvas ? this.canvas.getObjects().filter(o => o.type === 'image') : [];
+            },
+
+            applyZoneSize() {
+                var z = this.currentZone;
+                if (!z || !this.canvas) return;
+
+                var w = Math.max(1, Math.round(Number(z.width_inch) * DPI));
+                var h = Math.max(1, Math.round(Number(z.height_inch) * DPI));
+
+                this.canvas.setWidth(w);
+                this.canvas.setHeight(h);
+                this.canvas.renderAll();
+                this.fitStage();
+            },
+
+            fitStage() {
+                var stage = this.$refs.stage;
+                if (!stage || !this.canvas) return;
+
+                var wrap = stage.parentElement;
+                if (!wrap) return;
+
+                var pad = 48;
+                var maxW = wrap.clientWidth - pad;
+                var maxH = wrap.clientHeight - pad;
+                var cw = this.canvas.getWidth();
+                var ch = this.canvas.getHeight();
+
+                if (cw <= 0 || ch <= 0) return;
+
+                var fit = Math.min(maxW / cw, maxH / ch, 1);
+                this.fitScale = fit;
+                stage.style.transform = 'scale(' + (fit * this.zoomLevel) + ')';
+            },
+
+            changeZone() {
+                this.applyZoneSize();
+                if (!this.canvas) return;
+                this.canvas.getObjects().slice().forEach(o => this.canvas.remove(o));
+                this.syncCount();
+                this.syncActive();
+            },
+
+            onFiles(e) {
+                var files = Array.from(e.target.files || []);
+                files.forEach(f => this.addImageFromFile(f));
+                e.target.value = '';
+            },
+
+            addImageFromFile(file) {
+                var reader = new FileReader();
+                reader.onload = ev => this.addImageFromSrc(ev.target.result);
+                reader.readAsDataURL(file);
+            },
+
+            addImageFromSrc(src, replaceObj) {
+                if (!this.canvas) return;
+
+                fabric.Image.fromURL(src, (img) => {
+                    var cw = this.canvas.getWidth();
+                    var ch = this.canvas.getHeight();
+
+                    var maxW = cw * 0.6;
+                    var maxH = ch * 0.6;
+                    var scale = Math.min(maxW / img.width, maxH / img.height, 1);
+
                     img.set({
-                        left: replaceObj.left,
-                        top: replaceObj.top,
-                        scaleX: replaceObj.scaleX,
-                        scaleY: replaceObj.scaleY,
-                        angle: replaceObj.angle,
+                        left: cw / 2 - (img.width * scale) / 2,
+                        top: ch / 2 - (img.height * scale) / 2,
+                        scaleX: scale,
+                        scaleY: scale,
+                        cornerColor: '#6366f1',
+                        cornerStrokeColor: '#fff',
+                        borderColor: '#6366f1',
+                        cornerSize: 12,
+                        cornerStyle: 'circle',
+                        transparentCorners: false
                     });
-                    this.canvas.remove(replaceObj);
+
+                    if (replaceObj) {
+                        img.set({
+                            left: replaceObj.left,
+                            top: replaceObj.top,
+                            scaleX: replaceObj.scaleX,
+                            scaleY: replaceObj.scaleY,
+                            angle: replaceObj.angle
+                        });
+                        this.canvas.remove(replaceObj);
+                    }
+
+                    this.canvas.add(img);
+                    this.canvas.setActiveObject(img);
+                    this.canvas.renderAll();
+                    this.syncActive();
+                    this.syncCount();
+                }, { crossOrigin: 'anonymous' });
+            },
+
+            async removeBg() {
+                var active = this.canvas ? this.canvas.getActiveObject() : null;
+                if (!active || active.type !== 'image') return;
+
+                this.bgWorking = true;
+
+                try {
+                    var removeFn = await loadRemoveBg();
+                    var blob = await removeFn(active.getSrc());
+                    var url = URL.createObjectURL(blob);
+                    this.addImageFromSrc(url, active);
+                } catch (e) {
+                    this.toast('Background removal failed');
                 }
 
-                this.canvas.add(img);
-                this.canvas.setActiveObject(img);
+                this.bgWorking = false;
+            },
+
+            flipH() {
+                var a = this.canvas ? this.canvas.getActiveObject() : null;
+                if (!a) return;
+                a.set('flipX', !a.flipX);
+                this.canvas.renderAll();
+            },
+
+            rotate(deg) {
+                var a = this.canvas ? this.canvas.getActiveObject() : null;
+                if (!a) return;
+                a.rotate(((a.angle || 0) + deg) % 360);
+                this.canvas.renderAll();
+            },
+
+            layerUp() {
+                var a = this.canvas ? this.canvas.getActiveObject() : null;
+                if (!a) return;
+                this.canvas.bringForward(a);
+                this.canvas.renderAll();
+            },
+
+            layerDown() {
+                var a = this.canvas ? this.canvas.getActiveObject() : null;
+                if (!a) return;
+                this.canvas.sendBackwards(a);
+                this.canvas.renderAll();
+            },
+
+            removeActive() {
+                var a = this.canvas ? this.canvas.getActiveObject() : null;
+                if (!a) return;
+                this.canvas.remove(a);
+                this.canvas.discardActiveObject();
                 this.canvas.renderAll();
                 this.syncActive();
                 this.syncCount();
-            }, { crossOrigin: 'anonymous' });
-        },
+            },
 
-        async removeBg() {
-            const active = this.canvas ? this.canvas.getActiveObject() : null;
-            if (!active || active.type !== 'image') return;
+            zoom(dir) {
+                this.zoomLevel = Math.max(0.25, Math.min(3, this.zoomLevel + dir * 0.15));
+                this.fitStage();
+            },
 
-            this.bgWorking = true;
+            resetView() {
+                this.zoomLevel = 1;
+                this.fitStage();
+            },
 
-            try {
-                const src = active.getSrc();
-                const blob = await removeBg(src);
-                const url = URL.createObjectURL(blob);
-                this.addImageFromSrc(url, active);
-            } catch (e) {
-                this.toast('Background removal failed');
-            }
+            incQty() { this.qty = Math.min(999, (this.qty || 1) + 1); },
+            decQty() { this.qty = Math.max(1, (this.qty || 1) - 1); },
 
-            this.bgWorking = false;
-        },
+            async addToCart() {
+                if (this.items.length === 0 || this.adding) return;
 
-        flipH() {
-            const a = this.canvas ? this.canvas.getActiveObject() : null;
-            if (!a) return;
-            a.set('flipX', !a.flipX);
-            this.canvas.renderAll();
-        },
+                this.adding = true;
 
-        rotate(deg) {
-            const a = this.canvas ? this.canvas.getActiveObject() : null;
-            if (!a) return;
-            a.rotate(((a.angle || 0) + deg) % 360);
-            this.canvas.renderAll();
-        },
+                var z = this.currentZone;
+                var snapshot = this.canvas.toDataURL({ format: 'jpeg', quality: 0.7 });
 
-        layerUp() {
-            const a = this.canvas ? this.canvas.getActiveObject() : null;
-            if (!a) return;
-            this.canvas.bringForward(a);
-            this.canvas.renderAll();
-        },
+                var attributes = {
+                    'Sheet Size': z ? z.label : 'Custom',
+                    'Items': this.items.length
+                };
 
-        layerDown() {
-            const a = this.canvas ? this.canvas.getActiveObject() : null;
-            if (!a) return;
-            this.canvas.sendBackwards(a);
-            this.canvas.renderAll();
-        },
+                var payload = {
+                    product_id: this.product ? this.product.id : null,
+                    name: this.product ? this.product.name : ('Custom Gang Sheet — ' + (z ? z.label : 'Custom')),
+                    unit_price: this.basePrice,
+                    qty: this.qty,
+                    attributes: attributes,
+                    print_type: 'custom_size',
+                    note: this.items.length + ' design item(s) on sheet',
+                    image: snapshot
+                };
 
-        removeActive() {
-            const a = this.canvas ? this.canvas.getActiveObject() : null;
-            if (!a) return;
-            this.canvas.remove(a);
-            this.canvas.discardActiveObject();
-            this.canvas.renderAll();
-            this.syncActive();
-            this.syncCount();
-        },
-
-        zoom(dir) {
-            this.zoomLevel = Math.max(0.25, Math.min(3, this.zoomLevel + dir * 0.15));
-            this.fitStage();
-        },
-
-        resetView() {
-            this.zoomLevel = 1;
-            this.fitStage();
-        },
-
-        incQty() { this.qty = Math.min(999, (this.qty || 1) + 1); },
-        decQty() { this.qty = Math.max(1, (this.qty || 1) - 1); },
-
-        async addToCart() {
-            if (this.items.length === 0 || this.adding) return;
-
-            this.adding = true;
-
-            const z = this.currentZone;
-            const snapshot = this.canvas.toDataURL({ format: 'jpeg', quality: 0.7 });
-
-            const attributes = {
-                'Sheet Size': z ? z.label : 'Custom',
-                'Items': this.items.length,
-            };
-
-            const payload = {
-                product_id: this.product ? this.product.id : null,
-                name: this.product ? this.product.name : ('Custom Gang Sheet — ' + (z ? z.label : 'Custom')),
-                unit_price: this.basePrice,
-                qty: this.qty,
-                attributes: attributes,
-                print_type: 'custom_size',
-                note: this.items.length + ' design item(s) on sheet',
-                image: snapshot,
-            };
-
-            try {
-                const store = window.Alpine && window.Alpine.store('cart');
-                if (store) {
-                    await store.add(payload);
-                } else {
-                    this.toast('Cart not ready');
+                try {
+                    var store = window.Alpine && window.Alpine.store('cart');
+                    if (store) {
+                        await store.add(payload);
+                    } else {
+                        this.toast('Cart not ready');
+                    }
+                } catch (e) {
+                    this.toast('Could not add to cart');
                 }
-            } catch (e) {
-                this.toast('Could not add to cart');
+
+                this.adding = false;
+            },
+
+            toast(msg) {
+                var el = document.createElement('div');
+                el.textContent = msg;
+                el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0a0715;color:#fff;padding:12px 24px;border-radius:9999px;border:1px solid rgba(99,102,241,0.4);font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.6);';
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 2200);
             }
-
-            this.adding = false;
-        },
-
-        toast(msg) {
-            const el = document.createElement('div');
-            el.textContent = msg;
-            el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0a0715;color:#fff;padding:12px 24px;border-radius:9999px;border:1px solid rgba(99,102,241,0.4);font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.6);';
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 2200);
-        },
+        };
     };
-};
+})();
 </script>
 
 @endsection
