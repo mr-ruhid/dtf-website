@@ -24,7 +24,7 @@ class CartService
             $cart[$key] = $this->buildItem($data, $key);
         }
 
-        $cart[$key]['total'] = round($cart[$key]['unit_price'] * $cart[$key]['qty'], 2);
+        $this->recalculateItem($cart[$key]);
 
         session()->put($this->sessionKey, $cart);
 
@@ -39,9 +39,10 @@ class CartService
             return false;
         }
 
-        $qty = max(1, min(999, $qty));
+        $qty = max(1, min(9999, $qty));
         $cart[$key]['qty'] = $qty;
-        $cart[$key]['total'] = round($cart[$key]['unit_price'] * $qty, 2);
+
+        $this->recalculateItem($cart[$key]);
 
         session()->put($this->sessionKey, $cart);
 
@@ -87,7 +88,7 @@ class CartService
         $product = null;
 
         if (!empty($data['product_id'])) {
-            $product = Product::with('images')->find($data['product_id']);
+            $product = Product::with(['images', 'prices'])->find($data['product_id']);
         }
 
         $image = $product?->images->first()?->url
@@ -99,19 +100,94 @@ class CartService
         $slug = $product?->slug
             ?? ($data['slug'] ?? null);
 
+        $baseUnitPrice = round((float) ($data['unit_price'] ?? 0), 2);
+
+        if ($product && $product->base_price > 0 && $baseUnitPrice <= 0) {
+            $baseUnitPrice = (float) ($product->sale_price ?: $product->base_price);
+        }
+
         return [
             'key' => $key,
             'product_id' => $data['product_id'] ?? null,
             'name' => $name,
             'slug' => $slug,
             'image' => $image,
-            'unit_price' => round((float) ($data['unit_price'] ?? 0), 2),
+            'base_unit_price' => $baseUnitPrice,
+            'unit_price' => $baseUnitPrice,
             'qty' => max(1, (int) ($data['qty'] ?? 1)),
             'total' => 0,
             'attributes' => $data['attributes'] ?? [],
             'options' => $data['options'] ?? [],
             'print_type' => $data['print_type'] ?? 'none',
             'note' => $data['note'] ?? null,
+            'tier_label' => null,
+        ];
+    }
+
+    protected function recalculateItem(array &$item): void
+    {
+        $qty = max(1, (int) ($item['qty'] ?? 1));
+        $unitPrice = (float) ($item['unit_price'] ?? 0);
+        $baseUnitPrice = (float) ($item['base_unit_price'] ?? $unitPrice);
+
+        if ($unitPrice <= 0) {
+            $unitPrice = $baseUnitPrice;
+        }
+
+        $tier = $this->resolveTier($item['product_id'] ?? null, $qty);
+
+        if ($tier) {
+            $unitPrice = $tier['price'];
+            $item['tier_label'] = $tier['label'];
+        } else {
+            $item['tier_label'] = null;
+        }
+
+        $item['unit_price'] = round($unitPrice, 2);
+        $item['total'] = round($item['unit_price'] * $qty, 2);
+    }
+
+    protected function resolveTier($productId, int $qty): ?array
+    {
+        if (!$productId) {
+            return null;
+        }
+
+        $product = Product::with('prices')->find($productId);
+
+        if (!$product) {
+            return null;
+        }
+
+        $tiers = $product->prices->sortBy('min_qty');
+
+        if ($tiers->isEmpty()) {
+            return null;
+        }
+
+        $matched = null;
+
+        foreach ($tiers as $tier) {
+            $min = (int) $tier->min_qty;
+            $max = $tier->max_qty !== null ? (int) $tier->max_qty : null;
+
+            if ($qty >= $min && ($max === null || $qty <= $max)) {
+                $matched = $tier;
+                break;
+            }
+        }
+
+        if (!$matched) {
+            $matched = $tiers->last();
+        }
+
+        $rangeLabel = $matched->max_qty !== null
+            ? $matched->min_qty . '–' . $matched->max_qty
+            : $matched->min_qty . '+';
+
+        return [
+            'price' => round((float) $matched->price, 2),
+            'label' => $rangeLabel . ' qty · $' . number_format((float) $matched->price, 2) . ' ea',
         ];
     }
 
