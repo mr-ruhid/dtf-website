@@ -145,6 +145,7 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
         Route::put('products/{product}/toggle', [ProductController::class, 'toggleStatus'])->name('products.toggle');
         Route::put('products/{product}/featured', [ProductController::class, 'toggleFeatured'])->name('products.featured');
+        Route::post('products/{product}/duplicate', [ProductController::class, 'duplicate'])->name('products.duplicate');
         Route::delete('products/{product}/images/{image}', [ProductController::class, 'deleteImage'])->name('products.images.destroy');
 
         Route::get('branches', [BranchController::class, 'index'])->name('branches.index');
