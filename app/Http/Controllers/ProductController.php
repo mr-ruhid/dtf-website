@@ -15,6 +15,7 @@ class ProductController extends Controller
             'options.values',
             'attributeValues.attribute',
             'attributeValues.attributeValue',
+            'attributeValues.productImage',
             'printZones',
             'category',
             'model',
