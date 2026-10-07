@@ -96,6 +96,7 @@ class ProductController extends Controller
             'prices',
             'attributeValues.attribute',
             'attributeValues.attributeValue',
+            'attributeValues.productImage',
             'printZones',
             'options.values',
             'variants',
@@ -113,9 +114,9 @@ class ProductController extends Controller
     {
         $data = $this->validateData($request, $product->id);
 
-        $data['status'] = $request->boolean('status');
-        $data['is_featured'] = $request->boolean('is_featured');
-        $data['has_variants'] = $request->boolean('has_variants');
+        $data['status'] = $request->has('status') ? $request->boolean('status') : $product->status;
+        $data['is_featured'] = $request->has('is_featured') ? $request->boolean('is_featured') : $product->is_featured;
+        $data['has_variants'] = $request->has('has_variants') ? $request->boolean('has_variants') : $product->has_variants;
         $data['sort_order'] = $data['sort_order'] ?? 0;
 
         DB::beginTransaction();
@@ -230,6 +231,11 @@ class ProductController extends Controller
             return;
         }
 
+        $existingImages = $product->attributeValues()
+            ->whereNotNull('product_image_id')
+            ->get()
+            ->keyBy(fn($pav) => $pav->attribute_id . '_' . $pav->attribute_value_id);
+
         $product->attributeValues()->delete();
 
         $selected = $request->input('attribute_values', []);
@@ -240,12 +246,20 @@ class ProductController extends Controller
                     continue;
                 }
 
+                $key = $attributeId . '_' . $valueData['value_id'];
+                $productImageId = $valueData['product_image_id'] ?? null;
+
+                if (!$productImageId && isset($existingImages[$key])) {
+                    $productImageId = $existingImages[$key]->product_image_id;
+                }
+
                 $product->attributeValues()->create([
                     'attribute_id' => $attributeId,
                     'attribute_value_id' => $valueData['value_id'],
                     'price_override' => isset($valueData['price_override']) && $valueData['price_override'] !== ''
                         ? (float) $valueData['price_override']
                         : null,
+                    'product_image_id' => $productImageId ?: null,
                     'status' => true,
                 ]);
             }
