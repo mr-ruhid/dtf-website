@@ -21,6 +21,14 @@
     $defaultH = $defaultZone ? (float) ($defaultZone->max_height_inch ?: 12) : 12;
     $defaultZonePrice = $defaultZone ? (float) $defaultZone->price_addon : 0;
 
+    $pricing = [
+        'enabled' => \App\Models\Setting::get('design_custom_enabled', '1') == '1',
+        'per_sq_inch' => (float) \App\Models\Setting::get('design_custom_price_per_sq_inch', '0.05'),
+        'min_price' => (float) \App\Models\Setting::get('design_custom_min_price', '4.50'),
+        'min_inch' => (float) \App\Models\Setting::get('design_custom_min_inch', '1'),
+        'max_inch' => (float) \App\Models\Setting::get('design_custom_max_inch', '60'),
+    ];
+
     $startingPrice = (float) $basePrice;
 
     if ($startingPrice <= 0 && $prices->count()) {
@@ -33,7 +41,7 @@
     }
 
     if ($startingPrice <= 0 && $isDesignable) {
-        $startingPrice = max(4.50, round($defaultW * $defaultH * 0.05, 2));
+        $startingPrice = $pricing['min_price'];
     }
 
     if ($startingPrice <= 0) {
@@ -53,6 +61,8 @@
             requiresDesign: {{ $isDesignable ? 'true' : 'false' }},
             defaultW: {{ $defaultW }},
             defaultH: {{ $defaultH }},
+            defaultZonePrice: {{ $defaultZonePrice }},
+            pricing: {{ \Illuminate\Support\Js::from($pricing) }},
             options: {{ \Illuminate\Support\Js::from($displayOptions->map(function ($o) {
                 return [
                     'id' => $o->id,
@@ -216,19 +226,25 @@
                     </div>
                 @endif
 
-                @if($isDesignable)
+                @if($isDesignable && $pricing['enabled'])
                     <div class="rj-sp-qty-row">
                         <label class="rj-sp-option-label">
                             Sheet Size
                             <span class="rj-sp-req">*</span>
                         </label>
                         <div class="rj-sp-measure-2">
-                            <input type="number" min="1" max="60" step="0.1"
+                            <input type="number"
+                                   :min="pricing.min_inch"
+                                   :max="pricing.max_inch"
+                                   step="0.1"
                                    class="rj-sp-input"
                                    x-model.number="designW"
                                    placeholder="Width">
                             <span class="rj-sp-measure-sep">×</span>
-                            <input type="number" min="1" max="60" step="0.1"
+                            <input type="number"
+                                   :min="pricing.min_inch"
+                                   :max="pricing.max_inch"
+                                   step="0.1"
                                    class="rj-sp-input"
                                    x-model.number="designH"
                                    placeholder="Height">
@@ -895,6 +911,13 @@ function standardProduct(config) {
         basePrice: config.basePrice,
         requiresDesign: config.requiresDesign,
         options: config.options || [],
+        pricing: config.pricing || {
+            enabled: true,
+            per_sq_inch: 0.05,
+            min_price: 4.50,
+            min_inch: 1,
+            max_inch: 60
+        },
 
         selections: {},
         qty: 1,
@@ -905,9 +928,22 @@ function standardProduct(config) {
 
         get designHint() {
             if (!this.designW || !this.designH) return '';
-            if (this.designW < 1 || this.designH < 1) return 'Minimum 1 inch';
-            if (this.designW > 60 || this.designH > 60) return 'Maximum 60 inch';
+            const min = Number(this.pricing.min_inch) || 1;
+            const max = Number(this.pricing.max_inch) || 60;
+            if (this.designW < min || this.designH < min) return 'Minimum ' + min + ' inch';
+            if (this.designW > max || this.designH > max) return 'Maximum ' + max + ' inch';
             return this.designW + ' × ' + this.designH + ' in sheet';
+        },
+
+        get sheetPrice() {
+            if (!this.requiresDesign) return 0;
+
+            const perSqInch = Number(this.pricing.per_sq_inch) || 0;
+            const minPrice = Number(this.pricing.min_price) || 0;
+            const area = (this.designW || 12) * (this.designH || 12);
+            const calculated = area * perSqInch;
+
+            return Math.round(Math.max(calculated, minPrice) * 100) / 100;
         },
 
         get optionsAddon() {
@@ -923,18 +959,8 @@ function standardProduct(config) {
             return total;
         },
 
-        get designPrice() {
-            if (!this.requiresDesign) return 0;
-
-            const baseArea = 144;
-            const area = Math.max(1, (this.designW || 12) * (this.designH || 12));
-            const ratio = Math.max(1, area / baseArea);
-
-            return Math.round(this.basePrice * ratio * 100) / 100;
-        },
-
         get finalPrice() {
-            const base = this.requiresDesign ? this.designPrice : parseFloat(this.basePrice);
+            const base = this.requiresDesign ? this.sheetPrice : parseFloat(this.basePrice);
             return base + this.optionsAddon;
         },
 
@@ -983,16 +1009,19 @@ function standardProduct(config) {
         decQty() { this.qty = Math.max(1, (this.qty || 1) - 1); },
 
         goToDesign() {
+            const min = Number(this.pricing.min_inch) || 1;
+            const max = Number(this.pricing.max_inch) || 60;
+
             if (!this.designW || !this.designH) {
                 this.flash('Please enter width and height');
                 return;
             }
-            if (this.designW < 1 || this.designH < 1) {
-                this.flash('Minimum size is 1 inch');
+            if (this.designW < min || this.designH < min) {
+                this.flash('Minimum size is ' + min + ' inch');
                 return;
             }
-            if (this.designW > 60 || this.designH > 60) {
-                this.flash('Maximum size is 60 inch');
+            if (this.designW > max || this.designH > max) {
+                this.flash('Maximum size is ' + max + ' inch');
                 return;
             }
 
