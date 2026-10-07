@@ -190,7 +190,7 @@
                                     <span class="text-sm font-medium text-gray-700 flex-1" x-text="option.name || 'Untitled Option'"></span>
 
                                     <label class="flex items-center gap-1.5 text-[11px] text-gray-600 cursor-pointer">
-                                        <input type="checkbox" :name="`options[${optIndex}][status]`" value="1" x-model="option.status"
+                                        <input type="checkbox" tabindex="-1" :name="`options[${optIndex}][status]`" value="1" x-model="option.status"
                                                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5">
                                         Active
                                     </label>
@@ -242,7 +242,7 @@
 
                                         <div class="flex items-end pb-1">
                                             <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                                                <input type="checkbox" :name="`options[${optIndex}][is_required]`" value="1" x-model="option.is_required"
+                                                <input type="checkbox" tabindex="-1" :name="`options[${optIndex}][is_required]`" value="1" x-model="option.is_required"
                                                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                                                 Required
                                             </label>
@@ -278,7 +278,7 @@
                                                            placeholder="Sort">
 
                                                     <label class="flex items-center gap-1 text-[10px] text-gray-600 cursor-pointer">
-                                                        <input type="checkbox" :name="`options[${optIndex}][values][${valIndex}][status]`" value="1" x-model="val.status"
+                                                        <input type="checkbox" tabindex="-1" :name="`options[${optIndex}][values][${valIndex}][status]`" value="1" x-model="val.status"
                                                                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5">
                                                         On
                                                     </label>
@@ -332,7 +332,7 @@
                                             <div class="border rounded-lg p-3 transition"
                                                  :class="selectedAttributeValues['{{ $attribute->id }}']?.['{{ $value->id }}'] ? 'border-indigo-500 bg-indigo-50/50' : 'border-gray-200'">
                                                 <label class="cursor-pointer block">
-                                                    <input type="checkbox" class="sr-only"
+                                                    <input type="checkbox" class="sr-only" tabindex="-1"
                                                            @change="toggleAttributeValue({{ $attribute->id }}, {{ $value->id }}, '{{ $value->value }}', {{ $value->price_adjustment }})">
 
                                                     <div class="aspect-square rounded-md mb-2 border border-gray-100 relative" style="background-color: {{ $value->color_code }}">
@@ -414,7 +414,7 @@
                                             <div class="rounded-lg border transition"
                                                  :class="selectedAttributeValues['{{ $attribute->id }}']?.['{{ $value->id }}'] ? 'border-indigo-500 bg-indigo-50/50' : 'border-gray-200'">
                                                 <label class="flex items-center gap-3 p-3 cursor-pointer">
-                                                    <input type="checkbox"
+                                                    <input type="checkbox" tabindex="-1"
                                                            @change="toggleAttributeValue({{ $attribute->id }}, {{ $value->id }}, '{{ $value->value }}', {{ $value->price_adjustment }})"
                                                            :checked="selectedAttributeValues['{{ $attribute->id }}']?.['{{ $value->id }}']"
                                                            class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
