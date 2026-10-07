@@ -102,18 +102,46 @@ class OrderController extends Controller
 
     public function updatePayment(Request $request, Order $order)
     {
-        $data = $request->validate([
+        $validated = $request->validate([
             'payment_status' => ['required', 'in:unpaid,paid,refunded'],
             'tracking_number' => ['nullable', 'string', 'max:100'],
             'admin_note' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $order->update($data);
+        $oldStatus = $order->payment_status;
+        $newStatus = $validated['payment_status'];
 
-        return back()->with('status', 'Payment information updated.');
+        $order->payment_status = $newStatus;
+
+        if (array_key_exists('tracking_number', $validated)) {
+            $order->tracking_number = $validated['tracking_number'];
+        }
+
+        if (array_key_exists('admin_note', $validated)) {
+            $order->admin_note = $validated['admin_note'];
+        }
+
+        if ($newStatus === 'paid' && $oldStatus !== 'paid') {
+            $order->confirmed_at = $order->confirmed_at ?: now();
+        }
+
+        if ($newStatus === 'refunded' && $oldStatus !== 'refunded') {
+            $order->status = 'refunded';
+        }
+
+        $order->save();
+        $order->refresh();
+
+        $statusMsg = 'Payment status updated to ' . $order->payment_status_label . '.';
+
+        if ($oldStatus !== $newStatus) {
+            $statusMsg = 'Payment status changed from ' . ucfirst($oldStatus) . ' to ' . $order->payment_status_label . '.';
+        }
+
+        return back()->with('status', $statusMsg);
     }
 
-    public function markAsPaid(Request $request, Order $order)
+        public function markAsPaid(Request $request, Order $order)
     {
         if (!$order->payment_gateway_id) {
             return back()->withErrors(['error' => 'This order has no payment gateway assigned.']);
@@ -134,11 +162,27 @@ class OrderController extends Controller
             'note' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $gateway->markAsPaid(
-            $order,
-            $validated['reference'] ?? null,
-            $validated['note'] ?? null
-        );
+        try {
+            $gateway->markAsPaid(
+                $order,
+                $validated['reference'] ?? null,
+                $validated['note'] ?? null
+            );
+        } catch (\Throwable $e) {
+            logger()->error('markAsPaid failed: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Failed to mark as paid: ' . $e->getMessage()]);
+        }
+
+        $order->refresh();
+
+        $order->payment_status = 'paid';
+        if (empty($order->confirmed_at)) {
+            $order->confirmed_at = now();
+        }
+        if ($order->status === 'pending') {
+            $order->status = 'confirmed';
+        }
+        $order->save();
 
         $order->updateStatus(
             'confirmed',
@@ -149,7 +193,7 @@ class OrderController extends Controller
             true
         );
 
-        return back()->with('status', 'Order marked as paid successfully.');
+        return back()->with('status', 'Order marked as paid. Status confirmed.');
     }
 
     public function destroy(Order $order)
