@@ -204,7 +204,7 @@ class ProductController extends Controller
 
     protected function savePrices(Product $product, Request $request): void
     {
-        if (!$request->has('tiers')) {
+        if (!$request->filled('tiers')) {
             return;
         }
 
@@ -227,7 +227,7 @@ class ProductController extends Controller
 
     protected function saveAttributeValues(Product $product, Request $request): void
     {
-        if (!$request->has('attribute_values')) {
+        if (!$request->filled('attribute_values')) {
             return;
         }
 
@@ -241,6 +241,10 @@ class ProductController extends Controller
         $selected = $request->input('attribute_values', []);
 
         foreach ($selected as $attributeId => $values) {
+            if (!is_array($values)) {
+                continue;
+            }
+
             foreach ($values as $valueData) {
                 if (empty($valueData['value_id'])) {
                     continue;
@@ -306,6 +310,10 @@ class ProductController extends Controller
         }
 
         $options = $request->input('options', []);
+
+        if (!is_array($options) || count($options) === 0) {
+            return;
+        }
 
         $existingIds = $product->options()->pluck('id')->toArray();
         $keptIds = [];
