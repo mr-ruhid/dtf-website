@@ -23,6 +23,14 @@
         </div>
     @endif
 
+    <div class="mb-4 px-4 py-3 bg-indigo-50 border border-indigo-200 text-indigo-700 text-sm rounded-lg flex items-start gap-3">
+        <i class="fa-solid fa-circle-info mt-0.5"></i>
+        <div>
+            <p class="font-medium">Save first, then add images</p>
+            <p class="text-xs mt-0.5">After creating this product, upload images and assign them to colors in the edit page.</p>
+        </div>
+    </div>
+
     <form method="POST" action="{{ route('admin.products.store') }}" enctype="multipart/form-data" class="space-y-6">
         @csrf
 
@@ -379,10 +387,14 @@
                                                         </div>
 
                                                         <div>
-                                                            <label class="block text-[10px] text-gray-500 mb-0.5">Image</label>
-                                                            <input type="file" accept="image/*"
-                                                                   :name="`attribute_images[{{ $attribute->id }}][{{ $value->id }}]`"
-                                                                   class="w-full text-[10px] file:mr-1 file:py-1 file:px-2 file:border-0 file:bg-indigo-100 file:text-indigo-700 file:text-[10px] file:rounded">
+                                                            <label class="block text-[10px] text-gray-500 mb-0.5">Image (from gallery)</label>
+                                                            <p class="text-[10px] text-gray-400 italic mb-1">Available after saving product with images</p>
+                                                            <select :name="`attribute_values[{{ $attribute->id }}][${selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].index}][product_image_id]`"
+                                                                    x-model="selectedAttributeValues['{{ $attribute->id }}']['{{ $value->id }}'].product_image_id"
+                                                                    disabled
+                                                                    class="w-full text-[10px] border border-gray-200 rounded px-2 py-1 bg-gray-50 text-gray-400 cursor-not-allowed">
+                                                                <option value="">— Save product first —</option>
+                                                            </select>
                                                         </div>
 
                                                         <input type="hidden"
@@ -567,16 +579,19 @@
 
                     <div class="space-y-3">
                         <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                            <input type="hidden" name="status" value="0">
                             <input type="checkbox" name="status" value="1" {{ old('status', 1) ? 'checked' : '' }}
                                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                             Active
                         </label>
                         <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                            <input type="hidden" name="is_featured" value="0">
                             <input type="checkbox" name="is_featured" value="1" {{ old('is_featured') ? 'checked' : '' }}
                                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                             Featured
                         </label>
                         <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                            <input type="hidden" name="has_variants" value="0">
                             <input type="checkbox" name="has_variants" value="1" {{ old('has_variants') ? 'checked' : '' }}
                                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                             Has Variants (Size × Color)
@@ -636,6 +651,7 @@ function productForm() {
                             index: idx,
                             value_id: v.value_id,
                             price_override: (v.price_override !== undefined && v.price_override !== '') ? parseFloat(v.price_override) : null,
+                            product_image_id: (v.product_image_id !== undefined && v.product_image_id !== '') ? parseInt(v.product_image_id) : null,
                             temp_override: '',
                             editing: false
                         };
@@ -728,6 +744,7 @@ function productForm() {
                     value_name: valueName,
                     default_price: defaultPrice,
                     price_override: null,
+                    product_image_id: null,
                     temp_override: '',
                     editing: false
                 };
