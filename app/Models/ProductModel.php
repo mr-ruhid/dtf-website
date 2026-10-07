@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 class ProductModel extends Model
 {
@@ -16,61 +15,30 @@ class ProductModel extends Model
         'image',
         'icon',
         'sort_order',
-        'show_in_header',
-        'display_type',
-        'single_product_id',
-        'custom_view',
         'status',
         'meta_title',
         'meta_description',
         'meta_keywords',
+        'show_in_header',
+        'display_type',
+        'single_product_id',
+        'custom_view',
     ];
 
     protected $casts = [
         'status' => 'boolean',
-        'show_in_header' => 'boolean',
         'sort_order' => 'integer',
-        'single_product_id' => 'integer',
+        'show_in_header' => 'boolean',
     ];
 
-    protected static function booted(): void
+    public function products()
     {
-        static::creating(function (ProductModel $model) {
-            if (empty($model->slug)) {
-                $model->slug = static::generateSlug($model->name);
-            }
-        });
-
-        static::updating(function (ProductModel $model) {
-            if ($model->isDirty('name') && empty($model->slug)) {
-                $model->slug = static::generateSlug($model->name);
-            }
-        });
+        return $this->hasMany(Product::class, 'model_id');
     }
 
-    public static function generateSlug(string $name): string
+    public function rootCategories()
     {
-        $base = Str::slug($name);
-        $slug = $base;
-        $i = 1;
-
-        while (static::where('slug', $slug)->exists()) {
-            $slug = $base . '-' . $i;
-            $i++;
-        }
-
-        return $slug;
-    }
-
-    public function getImageUrlAttribute(): string
-    {
-        if (!$this->image) {
-            return '';
-        }
-        if (str_starts_with($this->image, 'http')) {
-            return $this->image;
-        }
-        return asset('storage/' . $this->image);
+        return $this->hasMany(Category::class, 'model_id')->whereNull('parent_id')->orderBy('sort_order');
     }
 
     public function categories()
@@ -78,48 +46,18 @@ class ProductModel extends Model
         return $this->hasMany(Category::class, 'model_id');
     }
 
-    public function rootCategories()
+    public function scopeInHeader($query)
     {
-        return $this->hasMany(Category::class, 'model_id')
-            ->whereNull('parent_id')
-            ->where('status', 1)
-            ->orderBy('sort_order');
-    }
-
-    public function products()
-    {
-        return $this->hasMany(Product::class, 'model_id');
-    }
-
-    public function singleProduct()
-    {
-        return $this->belongsTo(Product::class, 'single_product_id');
-    }
-
-    public function getIsGridAttribute(): bool
-    {
-        return $this->display_type === 'grid' || empty($this->display_type);
+        return $query->where('show_in_header', 1)->where('status', 1)->orderBy('sort_order');
     }
 
     public function getIsSingleAttribute(): bool
     {
-        return $this->display_type === 'single';
+        return $this->display_type === 'single' && !empty($this->single_product_id);
     }
 
     public function getIsCustomAttribute(): bool
     {
-        return $this->display_type === 'custom';
-    }
-
-    public function scopeActive($query)
-    {
-        return $query->where('status', 1);
-    }
-
-    public function scopeInHeader($query)
-    {
-        return $query->where('status', 1)
-            ->where('show_in_header', 1)
-            ->orderBy('sort_order');
+        return $this->display_type === 'custom' && !empty($this->custom_view);
     }
 }

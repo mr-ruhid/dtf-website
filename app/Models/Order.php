@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Order extends Model
 {
     protected $fillable = [
         'order_number',
+        'tracking_token',
         'customer_name',
         'customer_email',
         'customer_phone',
@@ -28,6 +30,7 @@ class Order extends Model
         'status',
         'payment_status',
         'payment_method',
+        'payment_gateway_id',
         'tracking_number',
         'customer_note',
         'admin_note',
@@ -67,6 +70,15 @@ class Order extends Model
         'refunded' => ['label' => 'Refunded', 'color' => 'gray'],
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (Order $order) {
+            if (empty($order->tracking_token)) {
+                $order->tracking_token = static::generateTrackingToken();
+            }
+        });
+    }
+
     public function branch()
     {
         return $this->belongsTo(Branch::class);
@@ -85,6 +97,11 @@ class Order extends Model
     public function statusLogs()
     {
         return $this->hasMany(OrderStatusLog::class)->latest();
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(PaymentTransaction::class);
     }
 
     public function getStatusLabelAttribute(): string
@@ -117,6 +134,15 @@ class Order extends Model
         ])->filter()->implode(', ');
     }
 
+    public function getTrackingUrlAttribute(): ?string
+    {
+        if (!$this->tracking_token) {
+            return null;
+        }
+
+        return route('track.show', ['token' => $this->tracking_token]);
+    }
+
     public static function generateOrderNumber(): string
     {
         $prefix = 'RJ-' . date('Y') . '-';
@@ -130,7 +156,16 @@ class Order extends Model
         return $prefix . str_pad($next, 4, '0', STR_PAD_LEFT);
     }
 
-    public function updateStatus(string $newStatus, ?string $note = null, ?int $changedBy = null, ?string $changedByName = null): void
+    public static function generateTrackingToken(): string
+    {
+        do {
+            $token = Str::random(32);
+        } while (static::where('tracking_token', $token)->exists());
+
+        return $token;
+    }
+
+    public function updateStatus(string $newStatus, ?string $note = null, ?int $changedBy = null, ?string $changedByName = null, bool $notifyCustomer = false, bool $isPublic = true): void
     {
         if ($this->status === $newStatus) {
             return;
@@ -161,6 +196,8 @@ class Order extends Model
             'note' => $note,
             'changed_by' => $changedBy,
             'changed_by_name' => $changedByName,
+            'notify_customer' => $notifyCustomer ? 1 : 0,
+            'is_public' => $isPublic ? 1 : 0,
         ]);
     }
 }
