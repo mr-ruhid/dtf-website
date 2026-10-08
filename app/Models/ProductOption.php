@@ -12,9 +12,6 @@ class ProductOption extends Model
         'type',
         'price_addon',
         'measurement_unit',
-        'w_price_addon',
-        'h_price_addon',
-        'min_measurement_price',
         'is_required',
         'sort_order',
         'status',
@@ -22,9 +19,6 @@ class ProductOption extends Model
 
     protected $casts = [
         'price_addon' => 'decimal:2',
-        'w_price_addon' => 'decimal:2',
-        'h_price_addon' => 'decimal:2',
-        'min_measurement_price' => 'decimal:2',
         'is_required' => 'boolean',
         'sort_order' => 'integer',
         'status' => 'boolean',
@@ -40,9 +34,34 @@ class ProductOption extends Model
         return $this->hasMany(ProductOptionValue::class)->orderBy('sort_order');
     }
 
+    public function measurements()
+    {
+        return $this->hasMany(ProductOptionMeasurement::class)
+            ->orderBy('sort_order')
+            ->orderBy('width_value')
+            ->orderBy('height_value');
+    }
+
+    public function activeMeasurements()
+    {
+        return $this->hasMany(ProductOptionMeasurement::class)
+            ->where('status', 1)
+            ->orderBy('sort_order')
+            ->orderBy('width_value')
+            ->orderBy('height_value');
+    }
+
     public function isMeasurement(): bool
     {
         return $this->type === 'measurement';
+    }
+
+    public function findMeasurement(float $w, float $h): ?ProductOptionMeasurement
+    {
+        return $this->activeMeasurements()
+            ->where('width_value', $w)
+            ->where('height_value', $h)
+            ->first();
     }
 
     public function calculateMeasurementPrice(float $w, float $h): float
@@ -51,18 +70,21 @@ class ProductOption extends Model
             return 0.0;
         }
 
-        $w = max(0, $w);
-        $h = max(0, $h);
+        $match = $this->findMeasurement($w, $h);
 
-        $price = ($w * (float) $this->w_price_addon) + ($h * (float) $this->h_price_addon);
-
-        $min = (float) $this->min_measurement_price;
-
-        if ($min > 0 && $price < $min) {
-            $price = $min;
+        if ($match) {
+            return (float) $match->price;
         }
 
-        return round($price, 2);
+        return 0.0;
+    }
+
+    public function getDefaultMeasurementAttribute(): ?ProductOptionMeasurement
+    {
+        return $this->activeMeasurements()
+            ->where('is_default', 1)
+            ->first()
+            ?? $this->activeMeasurements()->first();
     }
 
     public function getUnitLabelAttribute(): string
@@ -71,7 +93,7 @@ class ProductOption extends Model
             'feet' => 'ft',
             'cm' => 'cm',
             'inch' => 'in',
-            default => $this->measurement_unit,
+            default => (string) $this->measurement_unit,
         };
     }
 }
