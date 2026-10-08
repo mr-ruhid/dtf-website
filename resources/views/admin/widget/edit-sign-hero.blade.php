@@ -35,7 +35,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.widgets.update', $widget) }}" class="space-y-6">
+    <form method="POST" action="{{ route('admin.widgets.update', $widget) }}" enctype="multipart/form-data" class="space-y-6">
         @csrf
         @method('PUT')
 
@@ -43,165 +43,189 @@
 
             <div class="lg:col-span-2 space-y-6">
 
-                {{-- HEADER --}}
                 <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
                     <div class="flex items-center gap-2 mb-2">
                         <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
                             <i class="fa-solid fa-heading text-xs"></i>
                         </div>
                         <div>
-                            <h3 class="font-semibold text-gray-800 text-sm">Hero Header</h3>
-                            <p class="text-xs text-gray-400">Main title and eyebrow</p>
+                            <h3 class="font-semibold text-gray-800 text-sm">Text Content</h3>
+                            <p class="text-xs text-gray-400">Eyebrow, title and subtitle on the left</p>
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Eyebrow</label>
                         <input type="text" name="eyebrow" x-model="form.eyebrow" maxlength="100"
-                               placeholder="Custom Signage Studio"
+                               placeholder="Large-Format Print"
                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                        <input type="text" name="title" x-model="form.title" maxlength="200"
-                               placeholder="Signs that make your brand unmissable"
-                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <p class="text-[10px] text-gray-400 mt-1">Small label above the title (orange)</p>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Highlight Word
-                            <span class="text-xs font-normal text-gray-400 ml-1">(shown with gradient)</span>
+                            Title
+                            <span class="text-[10px] font-normal text-gray-400 ml-1">(use Enter for line breaks)</span>
                         </label>
-                        <input type="text" name="title_highlight" x-model="form.title_highlight" maxlength="100"
-                               placeholder="unmissable"
-                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <p class="text-[10px] text-gray-400 mt-1">This word inside the title gets a gradient color</p>
+                        <textarea name="title" x-model="form.title" rows="3" maxlength="200"
+                                  placeholder="Custom Signs, Vinyl&#10;& Banners"
+                                  class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"></textarea>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <textarea name="description" x-model="form.description" rows="3" maxlength="500"
-                                  placeholder="Premium vinyl, banners and fully custom signs..."
-                                  class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Subtitle
+                            <span class="text-[10px] font-normal text-gray-400 ml-1">(use Enter for line breaks)</span>
+                        </label>
+                        <textarea name="subtitle" x-model="form.subtitle" rows="2" maxlength="300"
+                                  placeholder="Send the artwork. We print it.&#10;You collect."
+                                  class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"></textarea>
                     </div>
                 </div>
 
-                {{-- BUTTONS --}}
-                <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-                    <div class="flex items-center gap-2 mb-2">
+                <div class="bg-white rounded-xl border border-gray-200 p-6">
+                    <div class="flex items-center gap-2 mb-4">
                         <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
-                            <i class="fa-solid fa-hand-pointer text-xs"></i>
+                            <i class="fa-solid fa-images text-xs"></i>
                         </div>
                         <div>
-                            <h3 class="font-semibold text-gray-800 text-sm">Action Buttons</h3>
-                            <p class="text-xs text-gray-400">Primary and secondary CTA</p>
+                            <h3 class="font-semibold text-gray-800 text-sm">Image Gallery</h3>
+                            <p class="text-xs text-gray-400">1 large + 2 small images on the right</p>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="space-y-3">
-                            <p class="text-xs font-semibold text-gray-700 uppercase tracking-wide">Button 1 (Primary)</p>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Text</label>
-                                <input type="text" name="btn1_text" x-model="form.btn1_text" maxlength="50"
-                                       placeholder="Get a Free Quote"
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">URL</label>
-                                <input type="text" name="btn1_url" x-model="form.btn1_url" maxlength="255"
-                                       placeholder="/contact-us"
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <div class="space-y-5">
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
+                                Main Image <span class="text-[10px] text-gray-400 normal-case font-normal">(large left)</span>
+                            </label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="aspect-[4/3] rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                                    <template x-if="form.main_image_preview">
+                                        <img :src="form.main_image_preview" class="w-full h-full object-cover">
+                                    </template>
+                                    <template x-if="!form.main_image_preview">
+                                        <div class="w-full h-full flex flex-col items-center justify-center text-gray-300">
+                                            <i class="fa-solid fa-image text-3xl mb-2"></i>
+                                            <span class="text-[11px]">No image</span>
+                                        </div>
+                                    </template>
+                                </div>
+                                <div class="flex flex-col justify-center gap-2">
+                                    <input type="file" name="main_image_file" accept="image/*"
+                                           @change="handleImage($event, 'main_image')"
+                                           class="w-full text-xs border border-gray-300 rounded-lg file:mr-2 file:py-2 file:px-3 file:border-0 file:bg-indigo-50 file:text-indigo-700 file:text-xs file:font-semibold hover:file:bg-indigo-100">
+                                    <input type="hidden" name="main_image" x-model="form.main_image">
+                                    <p class="text-[10px] text-gray-400">Recommended: 1200×900px · JPG, PNG, WEBP · Max 5MB</p>
+                                    <button type="button" x-show="form.main_image_preview"
+                                            @click="clearImage('main_image')"
+                                            class="self-start text-[11px] text-red-600 hover:text-red-700 font-medium">
+                                        <i class="fa-solid fa-trash text-[10px] mr-1"></i> Remove image
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="space-y-3">
-                            <p class="text-xs font-semibold text-gray-700 uppercase tracking-wide">Button 2 (Outline)</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4 border-t border-gray-100">
                             <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Text</label>
-                                <input type="text" name="btn2_text" x-model="form.btn2_text" maxlength="50"
-                                       placeholder="View Portfolio"
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
+                                    Small Image 2 <span class="text-[10px] text-gray-400 normal-case font-normal">(top right)</span>
+                                </label>
+                                <div class="aspect-[4/3] rounded-lg overflow-hidden border border-gray-200 bg-gray-50 mb-2">
+                                    <template x-if="form.image_2_preview">
+                                        <img :src="form.image_2_preview" class="w-full h-full object-cover">
+                                    </template>
+                                    <template x-if="!form.image_2_preview">
+                                        <div class="w-full h-full flex flex-col items-center justify-center text-gray-300">
+                                            <i class="fa-solid fa-image text-2xl mb-1"></i>
+                                            <span class="text-[10px]">No image</span>
+                                        </div>
+                                    </template>
+                                </div>
+                                <input type="file" name="image_2_file" accept="image/*"
+                                       @change="handleImage($event, 'image_2')"
+                                       class="w-full text-xs border border-gray-300 rounded-lg file:mr-2 file:py-1.5 file:px-3 file:border-0 file:bg-indigo-50 file:text-indigo-700 file:text-xs hover:file:bg-indigo-100">
+                                <input type="hidden" name="image_2" x-model="form.image_2">
+                                <button type="button" x-show="form.image_2_preview"
+                                        @click="clearImage('image_2')"
+                                        class="text-[10px] text-red-600 hover:text-red-700 font-medium mt-1">
+                                    <i class="fa-solid fa-trash text-[9px] mr-1"></i> Remove
+                                </button>
                             </div>
+
                             <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">URL</label>
-                                <input type="text" name="btn2_url" x-model="form.btn2_url" maxlength="255"
-                                       placeholder="#portfolio"
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
+                                    Small Image 3 <span class="text-[10px] text-gray-400 normal-case font-normal">(bottom right)</span>
+                                </label>
+                                <div class="aspect-[4/3] rounded-lg overflow-hidden border border-gray-200 bg-gray-50 mb-2">
+                                    <template x-if="form.image_3_preview">
+                                        <img :src="form.image_3_preview" class="w-full h-full object-cover">
+                                    </template>
+                                    <template x-if="!form.image_3_preview">
+                                        <div class="w-full h-full flex flex-col items-center justify-center text-gray-300">
+                                            <i class="fa-solid fa-image text-2xl mb-1"></i>
+                                            <span class="text-[10px]">No image</span>
+                                        </div>
+                                    </template>
+                                </div>
+                                <input type="file" name="image_3_file" accept="image/*"
+                                       @change="handleImage($event, 'image_3')"
+                                       class="w-full text-xs border border-gray-300 rounded-lg file:mr-2 file:py-1.5 file:px-3 file:border-0 file:bg-indigo-50 file:text-indigo-700 file:text-xs hover:file:bg-indigo-100">
+                                <input type="hidden" name="image_3" x-model="form.image_3">
+                                <button type="button" x-show="form.image_3_preview"
+                                        @click="clearImage('image_3')"
+                                        class="text-[10px] text-red-600 hover:text-red-700 font-medium mt-1">
+                                    <i class="fa-solid fa-trash text-[9px] mr-1"></i> Remove
+                                </button>
                             </div>
                         </div>
+
                     </div>
                 </div>
 
-                {{-- STATS --}}
-                <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-                    <div class="flex items-center gap-2 mb-2">
+                <div class="bg-white rounded-xl border border-gray-200 p-6">
+                    <div class="flex items-center gap-2 mb-4">
                         <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                            <i class="fa-solid fa-chart-simple text-xs"></i>
+                            <i class="fa-solid fa-list-ol text-xs"></i>
                         </div>
                         <div>
-                            <h3 class="font-semibold text-gray-800 text-sm">Stats Bar</h3>
-                            <p class="text-xs text-gray-400">Three numbers below the buttons</p>
+                            <h3 class="font-semibold text-gray-800 text-sm">Process Steps</h3>
+                            <p class="text-xs text-gray-400">Three steps at the bottom</p>
                         </div>
                     </div>
 
-                    @for ($i = 1; $i <= 3; $i++)
-                        <div class="grid grid-cols-3 gap-3 pb-3 {{ $i < 3 ? 'border-b border-gray-100' : '' }}">
-                            <div class="col-span-2">
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Value</label>
-                                <input type="text" name="stat{{ $i }}_value" x-model="form.stat{{ $i }}_value" maxlength="20"
-                                       placeholder="15+"
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Label</label>
-                                <input type="text" name="stat{{ $i }}_label" x-model="form.stat{{ $i }}_label" maxlength="50"
-                                       placeholder="Years"
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            </div>
-                        </div>
-                    @endfor
-                </div>
-
-                {{-- CARDS --}}
-                <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-                    <div class="flex items-center gap-2 mb-2">
-                        <div class="w-8 h-8 rounded-lg bg-pink-50 text-pink-600 flex items-center justify-center">
-                            <i class="fa-solid fa-layer-group text-xs"></i>
-                        </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <h3 class="font-semibold text-gray-800 text-sm">Floating Cards</h3>
-                            <p class="text-xs text-gray-400">Three cards with icon, title and meta</p>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">
+                                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-500 text-white text-[10px] font-bold mr-1">1</span>
+                                Step 1
+                            </label>
+                            <input type="text" name="step1_text" x-model="form.step1_text" maxlength="100"
+                                   placeholder="Send the file"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">
+                                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-500 text-white text-[10px] font-bold mr-1">2</span>
+                                Step 2
+                            </label>
+                            <input type="text" name="step2_text" x-model="form.step2_text" maxlength="100"
+                                   placeholder="We print it"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">
+                                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-500 text-white text-[10px] font-bold mr-1">3</span>
+                                Step 3
+                            </label>
+                            <input type="text" name="step3_text" x-model="form.step3_text" maxlength="100"
+                                   placeholder="You collect"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
                     </div>
-
-                    @for ($i = 1; $i <= 3; $i++)
-                        <div class="pb-3 {{ $i < 3 ? 'border-b border-gray-100' : '' }}">
-                            <p class="text-xs font-semibold text-gray-700 mb-2">Card {{ $i }}</p>
-                            <div class="grid grid-cols-12 gap-3">
-                                <div class="col-span-4">
-                                    <label class="block text-[10px] font-medium text-gray-500 mb-1">Icon (FA class)</label>
-                                    <input type="text" name="card{{ $i }}_icon" x-model="form.card{{ $i }}_icon" maxlength="50"
-                                           placeholder="fa-solid fa-sign-hanging"
-                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                </div>
-                                <div class="col-span-5">
-                                    <label class="block text-[10px] font-medium text-gray-500 mb-1">Title</label>
-                                    <input type="text" name="card{{ $i }}_title" x-model="form.card{{ $i }}_title" maxlength="100"
-                                           placeholder="Storefront Signs"
-                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                </div>
-                                <div class="col-span-3">
-                                    <label class="block text-[10px] font-medium text-gray-500 mb-1">Meta</label>
-                                    <input type="text" name="card{{ $i }}_meta" x-model="form.card{{ $i }}_meta" maxlength="50"
-                                           placeholder="From $149"
-                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                </div>
-                            </div>
-                        </div>
-                    @endfor
                 </div>
 
             </div>
@@ -234,14 +258,8 @@
                 <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
                     <i class="fa-solid fa-circle-info text-amber-600 mt-0.5"></i>
                     <div class="text-xs text-amber-800">
-                        <p class="font-medium mb-1">Icons</p>
-                        <p>Use Font Awesome 6 classes. Examples:</p>
-                        <ul class="mt-1 space-y-0.5 font-mono text-[10px]">
-                            <li>fa-solid fa-sign-hanging</li>
-                            <li>fa-solid fa-scroll</li>
-                            <li>fa-solid fa-truck-fast</li>
-                            <li>fa-solid fa-cube</li>
-                        </ul>
+                        <p class="font-medium mb-1">Layout</p>
+                        <p>Left side shows text (eyebrow + title + subtitle). Right side shows 1 large image + 2 small stacked images. Below: 3 process steps.</p>
                     </div>
                 </div>
 
@@ -257,31 +275,40 @@
 function signHeroEditor(settings) {
     var s = settings || {};
 
+    var preview = function (path) {
+        if (!path) return '';
+        return path.startsWith('http') ? path : '/storage/' + path;
+    };
+
     return {
         form: {
-            eyebrow: s.eyebrow || 'Custom Signage Studio',
-            title: s.title || 'Signs that make your brand unmissable',
-            title_highlight: s.title_highlight || 'unmissable',
-            description: s.description || 'Premium vinyl, banners and fully custom signs — designed, printed and installed by professionals.',
-            btn1_text: s.btn1_text || 'Get a Free Quote',
-            btn1_url: s.btn1_url || '/contact-us',
-            btn2_text: s.btn2_text || 'View Portfolio',
-            btn2_url: s.btn2_url || '#portfolio',
-            stat1_value: s.stat1_value || '15+',
-            stat1_label: s.stat1_label || 'Years Experience',
-            stat2_value: s.stat2_value || '8K+',
-            stat2_label: s.stat2_label || 'Signs Produced',
-            stat3_value: s.stat3_value || '24h',
-            stat3_label: s.stat3_label || 'Rush Turnaround',
-            card1_icon: s.card1_icon || 'fa-solid fa-sign-hanging',
-            card1_title: s.card1_title || 'Storefront Signs',
-            card1_meta: s.card1_meta || 'From $149',
-            card2_icon: s.card2_icon || 'fa-solid fa-scroll',
-            card2_title: s.card2_title || 'Vinyl Banners',
-            card2_meta: s.card2_meta || 'From $39',
-            card3_icon: s.card3_icon || 'fa-solid fa-truck-fast',
-            card3_title: s.card3_title || 'Install Service',
-            card3_meta: s.card3_meta || 'Same Day',
+            eyebrow: s.eyebrow || 'Large-Format Print',
+            title: s.title || 'Custom Signs, Vinyl\n& Banners',
+            subtitle: s.subtitle || 'Send the artwork. We print it.\nYou collect.',
+            main_image: s.main_image || '',
+            main_image_preview: preview(s.main_image),
+            image_2: s.image_2 || '',
+            image_2_preview: preview(s.image_2),
+            image_3: s.image_3 || '',
+            image_3_preview: preview(s.image_3),
+            step1_text: s.step1_text || 'Send the file',
+            step2_text: s.step2_text || 'We print it',
+            step3_text: s.step3_text || 'You collect',
+        },
+
+        handleImage(e, key) {
+            var file = e.target.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function (ev) {
+                this.form[key + '_preview'] = ev.target.result;
+            }.bind(this);
+            reader.readAsDataURL(file);
+        },
+
+        clearImage(key) {
+            this.form[key] = '';
+            this.form[key + '_preview'] = '';
         }
     };
 }
