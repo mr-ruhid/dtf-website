@@ -32,6 +32,11 @@ class SettingController extends Controller
             'site_currency',
             'site_language',
             'site_timezone',
+
+            'trust_1_title', 'trust_1_desc',
+            'trust_2_title', 'trust_2_desc',
+            'trust_3_title', 'trust_3_desc',
+            'trust_4_title', 'trust_4_desc',
         ];
 
         $settings = Setting::getMany($keys);
@@ -50,6 +55,15 @@ class SettingController extends Controller
             'site_timezone' => ['nullable', 'string', 'max:100'],
             'site_logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,svg,webp', 'max:2048'],
             'site_favicon' => ['nullable', 'image', 'mimes:jpg,jpeg,png,ico,svg', 'max:1024'],
+
+            'trust_1_title' => ['nullable', 'string', 'max:50'],
+            'trust_1_desc' => ['nullable', 'string', 'max:80'],
+            'trust_2_title' => ['nullable', 'string', 'max:50'],
+            'trust_2_desc' => ['nullable', 'string', 'max:80'],
+            'trust_3_title' => ['nullable', 'string', 'max:50'],
+            'trust_3_desc' => ['nullable', 'string', 'max:80'],
+            'trust_4_title' => ['nullable', 'string', 'max:50'],
+            'trust_4_desc' => ['nullable', 'string', 'max:80'],
         ]);
 
         foreach (['site_logo', 'site_favicon'] as $fileKey) {
@@ -531,7 +545,7 @@ class SettingController extends Controller
         return back()->with('status', $message);
     }
 
-        public function designPricing()
+    public function designPricing()
     {
         $keys = [
             'design_custom_enabled',
