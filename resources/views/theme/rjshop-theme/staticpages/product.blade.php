@@ -17,6 +17,8 @@
     $defaultZone = $product->printZones->where('status', 1)->sortBy('sort_order')->first();
     $defaultW = $defaultZone ? (float) ($defaultZone->max_width_inch ?: 12) : 12;
     $defaultH = $defaultZone ? (float) ($defaultZone->max_height_inch ?: 12) : 12;
+
+    $unitLabels = ['inch' => 'in', 'feet' => 'ft', 'cm' => 'cm'];
 @endphp
 
 <section class="rj-sp-hero"
@@ -27,17 +29,32 @@
             requiresDesign: {{ $isDesignable ? 'true' : 'false' }},
             defaultW: {{ $defaultW }},
             defaultH: {{ $defaultH }},
-            options: {{ \Illuminate\Support\Js::from($options->map(function ($o) {
+            options: {{ \Illuminate\Support\Js::from($options->map(function ($o) use ($unitLabels) {
+                $measurements = $o->type === 'measurement'
+                    ? $o->activeMeasurements->map(fn($m) => [
+                        'id' => $m->id,
+                        'width' => (float) $m->width_value,
+                        'height' => (float) $m->height_value,
+                        'price' => (float) $m->price,
+                        'label' => rtrim(rtrim(number_format((float) $m->width_value, 2, '.', ''), '0'), '.')
+                            . ' × '
+                            . rtrim(rtrim(number_format((float) $m->height_value, 2, '.', ''), '0'), '.'),
+                        'is_default' => (bool) $m->is_default,
+                    ])->values()
+                    : collect();
+
                 return [
                     'id' => $o->id,
                     'name' => $o->name,
                     'type' => $o->type,
                     'required' => (bool) $o->is_required,
+                    'unit' => $unitLabels[$o->measurement_unit] ?? 'in',
                     'values' => $o->values->where('status', 1)->map(fn($v) => [
                         'id' => $v->id,
                         'value' => $v->value,
                         'price_addon' => (float) $v->price_addon,
                     ])->values(),
+                    'measurements' => $measurements,
                 ];
             })->values()) }}
          })">
@@ -160,6 +177,9 @@
                                     @if($option->is_required)
                                         <span class="rj-sp-req">*</span>
                                     @endif
+                                    @if($option->type === 'measurement')
+                                        <span class="rj-sp-option-unit">({{ $unitLabels[$option->measurement_unit] ?? 'in' }})</span>
+                                    @endif
                                 </label>
 
                                 @if($option->type === 'select')
@@ -187,13 +207,40 @@
                                            placeholder="0"
                                            @input="pickOptionText({{ $option->id }}, $event.target.value)">
                                 @elseif($option->type === 'measurement')
-                                    <div class="rj-sp-measure">
-                                        <input type="number" class="rj-sp-input" placeholder="Width"
-                                               @input="pickOptionText({{ $option->id }}, 'W:' + $event.target.value)">
-                                        <span class="rj-sp-measure-sep">×</span>
-                                        <input type="number" class="rj-sp-input" placeholder="Height"
-                                               @input="pickOptionText({{ $option->id }}, 'H:' + $event.target.value)">
-                                    </div>
+                                    @php $hasMeasurements = $option->activeMeasurements->count() > 0; @endphp
+
+                                    @if($hasMeasurements)
+                                        <div class="rj-sp-select-wrap">
+                                            <select class="rj-sp-select"
+                                                    @change="pickMeasurement({{ $option->id }}, $event.target.value)">
+                                                <option value="">— Select {{ $option->name }} —</option>
+                                                @foreach($option->activeMeasurements as $m)
+                                                    @php
+                                                        $w = rtrim(rtrim(number_format((float) $m->width_value, 2, '.', ''), '0'), '.');
+                                                        $h = rtrim(rtrim(number_format((float) $m->height_value, 2, '.', ''), '0'), '.');
+                                                        $u = $unitLabels[$option->measurement_unit] ?? 'in';
+                                                    @endphp
+                                                    <option value="{{ $m->id }}">
+                                                        {{ $w }} × {{ $h }} {{ $u }}
+                                                        @if($m->price > 0)
+                                                            (+${{ number_format($m->price, 2) }})
+                                                        @endif
+                                                        @if($m->is_default)
+                                                            · Default
+                                                        @endif
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <i class="fa-solid fa-chevron-down rj-sp-select-icon"></i>
+                                        </div>
+
+                                        <p class="rj-sp-measure-hint" x-show="getMeasurementPreview({{ $option->id }})" x-text="getMeasurementPreview({{ $option->id }})"></p>
+                                    @else
+                                        <div class="rj-sp-measure-missing">
+                                            <i class="fa-solid fa-triangle-exclamation"></i>
+                                            <span>No sizes available — please contact us</span>
+                                        </div>
+                                    @endif
                                 @endif
                             </div>
                         @endforeach
@@ -558,6 +605,11 @@
         text-transform: uppercase; letter-spacing: 0.1em;
         font-family: ui-monospace, monospace;
     }
+    .rj-sp-option-unit {
+        color: #6b7280; font-size: 10px;
+        margin-left: 0.5rem; letter-spacing: 0.1em;
+        text-transform: none;
+    }
     .rj-sp-req { color: #f472b6; margin-left: 0.25rem; }
 
     .rj-sp-select-wrap { position: relative; }
@@ -606,9 +658,6 @@
     .rj-sp-measure-2 .rj-sp-input {
         flex: 1; text-align: center; padding-right: 2.5rem;
     }
-    .rj-sp-measure-2 .rj-sp-input + .rj-sp-measure-sep + .rj-sp-input {
-        padding-right: 2rem;
-    }
     .rj-sp-measure-sep { color: #6b7280; font-family: ui-monospace, monospace; }
     .rj-sp-measure-unit {
         position: absolute; right: 0.75rem; top: 50%;
@@ -621,9 +670,17 @@
     .rj-sp-measure-hint {
         font-family: ui-monospace, monospace;
         font-size: 10px;
-        color: #6b7280;
-        margin: 0.25rem 0 0;
-        letter-spacing: 0.1em;
+        color: #818cf8;
+        margin: 0.5rem 0 0;
+        letter-spacing: 0.05em;
+    }
+    .rj-sp-measure-missing {
+        display: flex; align-items: center; gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        background: rgba(245, 158, 11, 0.08);
+        border: 1px solid rgba(245, 158, 11, 0.25);
+        border-radius: 10px;
+        font-size: 12px; color: #fbbf24;
     }
 
     .rj-sp-qty-row { display: flex; flex-direction: column; gap: 0.5rem; }
@@ -846,6 +903,24 @@ function standardProduct(config) {
         designW: config.defaultW || 12,
         designH: config.defaultH || 12,
 
+        init() {
+            this.options.forEach(opt => {
+                if (opt.type === 'measurement' && opt.measurements && opt.measurements.length) {
+                    const def = opt.measurements.find(m => m.is_default);
+                    if (def) {
+                        this.selections[opt.id] = {
+                            option_id: opt.id,
+                            option_name: opt.name,
+                            measurement_id: def.id,
+                            label: def.label + ' ' + (opt.unit || 'in'),
+                            value: def.label + ' ' + (opt.unit || 'in'),
+                            price_addon: parseFloat(def.price || 0),
+                        };
+                    }
+                }
+            });
+        },
+
         get designHint() {
             if (!this.designW || !this.designH) return '';
             if (this.designW < 1 || this.designH < 1) return 'Minimum 1 inch';
@@ -858,9 +933,12 @@ function standardProduct(config) {
             this.options.forEach(opt => {
                 const sel = this.selections[opt.id];
                 if (!sel) return;
+
                 if (opt.type === 'select' && sel.value_id) {
                     const v = opt.values.find(x => x.id === sel.value_id);
                     if (v) total += parseFloat(v.price_addon || 0);
+                } else if (opt.type === 'measurement' && sel.measurement_id) {
+                    total += parseFloat(sel.price_addon || 0);
                 }
             });
             return total;
@@ -891,6 +969,41 @@ function standardProduct(config) {
                 value: v.value,
                 price_addon: parseFloat(v.price_addon || 0),
             };
+        },
+
+        pickMeasurement(optionId, measurementId) {
+            if (!measurementId) {
+                delete this.selections[optionId];
+                return;
+            }
+
+            const opt = this.options.find(o => o.id === optionId);
+            if (!opt) return;
+
+            const m = (opt.measurements || []).find(x => x.id == measurementId);
+            if (!m) return;
+
+            const unit = opt.unit || 'in';
+            const label = m.label + ' ' + unit;
+
+            this.selections[optionId] = {
+                option_id: optionId,
+                option_name: opt.name,
+                measurement_id: m.id,
+                label: label,
+                value: label,
+                price_addon: parseFloat(m.price || 0),
+            };
+        },
+
+        getMeasurementPreview(optionId) {
+            const sel = this.selections[optionId];
+            if (!sel || !sel.label) return '';
+            const price = parseFloat(sel.price_addon || 0);
+            if (price > 0) {
+                return sel.label + ' · +$' + price.toFixed(2);
+            }
+            return sel.label;
         },
 
         pickOptionText(optionId, value) {
