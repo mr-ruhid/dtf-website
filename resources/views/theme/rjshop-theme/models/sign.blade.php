@@ -6,96 +6,14 @@
 
 @section('content')
 
-{{-- ================= HERO ================= --}}
-<section class="rj-sg-hero">
-    <div class="rj-sg-grid-bg"></div>
-    <div class="rj-sg-orb rj-sg-orb-a"></div>
-    <div class="rj-sg-orb rj-sg-orb-b"></div>
+@php
+    $signHeroWidget = \App\Models\Widget::findByKey('sign_hero');
+@endphp
 
-    <div class="rj-sg-inner">
-        <nav class="rj-sg-breadcrumb">
-            <a href="{{ url('/') }}">Home</a>
-            <span>/</span>
-            <span class="current">{{ $model->name }}</span>
-        </nav>
-
-        <div class="rj-sg-hero-grid">
-            <div class="rj-sg-hero-text">
-                <div class="rj-sg-eyebrow">
-                    <span class="rj-sg-eyebrow-line"></span>
-                    <span class="rj-sg-eyebrow-text">Custom Signage Studio</span>
-                </div>
-
-                <h1 class="rj-sg-hero-title">
-                    Signs that make<br>
-                    your brand <span class="rj-sg-grad">unmissable</span>
-                </h1>
-
-                <p class="rj-sg-hero-desc">
-                    Premium vinyl, banners and fully custom signs — designed, printed and installed by professionals. From storefronts to stadiums, we bring your vision to life.
-                </p>
-
-                <div class="rj-sg-hero-actions">
-                    <a href="#quote" class="rj-sg-btn rj-sg-btn-primary">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        <span>Get a Free Quote</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </a>
-                    <a href="#portfolio" class="rj-sg-btn rj-sg-btn-outline">
-                        <i class="fa-solid fa-images"></i>
-                        <span>View Portfolio</span>
-                    </a>
-                </div>
-
-                <div class="rj-sg-hero-stats">
-                    <div class="rj-sg-stat">
-                        <span class="rj-sg-stat-value">15<span class="rj-sg-stat-plus">+</span></span>
-                        <span class="rj-sg-stat-label">Years Experience</span>
-                    </div>
-                    <div class="rj-sg-stat-div"></div>
-                    <div class="rj-sg-stat">
-                        <span class="rj-sg-stat-value">8K<span class="rj-sg-stat-plus">+</span></span>
-                        <span class="rj-sg-stat-label">Signs Produced</span>
-                    </div>
-                    <div class="rj-sg-stat-div"></div>
-                    <div class="rj-sg-stat">
-                        <span class="rj-sg-stat-value">24<span class="rj-sg-stat-plus">h</span></span>
-                        <span class="rj-sg-stat-label">Rush Turnaround</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="rj-sg-hero-visual">
-                <div class="rj-sg-hero-card rj-sg-hero-card-1">
-                    <div class="rj-sg-hero-card-icon"><i class="fa-solid fa-sign-hanging"></i></div>
-                    <p class="rj-sg-hero-card-title">Storefront Signs</p>
-                    <p class="rj-sg-hero-card-meta">From $149</p>
-                </div>
-
-                <div class="rj-sg-hero-card rj-sg-hero-card-2">
-                    <div class="rj-sg-hero-card-icon"><i class="fa-solid fa-scroll"></i></div>
-                    <p class="rj-sg-hero-card-title">Vinyl Banners</p>
-                    <p class="rj-sg-hero-card-meta">From $39</p>
-                </div>
-
-                <div class="rj-sg-hero-card rj-sg-hero-card-3">
-                    <div class="rj-sg-hero-card-icon"><i class="fa-solid fa-truck-fast"></i></div>
-                    <p class="rj-sg-hero-card-title">Install Service</p>
-                    <p class="rj-sg-hero-card-meta">Same Day</p>
-                </div>
-
-                <div class="rj-sg-hero-mockup">
-                    <div class="rj-sg-hero-mockup-inner">
-                        <div class="rj-sg-hero-mockup-sign">
-                            <span>YOUR BRAND</span>
-                        </div>
-                        <div class="rj-sg-hero-mockup-sub">Premium Vinyl Signage</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+{{-- ================= HERO (WIDGET) ================= --}}
+@if($signHeroWidget && $signHeroWidget->is_active)
+    @include('theme.rjshop-theme.widgets.sign-hero', ['widget' => $signHeroWidget])
+@endif
 
 {{-- ================= TRUST BAR ================= --}}
 <section class="rj-sg-trust">
@@ -445,16 +363,7 @@
 </section>
 
 <style>
-    /* ==================== HERO ==================== */
-    .rj-sg-hero {
-        position: relative;
-        background: #05030f;
-        color: #fff;
-        padding: 2rem 0 5rem;
-        overflow: hidden;
-    }
-    @media (min-width: 768px) { .rj-sg-hero { padding: 3rem 0 7rem; } }
-
+    /* ==================== SECTIONS (hero styles now in widget) ==================== */
     .rj-sg-grid-bg {
         position: absolute; inset: 0; opacity: 0.025; pointer-events: none;
         background-image:
@@ -462,33 +371,8 @@
             linear-gradient(90deg, rgba(99, 102, 241, 0.5) 1px, transparent 1px);
         background-size: 40px 40px;
     }
-    .rj-sg-orb {
-        position: absolute; width: 500px; height: 500px; border-radius: 50%;
-        filter: blur(140px); pointer-events: none;
-    }
-    .rj-sg-orb-a { top: 0; left: 15%; background: rgba(99, 102, 241, 0.09); }
-    .rj-sg-orb-b { bottom: 0; right: 15%; background: rgba(236, 72, 153, 0.08); }
-
     .rj-sg-inner { position: relative; max-width: 80rem; margin: 0 auto; padding: 0 1.5rem; }
     @media (min-width: 1024px) { .rj-sg-inner { padding: 0 3rem; } }
-
-    .rj-sg-breadcrumb {
-        display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
-        font-family: ui-monospace, monospace; font-size: 11px;
-        text-transform: uppercase; letter-spacing: 0.15em;
-        color: #6b7280; margin-bottom: 2rem;
-    }
-    .rj-sg-breadcrumb a { color: #6b7280; text-decoration: none; transition: color 0.2s; }
-    .rj-sg-breadcrumb a:hover { color: #a5b4fc; }
-    .rj-sg-breadcrumb .current { color: #9ca3af; }
-
-    .rj-sg-hero-grid {
-        display: grid; grid-template-columns: 1fr; gap: 3rem;
-        align-items: center;
-    }
-    @media (min-width: 900px) {
-        .rj-sg-hero-grid { grid-template-columns: 1.15fr 1fr; gap: 4rem; }
-    }
 
     .rj-sg-eyebrow { display: inline-flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
     .rj-sg-eyebrow-line { width: 1.25rem; height: 1px; background: rgba(244, 114, 182, 0.6); }
@@ -497,25 +381,6 @@
         text-transform: uppercase; letter-spacing: 0.35em;
         color: rgba(244, 114, 182, 0.9);
     }
-
-    .rj-sg-hero-title {
-        font-size: clamp(2rem, 5vw, 3.5rem);
-        font-weight: 900; line-height: 1.05; letter-spacing: -0.03em;
-        color: #fff; margin: 0 0 1.25rem;
-    }
-    .rj-sg-grad {
-        background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-    }
-
-    .rj-sg-hero-desc {
-        font-size: 1.0625rem; color: #9ca3af; line-height: 1.75;
-        margin: 0 0 2rem; max-width: 32rem;
-    }
-
-    .rj-sg-hero-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 2.5rem; }
 
     .rj-sg-btn {
         display: inline-flex; align-items: center; justify-content: center;
@@ -543,115 +408,6 @@
     .rj-sg-btn-outline:hover {
         background: rgba(99, 102, 241, 0.1);
         border-color: rgba(99, 102, 241, 0.4);
-    }
-
-    .rj-sg-hero-stats {
-        display: flex; align-items: center; gap: 1.5rem;
-        padding-top: 1.75rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.06);
-    }
-    .rj-sg-stat { display: flex; flex-direction: column; gap: 2px; }
-    .rj-sg-stat-value {
-        font-family: ui-monospace, monospace;
-        font-size: 1.5rem; font-weight: 900;
-        color: #fff; letter-spacing: -0.02em;
-    }
-    .rj-sg-stat-plus { color: #818cf8; font-size: 1.125rem; }
-    .rj-sg-stat-label {
-        font-family: ui-monospace, monospace;
-        font-size: 9px; text-transform: uppercase;
-        letter-spacing: 0.15em; color: #6b7280;
-    }
-    .rj-sg-stat-div { width: 1px; height: 32px; background: rgba(255, 255, 255, 0.08); }
-
-    /* Hero Visual */
-    .rj-sg-hero-visual {
-        position: relative;
-        aspect-ratio: 1;
-        min-height: 320px;
-    }
-
-    .rj-sg-hero-mockup {
-        position: absolute;
-        inset: 8% 12%;
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(236, 72, 153, 0.06));
-        border: 1px solid rgba(99, 102, 241, 0.2);
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(10px);
-    }
-    .rj-sg-hero-mockup::before {
-        content: '';
-        position: absolute;
-        inset: -20px;
-        border-radius: 28px;
-        border: 1px dashed rgba(99, 102, 241, 0.15);
-    }
-    .rj-sg-hero-mockup-inner {
-        text-align: center;
-        padding: 2rem;
-    }
-    .rj-sg-hero-mockup-sign {
-        display: inline-block;
-        padding: 1rem 2rem;
-        background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
-        border-radius: 12px;
-        font-weight: 900;
-        font-size: 1.25rem;
-        letter-spacing: 0.15em;
-        color: #fff;
-        box-shadow: 0 20px 50px -10px rgba(168, 85, 247, 0.5);
-        margin-bottom: 1rem;
-    }
-    .rj-sg-hero-mockup-sub {
-        font-family: ui-monospace, monospace;
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.3em;
-        color: #818cf8;
-    }
-
-    .rj-sg-hero-card {
-        position: absolute;
-        background: rgba(10, 7, 21, 0.9);
-        backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 14px;
-        padding: 14px 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        min-width: 160px;
-        z-index: 2;
-        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
-        animation: rj-sg-float 6s ease-in-out infinite;
-    }
-    .rj-sg-hero-card-icon {
-        width: 32px; height: 32px;
-        border-radius: 8px;
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(236, 72, 153, 0.2));
-        display: flex; align-items: center; justify-content: center;
-        color: #a5b4fc; font-size: 13px;
-        margin-bottom: 4px;
-    }
-    .rj-sg-hero-card-title {
-        font-size: 13px; font-weight: 700; color: #fff;
-        margin: 0;
-    }
-    .rj-sg-hero-card-meta {
-        font-family: ui-monospace, monospace;
-        font-size: 10px; color: #818cf8;
-        margin: 0; letter-spacing: 0.05em;
-    }
-    .rj-sg-hero-card-1 { top: 5%; left: -5%; animation-delay: 0s; }
-    .rj-sg-hero-card-2 { top: 42%; right: -8%; animation-delay: 2s; }
-    .rj-sg-hero-card-3 { bottom: 5%; left: 8%; animation-delay: 4s; }
-
-    @keyframes rj-sg-float {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-8px); }
     }
 
     /* ==================== TRUST BAR ==================== */
@@ -821,7 +577,6 @@
     .rj-sg-material-dot {
         width: 32px; height: 32px;
         border-radius: 8px;
-        box-shadow: 0 0 20px -4px currentColor;
         margin-bottom: 0.25rem;
     }
     .rj-sg-material h4 {
