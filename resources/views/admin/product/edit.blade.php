@@ -34,9 +34,6 @@
             'type' => $opt->type,
             'price_addon' => $opt->price_addon,
             'measurement_unit' => $opt->measurement_unit ?? 'inch',
-            'w_price_addon' => $opt->w_price_addon ?? 0,
-            'h_price_addon' => $opt->h_price_addon ?? 0,
-            'min_measurement_price' => $opt->min_measurement_price ?? 0,
             'is_required' => (bool) $opt->is_required,
             'sort_order' => $opt->sort_order,
             'status' => (bool) $opt->status,
@@ -47,6 +44,17 @@
                     'price_addon' => $v->price_addon,
                     'sort_order' => $v->sort_order,
                     'status' => (bool) $v->status,
+                ];
+            })->values(),
+            'measurements' => $opt->measurements->map(function($m) {
+                return [
+                    'id' => $m->id,
+                    'width_value' => (float) $m->width_value,
+                    'height_value' => (float) $m->height_value,
+                    'price' => (float) $m->price,
+                    'is_default' => (bool) $m->is_default,
+                    'sort_order' => $m->sort_order,
+                    'status' => (bool) $m->status,
                 ];
             })->values(),
         ];
@@ -302,7 +310,7 @@
                                                 <option value="select">Dropdown (Select)</option>
                                                 <option value="text">Text Input</option>
                                                 <option value="number">Number Input</option>
-                                                <option value="measurement">Measurement (W × H)</option>
+                                                <option value="measurement">Measurement (W × H Matrix)</option>
                                             </select>
                                         </div>
                                     </div>
@@ -333,70 +341,133 @@
                                         </div>
                                     </div>
 
-                                    {{-- MEASUREMENT SETTINGS --}}
+                                    {{-- ===================== MEASUREMENT MATRIX ===================== --}}
                                     <div x-show="option.type === 'measurement'" x-cloak class="border border-purple-200 bg-purple-50/40 rounded-lg p-4 space-y-4">
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <div class="w-7 h-7 rounded-lg bg-purple-500 text-white flex items-center justify-center">
-                                                <i class="fa-solid fa-ruler-combined text-xs"></i>
+                                        <div class="flex items-center justify-between flex-wrap gap-2">
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-7 h-7 rounded-lg bg-purple-500 text-white flex items-center justify-center">
+                                                    <i class="fa-solid fa-table-cells text-xs"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-sm font-semibold text-purple-900">Size Matrix</h4>
+                                                    <p class="text-[11px] text-purple-700">Each (W × H) combination has its own price.</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h4 class="text-sm font-semibold text-purple-900">Measurement Pricing</h4>
-                                                <p class="text-[11px] text-purple-700">Final price = (W × W-price) + (H × H-price)</p>
-                                            </div>
-                                        </div>
 
-                                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                                            <div>
-                                                <label class="block text-[11px] font-medium text-purple-900 mb-1">Unit</label>
+                                            <div class="flex items-center gap-2">
                                                 <select :name="`options[${optIndex}][measurement_unit]`" x-model="option.measurement_unit"
-                                                        class="w-full px-3 py-2 border border-purple-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                                        class="text-xs border border-purple-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
                                                     <option value="inch">Inch (in)</option>
                                                     <option value="feet">Feet (ft)</option>
                                                     <option value="cm">Centimeter (cm)</option>
                                                 </select>
-                                            </div>
 
-                                            <div>
-                                                <label class="block text-[11px] font-medium text-purple-900 mb-1">Width Price (per unit)</label>
-                                                <div class="relative">
-                                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
-                                                    <input type="number" :name="`options[${optIndex}][w_price_addon]`" x-model="option.w_price_addon" step="0.01" min="0"
-                                                           placeholder="0.00"
-                                                           class="w-full pl-7 pr-3 py-2 border border-purple-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
-                                                </div>
-                                            </div>
+                                                <button type="button" @click="addMeasurement(optIndex)"
+                                                        class="text-[11px] bg-purple-600 hover:bg-purple-700 text-white font-medium px-3 py-1.5 rounded-lg transition">
+                                                    <i class="fa-solid fa-plus text-[10px] mr-1"></i> Add Size
+                                                </button>
 
-                                            <div>
-                                                <label class="block text-[11px] font-medium text-purple-900 mb-1">Height Price (per unit)</label>
-                                                <div class="relative">
-                                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
-                                                    <input type="number" :name="`options[${optIndex}][h_price_addon]`" x-model="option.h_price_addon" step="0.01" min="0"
-                                                           placeholder="0.00"
-                                                           class="w-full pl-7 pr-3 py-2 border border-purple-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-[11px] font-medium text-purple-900 mb-1">Minimum Price</label>
-                                                <div class="relative">
-                                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
-                                                    <input type="number" :name="`options[${optIndex}][min_measurement_price]`" x-model="option.min_measurement_price" step="0.01" min="0"
-                                                           placeholder="0.00"
-                                                           class="w-full pl-7 pr-3 py-2 border border-purple-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
-                                                </div>
+                                                <button type="button" @click="quickFillMeasurements(optIndex)"
+                                                        class="text-[11px] bg-white hover:bg-purple-50 border border-purple-300 text-purple-700 font-medium px-3 py-1.5 rounded-lg transition"
+                                                        title="Add a quick grid of common sizes">
+                                                    <i class="fa-solid fa-wand-magic-sparkles text-[10px] mr-1"></i> Quick Grid
+                                                </button>
                                             </div>
                                         </div>
 
-                                        <div class="text-[11px] text-purple-800 bg-purple-100/60 border border-purple-200 rounded px-3 py-2">
-                                            <i class="fa-solid fa-calculator mr-1"></i>
-                                            <span class="font-mono">
-                                                W=10, H=20 → 10 × <span x-text="formatPrice(option.w_price_addon)"></span> + 20 × <span x-text="formatPrice(option.h_price_addon)"></span>
-                                                = $<span x-text="calcExample(option)"></span>
-                                            </span>
+                                        <div class="overflow-x-auto bg-white rounded-lg border border-purple-100">
+                                            <table class="w-full text-sm">
+                                                <thead class="bg-purple-50/50 text-purple-900">
+                                                    <tr>
+                                                        <th class="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider w-10">#</th>
+                                                        <th class="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider">Width</th>
+                                                        <th class="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider">Height</th>
+                                                        <th class="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider">Price ($)</th>
+                                                        <th class="px-3 py-2 text-center text-[10px] font-semibold uppercase tracking-wider w-20">Default</th>
+                                                        <th class="px-3 py-2 text-center text-[10px] font-semibold uppercase tracking-wider w-16">On</th>
+                                                        <th class="px-3 py-2 text-center text-[10px] font-semibold uppercase tracking-wider w-16"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <template x-for="(row, mIndex) in option.measurements" :key="mIndex">
+                                                        <tr class="border-t border-purple-100 hover:bg-purple-50/30">
+                                                            <td class="px-3 py-2 text-[11px] font-mono text-purple-400" x-text="mIndex + 1"></td>
+
+                                                            <td class="px-3 py-2">
+                                                                <input type="hidden" :name="`options[${optIndex}][measurements][${mIndex}][id]`" :value="row.id || ''">
+                                                                <input type="number" step="0.01" min="0.01"
+                                                                       :name="`options[${optIndex}][measurements][${mIndex}][width_value]`"
+                                                                       x-model="row.width_value"
+                                                                       placeholder="0.00"
+                                                                       class="w-24 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-500">
+                                                            </td>
+
+                                                            <td class="px-3 py-2">
+                                                                <input type="number" step="0.01" min="0.01"
+                                                                       :name="`options[${optIndex}][measurements][${mIndex}][height_value]`"
+                                                                       x-model="row.height_value"
+                                                                       placeholder="0.00"
+                                                                       class="w-24 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-500">
+                                                            </td>
+
+                                                            <td class="px-3 py-2">
+                                                                <div class="relative w-32">
+                                                                    <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
+                                                                    <input type="number" step="0.01" min="0"
+                                                                           :name="`options[${optIndex}][measurements][${mIndex}][price]`"
+                                                                           x-model="row.price"
+                                                                           placeholder="0.00"
+                                                                           class="w-full pl-6 pr-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-500">
+                                                                </div>
+                                                            </td>
+
+                                                            <td class="px-3 py-2 text-center">
+                                                                <input type="radio"
+                                                                       :name="`options[${optIndex}][default_measurement]`"
+                                                                       :value="mIndex"
+                                                                       :checked="row.is_default"
+                                                                       @change="setDefaultMeasurement(optIndex, mIndex)"
+                                                                       class="text-purple-600 focus:ring-purple-500">
+                                                                <input type="hidden"
+                                                                       :name="`options[${optIndex}][measurements][${mIndex}][is_default]`"
+                                                                       :value="row.is_default ? 1 : 0">
+                                                            </td>
+
+                                                            <td class="px-3 py-2 text-center">
+                                                                <input type="hidden" :name="`options[${optIndex}][measurements][${mIndex}][status]`" value="0">
+                                                                <input type="checkbox" value="1"
+                                                                       :name="`options[${optIndex}][measurements][${mIndex}][status]`"
+                                                                       x-model="row.status"
+                                                                       class="rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                                            </td>
+
+                                                            <td class="px-3 py-2 text-center">
+                                                                <button type="button" @click="option.measurements.splice(mIndex, 1)"
+                                                                        class="w-7 h-7 flex items-center justify-center rounded hover:bg-red-50 text-red-500 transition">
+                                                                    <i class="fa-solid fa-xmark text-xs"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+
+                                                    <tr x-show="option.measurements.length === 0">
+                                                        <td colspan="7" class="px-3 py-8 text-center">
+                                                            <i class="fa-solid fa-table-cells-large text-2xl text-purple-200 mb-2 block"></i>
+                                                            <p class="text-[12px] text-gray-500">No sizes yet</p>
+                                                            <p class="text-[11px] text-gray-400 mt-0.5">Click "Add Size" or "Quick Grid"</p>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <div class="text-[11px] text-purple-800 bg-purple-100/60 border border-purple-200 rounded px-3 py-2 flex items-start gap-2">
+                                            <i class="fa-solid fa-circle-info mt-0.5"></i>
+                                            <span>Customer must select one size from the matrix. The chosen price is added to the product base price.</span>
                                         </div>
                                     </div>
 
-                                    {{-- DROPDOWN VALUES --}}
+                                    {{-- ===================== DROPDOWN VALUES ===================== --}}
                                     <div x-show="option.type === 'select'" x-cloak class="border-t border-gray-100 pt-3">
                                         <div class="flex items-center justify-between mb-2">
                                             <label class="text-[11px] font-medium text-gray-600">Dropdown Values</label>
@@ -854,48 +925,39 @@ function productForm() {
             const oldOptions = @json(old('options'));
 
             if (oldOptions && oldOptions.length) {
-                this.options = oldOptions.map(o => ({
-                    id: o.id || null,
-                    name: o.name || '',
-                    type: o.type || 'select',
-                    price_addon: o.price_addon || 0,
-                    measurement_unit: o.measurement_unit || 'inch',
-                    w_price_addon: o.w_price_addon || 0,
-                    h_price_addon: o.h_price_addon || 0,
-                    min_measurement_price: o.min_measurement_price || 0,
-                    is_required: o.is_required === '1' || o.is_required === 1 || o.is_required === true,
-                    sort_order: o.sort_order || 0,
-                    status: o.status !== undefined ? (o.status === '1' || o.status === 1 || o.status === true) : true,
-                    values: (o.values || []).map(v => ({
-                        id: v.id || null,
-                        value: v.value || '',
-                        price_addon: v.price_addon || 0,
-                        sort_order: v.sort_order || 0,
-                        status: v.status !== undefined ? (v.status === '1' || v.status === 1 || v.status === true) : true,
-                    }))
-                }));
+                this.options = oldOptions.map(o => this.normalizeOption(o));
             } else if (dbOptions.length) {
-                this.options = dbOptions.map(o => ({
-                    id: o.id,
-                    name: o.name,
-                    type: o.type,
-                    price_addon: o.price_addon,
-                    measurement_unit: o.measurement_unit || 'inch',
-                    w_price_addon: o.w_price_addon || 0,
-                    h_price_addon: o.h_price_addon || 0,
-                    min_measurement_price: o.min_measurement_price || 0,
-                    is_required: o.is_required,
-                    sort_order: o.sort_order,
-                    status: o.status,
-                    values: (o.values || []).map(v => ({
-                        id: v.id,
-                        value: v.value,
-                        price_addon: v.price_addon,
-                        sort_order: v.sort_order,
-                        status: v.status,
-                    }))
-                }));
+                this.options = dbOptions.map(o => this.normalizeOption(o));
             }
+        },
+
+        normalizeOption(o) {
+            return {
+                id: o.id || null,
+                name: o.name || '',
+                type: o.type || 'select',
+                price_addon: o.price_addon || 0,
+                measurement_unit: o.measurement_unit || 'inch',
+                is_required: o.is_required === '1' || o.is_required === 1 || o.is_required === true,
+                sort_order: o.sort_order || 0,
+                status: o.status !== undefined ? (o.status === '1' || o.status === 1 || o.status === true) : true,
+                values: (o.values || []).map(v => ({
+                    id: v.id || null,
+                    value: v.value || '',
+                    price_addon: v.price_addon || 0,
+                    sort_order: v.sort_order || 0,
+                    status: v.status !== undefined ? (v.status === '1' || v.status === 1 || v.status === true) : true,
+                })),
+                measurements: (o.measurements || []).map(m => ({
+                    id: m.id || null,
+                    width_value: m.width_value !== undefined && m.width_value !== null ? parseFloat(m.width_value) : '',
+                    height_value: m.height_value !== undefined && m.height_value !== null ? parseFloat(m.height_value) : '',
+                    price: m.price !== undefined && m.price !== null ? parseFloat(m.price) : '',
+                    is_default: m.is_default === true || m.is_default === 1 || m.is_default === '1',
+                    sort_order: m.sort_order || 0,
+                    status: m.status !== undefined ? (m.status === '1' || m.status === 1 || m.status === true) : true,
+                })),
+            };
         },
 
         addTier() {
@@ -913,13 +975,11 @@ function productForm() {
                 type: 'select',
                 price_addon: 0,
                 measurement_unit: 'inch',
-                w_price_addon: 0,
-                h_price_addon: 0,
-                min_measurement_price: 0,
                 is_required: false,
                 sort_order: this.options.length,
                 status: true,
                 values: [],
+                measurements: [],
             });
         },
 
@@ -936,6 +996,51 @@ function productForm() {
                 price_addon: 0,
                 sort_order: this.options[optIndex].values.length,
                 status: true,
+            });
+        },
+
+        addMeasurement(optIndex) {
+            if (!this.options[optIndex].measurements) this.options[optIndex].measurements = [];
+            const isFirst = this.options[optIndex].measurements.length === 0;
+            this.options[optIndex].measurements.push({
+                id: null,
+                width_value: '',
+                height_value: '',
+                price: '',
+                is_default: isFirst,
+                sort_order: this.options[optIndex].measurements.length,
+                status: true,
+            });
+        },
+
+        quickFillMeasurements(optIndex) {
+            const option = this.options[optIndex];
+            if (!option) return;
+
+            if (option.measurements.length > 0) {
+                if (!confirm('This will REPLACE existing sizes with a quick grid (1×1, 1×2, 2×1, 2×2, 2×4, 4×4). Continue?')) {
+                    return;
+                }
+            }
+
+            const presets = [
+                [1, 1], [1, 2], [2, 1], [2, 2], [2, 4], [4, 4]
+            ];
+
+            option.measurements = presets.map((p, i) => ({
+                id: null,
+                width_value: p[0],
+                height_value: p[1],
+                price: '',
+                is_default: i === 0,
+                sort_order: i,
+                status: true,
+            }));
+        },
+
+        setDefaultMeasurement(optIndex, mIndex) {
+            this.options[optIndex].measurements.forEach((m, i) => {
+                m.is_default = (i === mIndex);
             });
         },
 
@@ -1001,14 +1106,6 @@ function productForm() {
 
         formatPrice(value) {
             return parseFloat(value || 0).toFixed(2);
-        },
-
-        calcExample(option) {
-            const w = 10, h = 20;
-            const price = (w * parseFloat(option.w_price_addon || 0)) + (h * parseFloat(option.h_price_addon || 0));
-            const min = parseFloat(option.min_measurement_price || 0);
-            const final = Math.max(price, min);
-            return final.toFixed(2);
         }
     }
 }
