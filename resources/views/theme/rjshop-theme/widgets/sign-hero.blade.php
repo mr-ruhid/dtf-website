@@ -17,14 +17,21 @@
     $step3 = $widget->getSetting('step3_text', 'You collect');
 @endphp
 
-<section class="rj-sh" id="rjHero">
-    <div class="rj-sh-inner">
+<section class="q-widget rj-sh" id="rjHero">
+    <div class="q-widget-grid"></div>
+    <div class="q-widget-orb-a"></div>
+    <div class="q-widget-orb-b"></div>
 
-        <div class="rj-sh-grid">
+    <div class="q-widget-inner rj-sh-pad">
+
+        <div class="rj-sh-layout">
 
             <div class="rj-sh-text">
                 @if($eyebrow)
-                    <div class="rj-sh-eyebrow">{{ $eyebrow }}</div>
+                    <div class="q-widget-eyebrow">
+                        <span class="q-widget-eyebrow-line"></span>
+                        <span class="q-widget-eyebrow-text">{{ $eyebrow }}</span>
+                    </div>
                 @endif
 
                 @if($title)
@@ -43,7 +50,7 @@
                     @else
                         <div class="rj-sh-placeholder">
                             <i class="fa-regular fa-image"></i>
-                            <span>Main image</span>
+                            <span>Main Image</span>
                         </div>
                     @endif
                 </div>
@@ -100,78 +107,70 @@
 </section>
 
 <style>
-    .rj-sh {
-        position: relative;
-        background: #faf8f5;
-        color: #111;
-        padding: 2.5rem 0 3rem;
+    .rj-sh-pad {
+        padding-top: 2.5rem;
+        padding-bottom: 3rem;
     }
-    @media (min-width: 768px) { .rj-sh { padding: 4rem 0 4.5rem; } }
-
-    .rj-sh-inner {
-        max-width: 80rem; margin: 0 auto; padding: 0 1.5rem;
+    @media (min-width: 768px) {
+        .rj-sh-pad { padding-top: 4rem; padding-bottom: 4.5rem; }
     }
-    @media (min-width: 1024px) { .rj-sh-inner { padding: 0 3rem; } }
 
-    .rj-sh-grid {
-        display: grid; grid-template-columns: 1fr; gap: 2.5rem;
+    .rj-sh-layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
         align-items: center;
         margin-bottom: 3rem;
     }
     @media (min-width: 900px) {
-        .rj-sh-grid {
-            grid-template-columns: 1fr 1.15fr;
-            gap: 4rem;
+        .rj-sh-layout {
+            grid-template-columns: 1fr 1.35fr;
+            gap: 3.5rem;
             margin-bottom: 4rem;
         }
     }
 
-    .rj-sh-eyebrow {
-        display: inline-block;
-        font-family: ui-monospace, "SF Mono", Menlo, monospace;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.22em;
-        color: #ea580c;
-        margin-bottom: 1.5rem;
-    }
-
     .rj-sh-title {
-        font-size: clamp(2.25rem, 5.5vw, 4.25rem);
+        font-size: clamp(2.25rem, 5vw, 4rem);
         font-weight: 900;
         line-height: 1.02;
         letter-spacing: -0.035em;
-        color: #111;
+        color: var(--q-text);
         margin: 0 0 1.5rem;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     .rj-sh-subtitle {
-        font-size: clamp(1rem, 1.4vw, 1.25rem);
-        color: #4b5563;
-        line-height: 1.55;
+        font-size: clamp(1rem, 1.4vw, 1.125rem);
+        color: var(--q-text-dim);
+        line-height: 1.6;
         margin: 0;
-        max-width: 28rem;
-        font-weight: 400;
+        max-width: 26rem;
+        font-weight: 300;
     }
 
+    /* ---------- Gallery: 4:3 images ---------- */
     .rj-sh-gallery {
         display: grid;
-        grid-template-columns: 1.55fr 1fr;
+        grid-template-columns: 2fr 1fr;
         gap: 0.75rem;
-        aspect-ratio: 16 / 11;
-        min-height: 280px;
     }
     @media (min-width: 768px) {
-        .rj-sh-gallery { gap: 0.875rem; min-height: 400px; }
+        .rj-sh-gallery { gap: 0.875rem; }
     }
 
     .rj-sh-gallery-main {
-        border-radius: 10px;
+        aspect-ratio: 4 / 3;
+        border-radius: 14px;
         overflow: hidden;
-        background: #ece7dd;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--q-border);
         position: relative;
+        transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .rj-sh-gallery-main:hover {
+        border-color: var(--q-border-accent);
+        box-shadow: 0 20px 48px -16px rgba(var(--q-accent-1-rgb), 0.35);
     }
 
     .rj-sh-gallery-side {
@@ -184,42 +183,59 @@
     }
 
     .rj-sh-gallery-small {
-        border-radius: 10px;
+        aspect-ratio: 4 / 3;
+        border-radius: 14px;
         overflow: hidden;
-        background: #ece7dd;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--q-border);
         position: relative;
+        transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .rj-sh-gallery-small:hover {
+        border-color: var(--q-border-accent);
+        box-shadow: 0 20px 48px -16px rgba(var(--q-accent-1-rgb), 0.35);
     }
 
     .rj-sh-gallery img {
-        width: 100%; height: 100%;
+        width: 100%;
+        height: 100%;
         object-fit: cover;
         display: block;
-        transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
     }
     .rj-sh-gallery-main:hover img,
     .rj-sh-gallery-small:hover img {
-        transform: scale(1.04);
+        transform: scale(1.05);
     }
 
     .rj-sh-placeholder {
-        width: 100%; height: 100%;
-        display: flex; flex-direction: column;
-        align-items: center; justify-content: center;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         gap: 0.5rem;
-        color: #b8b0a3;
-        font-size: 1.75rem;
+        color: var(--q-text-dark);
+        font-size: 1.5rem;
+        background:
+            linear-gradient(135deg, rgba(var(--q-accent-1-rgb), 0.06), rgba(var(--q-accent-3-rgb), 0.04));
     }
     .rj-sh-placeholder span {
-        font-size: 11px;
-        font-family: ui-monospace, monospace;
+        font-size: 10px;
+        font-family: ui-monospace, SFMono-Regular, monospace;
         text-transform: uppercase;
-        letter-spacing: 0.15em;
+        letter-spacing: 0.2em;
+        color: var(--q-text-dim);
     }
 
+    /* ---------- Steps ---------- */
     .rj-sh-steps {
-        display: grid; grid-template-columns: 1fr; gap: 1.25rem;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
         padding-top: 2rem;
-        border-top: 1px solid #e5e1d9;
+        border-top: 1px solid var(--q-border);
     }
     @media (min-width: 768px) {
         .rj-sh-steps {
@@ -230,26 +246,43 @@
     }
 
     .rj-sh-step {
-        display: flex; align-items: center; gap: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.875rem;
     }
 
     .rj-sh-step-num {
-        width: 34px; height: 34px;
+        width: 38px;
+        height: 38px;
         border-radius: 50%;
-        background: #ea580c;
+        background: linear-gradient(135deg, var(--q-accent-1), var(--q-accent-2));
         color: #fff;
         font-weight: 900;
         font-size: 15px;
-        display: flex; align-items: center; justify-content: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         flex-shrink: 0;
         font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        box-shadow:
+            0 8px 24px -8px rgba(var(--q-accent-1-rgb), 0.7),
+            0 0 0 1px rgba(var(--q-accent-1-rgb), 0.2);
     }
 
     .rj-sh-step-text {
         font-size: 1.0625rem;
         font-weight: 700;
-        color: #111;
+        color: var(--q-text);
         letter-spacing: -0.01em;
         line-height: 1.3;
+    }
+
+    @media (max-width: 640px) {
+        .rj-sh-gallery {
+            grid-template-columns: 1fr 1fr;
+        }
+        .rj-sh-gallery-side {
+            grid-template-rows: auto auto;
+        }
     }
 </style>
