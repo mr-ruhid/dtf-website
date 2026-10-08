@@ -22,13 +22,13 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Site Name <span class="text-red-500">*</span></label>
                     <input type="text" name="site_name" value="{{ old('site_name', $settings['site_name'] ?? 'RJ SHOP lite') }}" required
-                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Tagline</label>
                     <input type="text" name="site_tagline" value="{{ old('site_tagline', $settings['site_tagline'] ?? '') }}"
                            placeholder="Short slogan"
-                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
             </div>
 
@@ -36,7 +36,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Site Description</label>
                 <textarea name="site_description" rows="2" maxlength="500"
                           placeholder="Brief description of your site for SEO"
-                          class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">{{ old('site_description', $settings['site_description'] ?? '') }}</textarea>
+                          class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">{{ old('site_description', $settings['site_description'] ?? '') }}</textarea>
             </div>
         </div>
     </div>
@@ -58,13 +58,10 @@
                 @if (!empty($settings['site_logo']))
                     <div class="mb-3 p-4 bg-slate-50 border border-gray-200 rounded-lg flex items-center justify-between">
                         <img src="{{ asset('storage/' . $settings['site_logo']) }}" class="h-12 object-contain" alt="Logo">
-                        <form method="POST" action="{{ route('admin.settings.general.remove-logo') }}">
-                            @csrf
-                            @method('DELETE')
-                            <button class="text-xs text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg transition">
-                                <i class="fa-solid fa-trash text-xs"></i> Remove
-                            </button>
-                        </form>
+                        <button type="button" onclick="document.getElementById('removeLogoForm').submit()"
+                                class="text-xs text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg transition">
+                            <i class="fa-solid fa-trash text-xs"></i> Remove
+                        </button>
                     </div>
                 @endif
                 <input type="file" name="site_logo" accept="image/*"
@@ -77,13 +74,10 @@
                 @if (!empty($settings['site_favicon']))
                     <div class="mb-3 p-4 bg-slate-50 border border-gray-200 rounded-lg flex items-center justify-between">
                         <img src="{{ asset('storage/' . $settings['site_favicon']) }}" class="h-10 object-contain" alt="Favicon">
-                        <form method="POST" action="{{ route('admin.settings.general.remove-favicon') }}">
-                            @csrf
-                            @method('DELETE')
-                            <button class="text-xs text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg transition">
-                                <i class="fa-solid fa-trash text-xs"></i> Remove
-                            </button>
-                        </form>
+                        <button type="button" onclick="document.getElementById('removeFaviconForm').submit()"
+                                class="text-xs text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg transition">
+                            <i class="fa-solid fa-trash text-xs"></i> Remove
+                        </button>
                     </div>
                 @endif
                 <input type="file" name="site_favicon" accept="image/*"
@@ -96,36 +90,53 @@
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
             <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <i class="fa-solid fa-address-book text-sm"></i>
+                <i class="fa-solid fa-truck-fast text-sm"></i>
             </div>
             <div>
-                <h3 class="font-semibold text-gray-800 text-sm">Contact Information</h3>
-                <p class="text-xs text-gray-500">How customers can reach you</p>
+                <h3 class="font-semibold text-gray-800 text-sm">Trust Bar</h3>
+                <p class="text-xs text-gray-500">Feature badges shown under the hero (icons are fixed)</p>
             </div>
         </div>
 
-        <div class="p-6 space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" name="site_email" value="{{ old('site_email', $settings['site_email'] ?? '') }}"
-                           placeholder="info@example.com"
-                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                    <input type="text" name="site_phone" value="{{ old('site_phone', $settings['site_phone'] ?? '') }}"
-                           placeholder="+994 50 000 00 00"
-                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                </div>
-            </div>
+        <div class="p-6 space-y-5">
+            <p class="text-xs text-gray-500 leading-relaxed">
+                These 4 badges appear on the sign hero and other pages. Icons are predefined — you can customize the text freely.
+            </p>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                <input type="text" name="site_address" value="{{ old('site_address', $settings['site_address'] ?? '') }}"
-                       placeholder="Bakı, Azərbaycan"
-                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-            </div>
+            @php
+                $trustDefaults = [
+                    1 => ['icon' => 'fa-award', 'title' => '5-Year Warranty', 'desc' => 'On all outdoor signage'],
+                    2 => ['icon' => 'fa-shield-halved', 'title' => 'UV-Resistant', 'desc' => 'Colors that last for years'],
+                    3 => ['icon' => 'fa-bolt', 'title' => 'Fast Turnaround', 'desc' => 'Ready in 24-72 hours'],
+                    4 => ['icon' => 'fa-truck', 'title' => 'Free Delivery', 'desc' => 'On orders over $99'],
+                ];
+            @endphp
+
+            @foreach ($trustDefaults as $i => $default)
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-3 pb-4 {{ $i < 4 ? 'border-b border-gray-100' : '' }}">
+                    <div class="md:col-span-1 flex items-center justify-center">
+                        <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                            <i class="fa-solid {{ $default['icon'] }} text-sm"></i>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-5">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Title</label>
+                        <input type="text" name="trust_{{ $i }}_title"
+                               value="{{ old('trust_' . $i . '_title', $settings['trust_' . $i . '_title'] ?? $default['title']) }}"
+                               maxlength="50"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+
+                    <div class="md:col-span-6">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                        <input type="text" name="trust_{{ $i }}_desc"
+                               value="{{ old('trust_' . $i . '_desc', $settings['trust_' . $i . '_desc'] ?? $default['desc']) }}"
+                               maxlength="80"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+            @endforeach
         </div>
     </div>
 
@@ -144,7 +155,7 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Currency</label>
                 <select name="site_currency"
-                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     @foreach (['USD' => 'USD ($)', 'EUR' => 'EUR (€)', 'AZN' => 'AZN (₼)', 'TRY' => 'TRY (₺)', 'RUB' => 'RUB (₽)', 'GBP' => 'GBP (£)'] as $code => $label)
                         <option value="{{ $code }}" {{ ($settings['site_currency'] ?? 'USD') === $code ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
@@ -154,7 +165,7 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Language</label>
                 <select name="site_language"
-                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     @foreach (['en' => 'English', 'az' => 'Azərbaycan', 'tr' => 'Türkçe', 'ru' => 'Русский'] as $code => $label)
                         <option value="{{ $code }}" {{ ($settings['site_language'] ?? 'en') === $code ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
@@ -164,74 +175,11 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
                 <select name="site_timezone"
-                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     @foreach (['UTC' => 'UTC', 'Asia/Baku' => 'Baku (GMT+4)', 'Europe/Istanbul' => 'Istanbul (GMT+3)', 'Europe/London' => 'London (GMT+0)', 'America/New_York' => 'New York (GMT-5)'] as $code => $label)
                         <option value="{{ $code }}" {{ ($settings['site_timezone'] ?? 'UTC') === $code ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
-            <div class="w-9 h-9 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center">
-                <i class="fa-solid fa-share-nodes text-sm"></i>
-            </div>
-            <div>
-                <h3 class="font-semibold text-gray-800 text-sm">Social Media</h3>
-                <p class="text-xs text-gray-500">Connect your social profiles</p>
-            </div>
-        </div>
-
-        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            @foreach ([
-                'facebook_url' => ['Facebook', 'fa-facebook', 'https://facebook.com/yourpage'],
-                'instagram_url' => ['Instagram', 'fa-instagram', 'https://instagram.com/yourpage'],
-                'twitter_url' => ['Twitter / X', 'fa-x-twitter', 'https://x.com/yourpage'],
-                'youtube_url' => ['YouTube', 'fa-youtube', 'https://youtube.com/@yourchannel'],
-                'linkedin_url' => ['LinkedIn', 'fa-linkedin', 'https://linkedin.com/company/yourpage'],
-                'tiktok_url' => ['TikTok', 'fa-tiktok', 'https://tiktok.com/@yourpage'],
-            ] as $key => $meta)
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        <i class="fa-brands {{ $meta[1] }} mr-1 text-gray-400"></i> {{ $meta[0] }}
-                    </label>
-                    <input type="text" name="{{ $key }}" value="{{ old($key, $settings[$key] ?? '') }}"
-                           placeholder="{{ $meta[2] }}"
-                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                </div>
-            @endforeach
-        </div>
-    </div>
-
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
-            <div class="w-9 h-9 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
-                <i class="fa-solid fa-screwdriver-wrench text-sm"></i>
-            </div>
-            <div>
-                <h3 class="font-semibold text-gray-800 text-sm">Maintenance Mode</h3>
-                <p class="text-xs text-gray-500">Temporarily disable the site for visitors</p>
-            </div>
-        </div>
-
-        <div class="p-6 space-y-4">
-            <label class="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" name="maintenance_mode" value="1"
-                       {{ ($settings['maintenance_mode'] ?? '0') === '1' ? 'checked' : '' }}
-                       class="rounded border-gray-300 text-rose-600 focus:ring-rose-500 w-5 h-5">
-                <div>
-                    <p class="text-sm font-medium text-gray-800">Enable Maintenance Mode</p>
-                    <p class="text-xs text-gray-500">Visitors will see a maintenance page. Admin panel remains accessible.</p>
-                </div>
-            </label>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Maintenance Message</label>
-                <textarea name="maintenance_message" rows="2" maxlength="500"
-                          placeholder="We'll be back soon!"
-                          class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">{{ old('maintenance_message', $settings['maintenance_message'] ?? '') }}</textarea>
             </div>
         </div>
     </div>
@@ -243,6 +191,16 @@
         </button>
     </div>
 
+</form>
+
+<form method="POST" action="{{ route('admin.settings.general.remove-logo') }}" id="removeLogoForm" class="hidden">
+    @csrf
+    @method('DELETE')
+</form>
+
+<form method="POST" action="{{ route('admin.settings.general.remove-favicon') }}" id="removeFaviconForm" class="hidden">
+    @csrf
+    @method('DELETE')
 </form>
 
 @endsection
