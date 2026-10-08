@@ -20,7 +20,6 @@
         ];
     })->values();
 
-    // flatMap/collapse numeric key-ləri yenidən nömrələyir, ona görə sadə dövr işlədirik
     $defaultPrices = [];
     foreach ($attributes as $a) {
         foreach ($a->activeValues as $v) {
@@ -34,6 +33,10 @@
             'name' => $opt->name,
             'type' => $opt->type,
             'price_addon' => $opt->price_addon,
+            'measurement_unit' => $opt->measurement_unit ?? 'inch',
+            'w_price_addon' => $opt->w_price_addon ?? 0,
+            'h_price_addon' => $opt->h_price_addon ?? 0,
+            'min_measurement_price' => $opt->min_measurement_price ?? 0,
             'is_required' => (bool) $opt->is_required,
             'sort_order' => $opt->sort_order,
             'status' => (bool) $opt->status,
@@ -70,7 +73,7 @@
             <h2 class="text-xl font-semibold text-gray-800 mt-2">Edit Product</h2>
             <p class="text-xs text-gray-400 font-mono mt-1">{{ $product->slug }}</p>
         </div>
-        <a href="#" target="_blank" class="text-sm text-indigo-600 hover:underline">
+        <a href="{{ url('product/' . $product->slug) }}" target="_blank" class="text-sm text-indigo-600 hover:underline">
             <i class="fa-solid fa-eye text-xs mr-1"></i> Preview
         </a>
     </div>
@@ -95,7 +98,6 @@
         @csrf
         @method('PUT')
 
-        {{-- Bölmələrin göndərildiyini bildirən markerlər (boş siyahı = hamısını sil) --}}
         <input type="hidden" name="tiers_submitted" value="1">
         <input type="hidden" name="attributes_submitted" value="1">
         <input type="hidden" name="options_submitted" value="1">
@@ -187,7 +189,6 @@
                             @foreach ($product->images as $image)
                                 <div class="group relative rounded-lg overflow-hidden border border-gray-200 aspect-square">
                                     <img src="{{ $image->url }}" class="w-full h-full object-cover">
-                                    {{-- Düymə əsas formun içindədir, amma form="..." ilə xaricdəki silmə formasına bağlanır --}}
                                     <button type="submit" form="delete-image-{{ $image->id }}"
                                             onclick="return confirm('Delete this image?')"
                                             class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700">
@@ -308,7 +309,7 @@
 
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                         <div>
-                                            <label class="block text-[11px] font-medium text-gray-600 mb-1">Price Add-on ($)</label>
+                                            <label class="block text-[11px] font-medium text-gray-600 mb-1">Base Price Add-on ($)</label>
                                             <div class="relative">
                                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
                                                 <input type="number" :name="`options[${optIndex}][price_addon]`" x-model="option.price_addon" step="0.01" min="0"
@@ -332,7 +333,71 @@
                                         </div>
                                     </div>
 
-                                    <div x-show="option.type === 'select'" class="border-t border-gray-100 pt-3">
+                                    {{-- MEASUREMENT SETTINGS --}}
+                                    <div x-show="option.type === 'measurement'" x-cloak class="border border-purple-200 bg-purple-50/40 rounded-lg p-4 space-y-4">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <div class="w-7 h-7 rounded-lg bg-purple-500 text-white flex items-center justify-center">
+                                                <i class="fa-solid fa-ruler-combined text-xs"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="text-sm font-semibold text-purple-900">Measurement Pricing</h4>
+                                                <p class="text-[11px] text-purple-700">Final price = (W × W-price) + (H × H-price)</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                            <div>
+                                                <label class="block text-[11px] font-medium text-purple-900 mb-1">Unit</label>
+                                                <select :name="`options[${optIndex}][measurement_unit]`" x-model="option.measurement_unit"
+                                                        class="w-full px-3 py-2 border border-purple-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                                    <option value="inch">Inch (in)</option>
+                                                    <option value="feet">Feet (ft)</option>
+                                                    <option value="cm">Centimeter (cm)</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-[11px] font-medium text-purple-900 mb-1">Width Price (per unit)</label>
+                                                <div class="relative">
+                                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
+                                                    <input type="number" :name="`options[${optIndex}][w_price_addon]`" x-model="option.w_price_addon" step="0.01" min="0"
+                                                           placeholder="0.00"
+                                                           class="w-full pl-7 pr-3 py-2 border border-purple-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-[11px] font-medium text-purple-900 mb-1">Height Price (per unit)</label>
+                                                <div class="relative">
+                                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
+                                                    <input type="number" :name="`options[${optIndex}][h_price_addon]`" x-model="option.h_price_addon" step="0.01" min="0"
+                                                           placeholder="0.00"
+                                                           class="w-full pl-7 pr-3 py-2 border border-purple-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-[11px] font-medium text-purple-900 mb-1">Minimum Price</label>
+                                                <div class="relative">
+                                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
+                                                    <input type="number" :name="`options[${optIndex}][min_measurement_price]`" x-model="option.min_measurement_price" step="0.01" min="0"
+                                                           placeholder="0.00"
+                                                           class="w-full pl-7 pr-3 py-2 border border-purple-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="text-[11px] text-purple-800 bg-purple-100/60 border border-purple-200 rounded px-3 py-2">
+                                            <i class="fa-solid fa-calculator mr-1"></i>
+                                            <span class="font-mono">
+                                                W=10, H=20 → 10 × <span x-text="formatPrice(option.w_price_addon)"></span> + 20 × <span x-text="formatPrice(option.h_price_addon)"></span>
+                                                = $<span x-text="calcExample(option)"></span>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {{-- DROPDOWN VALUES --}}
+                                    <div x-show="option.type === 'select'" x-cloak class="border-t border-gray-100 pt-3">
                                         <div class="flex items-center justify-between mb-2">
                                             <label class="text-[11px] font-medium text-gray-600">Dropdown Values</label>
                                             <button type="button" @click="addOptionValue(optIndex)"
@@ -707,7 +772,6 @@
 
     </form>
 
-    {{-- Şəkil silmə formaları: əsas formun XARİCİNDƏ (iç-içə form problemi həll olunub) --}}
     @foreach ($product->images as $image)
         <form id="delete-image-{{ $image->id }}" method="POST"
               action="{{ route('admin.products.images.destroy', [$product, $image]) }}" class="hidden">
@@ -795,6 +859,10 @@ function productForm() {
                     name: o.name || '',
                     type: o.type || 'select',
                     price_addon: o.price_addon || 0,
+                    measurement_unit: o.measurement_unit || 'inch',
+                    w_price_addon: o.w_price_addon || 0,
+                    h_price_addon: o.h_price_addon || 0,
+                    min_measurement_price: o.min_measurement_price || 0,
                     is_required: o.is_required === '1' || o.is_required === 1 || o.is_required === true,
                     sort_order: o.sort_order || 0,
                     status: o.status !== undefined ? (o.status === '1' || o.status === 1 || o.status === true) : true,
@@ -812,6 +880,10 @@ function productForm() {
                     name: o.name,
                     type: o.type,
                     price_addon: o.price_addon,
+                    measurement_unit: o.measurement_unit || 'inch',
+                    w_price_addon: o.w_price_addon || 0,
+                    h_price_addon: o.h_price_addon || 0,
+                    min_measurement_price: o.min_measurement_price || 0,
                     is_required: o.is_required,
                     sort_order: o.sort_order,
                     status: o.status,
@@ -840,6 +912,10 @@ function productForm() {
                 name: '',
                 type: 'select',
                 price_addon: 0,
+                measurement_unit: 'inch',
+                w_price_addon: 0,
+                h_price_addon: 0,
+                min_measurement_price: 0,
                 is_required: false,
                 sort_order: this.options.length,
                 status: true,
@@ -925,6 +1001,14 @@ function productForm() {
 
         formatPrice(value) {
             return parseFloat(value || 0).toFixed(2);
+        },
+
+        calcExample(option) {
+            const w = 10, h = 20;
+            const price = (w * parseFloat(option.w_price_addon || 0)) + (h * parseFloat(option.h_price_addon || 0));
+            const min = parseFloat(option.min_measurement_price || 0);
+            const final = Math.max(price, min);
+            return final.toFixed(2);
         }
     }
 }
