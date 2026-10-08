@@ -68,6 +68,25 @@ class WidgetController extends Controller
         $folder = 'widgets/' . $widget->key;
         $existing = $widget->settings ?? [];
 
+        if ($widget->key === 'sign_hero') {
+            foreach (['main_image', 'image_2', 'image_3'] as $key) {
+                $oldImage = $existing[$key] ?? null;
+                $fileKey = $key . '_file';
+
+                if ($request->hasFile($fileKey)) {
+                    if ($oldImage && !str_starts_with($oldImage, 'http')) {
+                        Storage::disk('public')->delete($oldImage);
+                    }
+                    $data[$key] = $request->file($fileKey)->store($folder, 'public');
+                } else {
+                    $data[$key] = !empty($data[$key]) ? $data[$key] : $oldImage;
+                }
+
+                unset($data[$fileKey]);
+                unset($data[$key . '_preview']);
+            }
+        }
+
         if ($widget->key === 'steps' && isset($data['items']) && is_array($data['items'])) {
             foreach ($data['items'] as $index => $item) {
                 $oldImage = $existing['items'][$index]['image'] ?? null;
@@ -125,27 +144,16 @@ class WidgetController extends Controller
             'sign_hero' => $request->validate([
                 'eyebrow' => ['nullable', 'string', 'max:100'],
                 'title' => ['nullable', 'string', 'max:200'],
-                'title_highlight' => ['nullable', 'string', 'max:100'],
-                'description' => ['nullable', 'string', 'max:500'],
-                'btn1_text' => ['nullable', 'string', 'max:50'],
-                'btn1_url' => ['nullable', 'string', 'max:255'],
-                'btn2_text' => ['nullable', 'string', 'max:50'],
-                'btn2_url' => ['nullable', 'string', 'max:255'],
-                'stat1_value' => ['nullable', 'string', 'max:20'],
-                'stat1_label' => ['nullable', 'string', 'max:50'],
-                'stat2_value' => ['nullable', 'string', 'max:20'],
-                'stat2_label' => ['nullable', 'string', 'max:50'],
-                'stat3_value' => ['nullable', 'string', 'max:20'],
-                'stat3_label' => ['nullable', 'string', 'max:50'],
-                'card1_icon' => ['nullable', 'string', 'max:50'],
-                'card1_title' => ['nullable', 'string', 'max:100'],
-                'card1_meta' => ['nullable', 'string', 'max:50'],
-                'card2_icon' => ['nullable', 'string', 'max:50'],
-                'card2_title' => ['nullable', 'string', 'max:100'],
-                'card2_meta' => ['nullable', 'string', 'max:50'],
-                'card3_icon' => ['nullable', 'string', 'max:50'],
-                'card3_title' => ['nullable', 'string', 'max:100'],
-                'card3_meta' => ['nullable', 'string', 'max:50'],
+                'subtitle' => ['nullable', 'string', 'max:300'],
+                'main_image' => ['nullable', 'string', 'max:500'],
+                'main_image_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+                'image_2' => ['nullable', 'string', 'max:500'],
+                'image_2_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+                'image_3' => ['nullable', 'string', 'max:500'],
+                'image_3_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+                'step1_text' => ['nullable', 'string', 'max:100'],
+                'step2_text' => ['nullable', 'string', 'max:100'],
+                'step3_text' => ['nullable', 'string', 'max:100'],
             ]),
 
             'steps' => $request->validate([
