@@ -71,10 +71,11 @@
     }
     @media (min-width: 1024px) { .rj-sff-inner { padding: 0 2.5rem; } }
 
-    .rj-sff-head {
-        margin-bottom: 2.5rem;
-        max-width: 48rem;
-    }
+.rj-sff-head {
+    margin: 0 auto 2.5rem;
+    max-width: 48rem;
+    text-align: center;
+}
 
     .rj-sff-eyebrow {
         font-family: ui-monospace, monospace;
