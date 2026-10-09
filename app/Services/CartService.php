@@ -106,6 +106,8 @@ class CartService
             $baseUnitPrice = (float) ($product->sale_price ?: $product->base_price);
         }
 
+        $pricingType = $product?->pricing_type ?? 'fixed';
+
         $printType = $data['print_type'] ?? 'none';
 
         $widthInch = isset($data['width_inch']) && $data['width_inch'] !== null && $data['width_inch'] !== ''
@@ -141,6 +143,7 @@ class CartService
             'attributes' => $data['attributes'] ?? [],
             'options' => $data['options'] ?? [],
             'print_type' => $printType,
+            'pricing_type' => $pricingType,
             'note' => $data['note'] ?? null,
             'tier_label' => null,
             'width_inch' => $widthInch,
@@ -153,26 +156,31 @@ class CartService
     protected function recalculateItem(array &$item): void
     {
         $qty = max(1, (int) ($item['qty'] ?? 1));
-        $unitPrice = (float) ($item['unit_price'] ?? 0);
-        $baseUnitPrice = (float) ($item['base_unit_price'] ?? $unitPrice);
 
-        if ($unitPrice <= 0) {
-            $unitPrice = $baseUnitPrice;
+        $baseUnitPrice = (float) ($item['base_unit_price'] ?? 0);
+
+        if ($baseUnitPrice <= 0) {
+            $baseUnitPrice = (float) ($item['unit_price'] ?? 0);
+            $item['base_unit_price'] = $baseUnitPrice;
         }
 
+        $productId = $item['product_id'] ?? null;
+        $pricingType = $item['pricing_type'] ?? 'fixed';
         $printType = $item['print_type'] ?? 'none';
 
-        if ($printType === 'custom_size') {
-            $item['unit_price'] = round($unitPrice, 2);
-            $item['total'] = round($item['unit_price'] * $qty, 2);
-            $item['tier_label'] = null;
-            return;
-        }
+        $tier = $this->resolveTier($productId, $qty);
 
-        $tier = $this->resolveTier($item['product_id'] ?? null, $qty);
+        $unitPrice = $baseUnitPrice;
 
         if ($tier) {
-            $unitPrice = $tier['price'];
+            if ($pricingType === 'discount') {
+                $pct = (float) $tier['value'];
+                $unitPrice = round($baseUnitPrice * (1 - $pct / 100), 2);
+            } else {
+                if ($printType !== 'custom_size') {
+                    $unitPrice = (float) $tier['value'];
+                }
+            }
             $item['tier_label'] = $tier['label'];
         } else {
             $item['tier_label'] = null;
@@ -213,16 +221,24 @@ class CartService
         }
 
         if (!$matched) {
-            $matched = $tiers->last();
+            $matched = $tiers->first();
         }
 
         $rangeLabel = $matched->max_qty !== null
             ? $matched->min_qty . '–' . $matched->max_qty
             : $matched->min_qty . '+';
 
+        $isDiscount = ($product->pricing_type ?? 'fixed') === 'discount';
+        $value = (float) $matched->price;
+
+        $label = $isDiscount
+            ? $rangeLabel . ' qty · ' . rtrim(rtrim(number_format($value, 2, '.', ''), '0'), '.') . '% off'
+            : $rangeLabel . ' qty · $' . number_format($value, 2) . ' ea';
+
         return [
-            'price' => round((float) $matched->price, 2),
-            'label' => $rangeLabel . ' qty · $' . number_format((float) $matched->price, 2) . ' ea',
+            'value' => $value,
+            'label' => $label,
+            'is_discount' => $isDiscount,
         ];
     }
 
