@@ -49,6 +49,10 @@
     $storyWidget = \App\Models\Widget::where('key', 'special_films_story')
         ->where('is_active', 1)
         ->first();
+
+    $faqWidget = \App\Models\Widget::where('key', 'special_films_faq')
+        ->where('is_active', 1)
+        ->first();
 @endphp
 
 <div @if($product) x-data="specialFilms({
@@ -185,6 +189,10 @@
 @endif
 
 </div>
+
+@if($faqWidget)
+    @include('theme.rjshop-theme.widgets.special-films-faq', ['widget' => $faqWidget])
+@endif
 
 <style>
     .rj-sf {
@@ -374,17 +382,17 @@
         filter: brightness(1.6) drop-shadow(0 0 6px currentColor);
     }
 
-.rj-sf-config {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    max-width: 44rem;
-    margin: 0 auto;
-    padding: 1.75rem 1.75rem 1.5rem;
-    background: rgba(255, 255, 255, 0.015);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 18px;
-}
+    .rj-sf-config {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        max-width: 44rem;
+        margin: 0 auto;
+        padding: 1.75rem 1.75rem 1.5rem;
+        background: rgba(255, 255, 255, 0.015);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+    }
 
     .rj-sf-config-head {
         display: flex;
