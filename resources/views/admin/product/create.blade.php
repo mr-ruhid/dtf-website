@@ -71,7 +71,7 @@
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                                 <option value="">Select model</option>
                                 @foreach ($models as $model)
-                                    <option value="{{ $model->id }}">{{ $model->name }}</option>
+                                    <option value="{{ $model->id }}" data-display="{{ $model->display_type }}">{{ $model->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -122,17 +122,33 @@
                     <p class="text-xs text-gray-500">Multiple images · JPG, PNG, WEBP · Max 5MB each</p>
                 </div>
 
+                {{-- ================= TIERS ================= --}}
                 <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
                     <div class="flex items-center justify-between">
-                        <h3 class="font-semibold text-gray-800 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-layer-group text-indigo-500"></i> Quantity Pricing (Tiers)
-                        </h3>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-layer-group text-indigo-500"></i> Quantity Pricing (Tiers)
+                            </h3>
+                            <p class="text-xs mt-1" :class="isDiscount ? 'text-purple-600' : 'text-gray-500'">
+                                <template x-if="isDiscount">
+                                    <span>
+                                        <i class="fa-solid fa-percent text-[10px]"></i>
+                                        Discount mode — enter percentage off
+                                    </span>
+                                </template>
+                                <template x-if="!isDiscount">
+                                    <span>
+                                        <i class="fa-solid fa-dollar-sign text-[10px]"></i>
+                                        Fixed mode — enter unit price per tier
+                                    </span>
+                                </template>
+                            </p>
+                        </div>
                         <button type="button" @click="addTier"
                                 class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium px-3 py-1.5 rounded-lg transition">
                             <i class="fa-solid fa-plus text-[10px] mr-1"></i> Add Tier
                         </button>
                     </div>
-                    <p class="text-xs text-gray-500">Different price per quantity tier</p>
 
                     <div class="space-y-2">
                         <template x-for="(tier, index) in tiers" :key="index">
@@ -149,9 +165,15 @@
                                     <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">pcs</span>
                                 </div>
                                 <div class="relative flex-1">
-                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
-                                    <input type="number" :name="`tiers[${index}][price]`" x-model="tier.price" step="0.01" min="0" placeholder="Price"
-                                           class="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold"
+                                          :class="isDiscount ? 'text-purple-600' : 'text-gray-500'"
+                                          x-text="isDiscount ? '%' : '$'"></span>
+                                    <input type="number" :name="`tiers[${index}][price]`" x-model="tier.price"
+                                           :step="isDiscount ? '1' : '0.01'" min="0"
+                                           :max="isDiscount ? '100' : ''"
+                                           :placeholder="isDiscount ? 'Discount' : 'Price'"
+                                           :class="isDiscount ? 'border-purple-300 bg-purple-50/40' : 'border-gray-300'"
+                                           class="w-full pl-7 pr-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                 </div>
                                 <button type="button" @click="tiers.splice(index, 1)"
                                         class="w-9 h-9 flex items-center justify-center rounded hover:bg-red-50 text-red-500 transition">
@@ -160,6 +182,13 @@
                             </div>
                         </template>
                     </div>
+
+                    <template x-if="isDiscount">
+                        <div class="text-[11px] text-purple-800 bg-purple-100/60 border border-purple-200 rounded px-3 py-2 flex items-start gap-2">
+                            <i class="fa-solid fa-circle-info mt-0.5"></i>
+                            <span>Discount applies to the total of <strong>base price + option add-ons</strong>. Empty = 0% off.</span>
+                        </div>
+                    </template>
                 </div>
 
                 <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
@@ -249,7 +278,6 @@
                                         </div>
                                     </div>
 
-                                    {{-- ===================== MEASUREMENT MATRIX ===================== --}}
                                     <div x-show="option.type === 'measurement'" x-cloak class="border border-purple-200 bg-purple-50/40 rounded-lg p-4 space-y-4">
                                         <div class="flex items-center justify-between flex-wrap gap-2">
                                             <div class="flex items-center gap-2">
@@ -366,14 +394,8 @@
                                                 </tbody>
                                             </table>
                                         </div>
-
-                                        <div class="text-[11px] text-purple-800 bg-purple-100/60 border border-purple-200 rounded px-3 py-2 flex items-start gap-2">
-                                            <i class="fa-solid fa-circle-info mt-0.5"></i>
-                                            <span>Customer must select one size from the matrix. The chosen price is added to the product base price.</span>
-                                        </div>
                                     </div>
 
-                                    {{-- ===================== DROPDOWN VALUES ===================== --}}
                                     <div x-show="option.type === 'select'" x-cloak class="border-t border-gray-100 pt-3">
                                         <div class="flex items-center justify-between mb-2">
                                             <label class="text-[11px] font-medium text-gray-600">Dropdown Values</label>
@@ -746,8 +768,11 @@ function productForm() {
         tiers: [],
         selectedAttributeValues: {},
         options: [],
+        isDiscount: false,
 
         init() {
+            this.updatePricingMode();
+
             const oldTiers = @json(old('tiers', []));
             if (oldTiers.length) {
                 this.tiers = oldTiers.map(t => ({min_qty: t.min_qty || '', max_qty: t.max_qty || '', price: t.price || ''}));
@@ -777,6 +802,16 @@ function productForm() {
             if (oldOptions.length) {
                 this.options = oldOptions.map(o => this.normalizeOption(o));
             }
+        },
+
+        updatePricingMode() {
+            const sel = document.querySelector('select[name="model_id"]');
+            if (!sel) return;
+
+            const opt = sel.options[sel.selectedIndex];
+            const display = opt ? (opt.dataset.display || '') : '';
+
+            this.isDiscount = display === 'single' || display === 'custom';
         },
 
         normalizeOption(o) {
