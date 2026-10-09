@@ -21,7 +21,7 @@ class ModelController extends Controller
         }
 
         if ($model->isCustom && $model->custom_view) {
-            $view = 'theme.rjshop-theme.rjshop.models.' . $model->custom_view;
+            $view = 'theme.rjshop-theme.rjshop.model.' . $model->custom_view;
 
             if (view()->exists($view)) {
                 return view($view, compact('model'));
@@ -63,7 +63,7 @@ class ModelController extends Controller
             ->limit(6)
             ->get();
 
-        return view('theme.rjshop-theme.rjshop.models.single', compact('model', 'product', 'relatedProducts', 'faqs'));
+        return view('theme.rjshop-theme.rjshop.model.single', compact('model', 'product', 'relatedProducts', 'faqs'));
     }
 
     protected function showGrid(ProductModel $model, Request $request, ?string $categorySlug = null)
@@ -152,7 +152,7 @@ class ModelController extends Controller
 
         $products = $query->paginate(12)->withQueryString();
 
-        return view('theme.rjshop-theme.rjshop.models.grid', compact(
+        return view('theme.rjshop-theme.rjshop.model.grid', compact(
             'model',
             'categories',
             'products',
