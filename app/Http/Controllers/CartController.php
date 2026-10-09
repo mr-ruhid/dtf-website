@@ -23,10 +23,15 @@ class CartController extends Controller
     {
         $validated = $request->validate([
             'product_id' => 'nullable|integer|exists:products,id',
+            'product_name' => 'nullable|string|max:255',
             'name' => 'nullable|string|max:255',
             'slug' => 'nullable|string|max:255',
             'image' => 'nullable|string',
             'unit_price' => 'nullable|numeric|min:0',
+            'product_price' => 'nullable|numeric|min:0',
+            'sheet_price' => 'nullable|numeric|min:0',
+            'width_inch' => 'nullable|numeric|min:0|max:1000',
+            'height_inch' => 'nullable|numeric|min:0|max:1000',
             'qty' => 'nullable|integer|min:1|max:9999',
             'attributes' => 'nullable|array',
             'options' => 'nullable|array',
