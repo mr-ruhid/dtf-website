@@ -116,10 +116,10 @@
                     <div x-show="displayType === 'custom'" x-cloak x-collapse class="pt-2 border-t border-gray-100">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Custom View Name</label>
                         <input type="text" name="custom_view" value="{{ old('custom_view', $model->custom_view) }}"
-                               placeholder="e.g. gangsheet"
+                               placeholder="e.g. sign"
                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                         <p class="text-xs text-gray-500 mt-1">
-                            Blade file: <code class="bg-gray-100 px-1 rounded">resources/views/theme/rjshop-theme/models/{name}.blade.php</code>
+                            Blade file: <code class="bg-gray-100 px-1 rounded">resources/views/theme/rjshop-theme/rjshop/model/{name}.blade.php</code>
                         </p>
                     </div>
                 </div>
