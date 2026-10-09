@@ -13,6 +13,7 @@ class ProductController extends Controller
             'images',
             'prices',
             'options.values',
+            'options.measurements',
             'attributeValues.attribute',
             'attributeValues.attributeValue',
             'attributeValues.productImage',
@@ -45,8 +46,8 @@ class ProductController extends Controller
             ->get();
 
         $view = $product->print_type === 'apparel'
-            ? 'theme.rjshop-theme.staticpages.product-apparel'
-            : 'theme.rjshop-theme.staticpages.product';
+            ? 'theme.rjshop-theme.rjshop.product-apparel'
+            : 'theme.rjshop-theme.rjshop.product';
 
         return view($view, compact('product', 'relatedProducts', 'faqs'));
     }
