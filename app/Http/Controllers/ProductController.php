@@ -25,6 +25,17 @@ class ProductController extends Controller
             ->where('status', 1)
             ->firstOrFail();
 
+        $siblings = collect();
+
+        if ($product->model_id) {
+            $siblings = Product::with(['images'])
+                ->where('model_id', $product->model_id)
+                ->where('id', '!=', $product->id)
+                ->where('status', 1)
+                ->orderBy('sort_order')
+                ->get();
+        }
+
         $relatedProducts = Product::where('status', 1)
             ->where('id', '!=', $product->id)
             ->where(function ($q) use ($product) {
@@ -45,10 +56,16 @@ class ProductController extends Controller
             ->limit(6)
             ->get();
 
-        $view = $product->print_type === 'apparel'
-            ? 'theme.rjshop-theme.rjshop.product-apparel'
-            : 'theme.rjshop-theme.rjshop.product';
+        $customView = $product->model?->custom_view;
 
-        return view($view, compact('product', 'relatedProducts', 'faqs'));
+        if ($customView && view()->exists('theme.rjshop-theme.rjshop.product-' . $customView)) {
+            $view = 'theme.rjshop-theme.rjshop.product-' . $customView;
+        } elseif ($product->print_type === 'apparel') {
+            $view = 'theme.rjshop-theme.rjshop.product-apparel';
+        } else {
+            $view = 'theme.rjshop-theme.rjshop.product';
+        }
+
+        return view($view, compact('product', 'siblings', 'relatedProducts', 'faqs'));
     }
 }
