@@ -251,7 +251,21 @@ class WidgetSeeder extends Seeder
                             'description' => 'Upload your art on the Glitter DTF Gang Sheet and we print it the same day. Glitter DTF is the only specialty film we sell right now. No minimums.',
                         ],
                     ],
-
+                ],
+            ],
+            [
+                'key' => 'special_films_faq',
+                'name' => 'Special Films FAQ',
+                'sort_order' => 18,
+                'settings' => [
+                    'eyebrow' => 'THE SAME ANSWERS, IF YOU NEED THEM',
+                    'title' => 'Open a question',
+                    'items' => [
+                        ['question' => 'What specialty film does DTF Town sell?', 'answer' => ''],
+                        ['question' => 'What is Glitter DTF?', 'answer' => ''],
+                        ['question' => 'How do I press Glitter DTF?', 'answer' => ''],
+                        ['question' => 'Where is Glitter DTF printed?', 'answer' => ''],
+                    ],
                 ],
             ],
         ];
