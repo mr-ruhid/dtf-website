@@ -9,23 +9,11 @@
 
 @section('content')
 
-@php
-    $pricing = [
-        'enabled' => (\App\Models\Setting::get('design_custom_enabled') ?? '1') == '1',
-        'per_sq_inch' => (float) (\App\Models\Setting::get('design_custom_price_per_sq_inch') ?? '0.05'),
-        'min_price' => (float) (\App\Models\Setting::get('design_custom_min_price') ?? '4.50'),
-        'min_inch' => (float) (\App\Models\Setting::get('design_custom_min_inch') ?? '1'),
-        'max_inch' => (float) (\App\Models\Setting::get('design_custom_max_inch') ?? '60'),
-    ];
-@endphp
-
 <section id="rjHero"
          class="rj-dz"
          x-data="designStudio({
-            zones: {{ \Illuminate\Support\Js::from($zones) }},
             product: {{ \Illuminate\Support\Js::from($product) }},
-            allProducts: {{ \Illuminate\Support\Js::from($allProducts) }},
-            pricing: {{ \Illuminate\Support\Js::from($pricing) }}
+            allProducts: {{ \Illuminate\Support\Js::from($allProducts) }}
          })">
 
     <div class="rj-dz-toolbar">
@@ -147,22 +135,22 @@
                             </template>
                             <div class="rj-dz-left-overlay">
                                 <span class="rj-dz-left-dot"></span>
-                                <span x-text="currentZone ? currentZone.label : 'Custom'"></span>
+                                <span x-text="selectedMeasurement ? selectedMeasurement.label : 'No size'"></span>
                             </div>
                         </div>
 
                         <p class="rj-dz-left-name" x-text="product.name"></p>
                         <p class="rj-dz-left-meta">
-                            <span x-text="'Base $' + Number(product.base_price).toFixed(2)"></span>
+                            <span x-text="'$' + Number(unitPrice).toFixed(2) + ' / sheet'"></span>
                             <span class="rj-dz-left-sep">·</span>
-                            <span x-text="currentZone ? (currentZone.width_inch + '×' + currentZone.height_inch + ' in') : 'Custom'"></span>
+                            <span x-text="selectedMeasurement ? selectedMeasurement.label : '—'"></span>
                         </p>
                     </div>
                 </template>
 
                 <div class="rj-dz-left-tip">
                     <i class="fa-solid fa-circle-info"></i>
-                    <span>Only DTF Transfers, UV Stickers and Special Films support custom design.</span>
+                    <span>Upload artwork, arrange it on the sheet, then add to cart.</span>
                 </div>
             </div>
         </aside>
@@ -183,30 +171,21 @@
         </div>
 
         <aside class="rj-dz-sidebar">
-            <div class="rj-dz-side-block">
-                <label class="rj-dz-label">Sheet Size</label>
+
+            <div class="rj-dz-side-block" x-show="measurements.length > 0">
+                <label class="rj-dz-label">Size</label>
                 <div class="rj-dz-select-wrap">
-                    <select class="rj-dz-select" x-ref="zoneSelect" @change="changeZone($event)"></select>
+                    <select class="rj-dz-select" x-ref="sizeSelect" @change="changeSize($event)"></select>
                     <i class="fa-solid fa-chevron-down"></i>
                 </div>
-                <p class="rj-dz-hint" x-text="currentZone ? (currentZone.width_inch + ' × ' + currentZone.height_inch + ' in') : ''"></p>
+                <p class="rj-dz-hint" x-text="selectedMeasurement ? selectedMeasurement.label : ''"></p>
             </div>
 
-            <div class="rj-dz-side-block" x-show="pricing.enabled" x-cloak>
-                <label class="rj-dz-label">
-                    Custom Size
-                    <span class="rj-dz-label-note">override</span>
-                </label>
-                <div class="rj-dz-custom">
-                    <input type="number" :min="pricing.min_inch" :max="pricing.max_inch" step="0.1" x-model.number="customW" placeholder="W" @input.debounce.400ms="applyCustom()">
-                    <span class="rj-dz-custom-sep">×</span>
-                    <input type="number" :min="pricing.min_inch" :max="pricing.max_inch" step="0.1" x-model.number="customH" placeholder="H" @input.debounce.400ms="applyCustom()">
-                    <span class="rj-dz-custom-unit">in</span>
+            <div class="rj-dz-side-block" x-show="measurements.length === 0" x-cloak>
+                <div class="rj-dz-measure-missing">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>No sizes available for this product</span>
                 </div>
-                <button type="button" class="rj-dz-custom-clear" x-show="isCustom" @click="clearCustom()">
-                    <i class="fa-solid fa-xmark"></i>
-                    <span>Clear custom</span>
-                </button>
             </div>
 
             <div class="rj-dz-side-block rj-dz-sel" x-show="single" x-cloak>
@@ -217,7 +196,7 @@
 
                 <div class="rj-dz-custom">
                     <input type="number" step="0.01" min="0.1" :value="sel.w" placeholder="W" @change="setSize('w', $event.target.value)">
-                    <button type="button" class="rj-dz-lock" :class="{ 'is-on': lockRatio }" @click="toggleLock()" :title="lockRatio ? 'Aspect ratio locked' : 'Aspect ratio unlocked'">
+                    <button type="button" class="rj-dz-lock" :class="{ 'is-on': lockRatio }" @click="toggleLock()">
                         <i class="fa-solid" :class="lockRatio ? 'fa-lock' : 'fa-lock-open'"></i>
                     </button>
                     <input type="number" step="0.01" min="0.1" :value="sel.h" placeholder="H" @change="setSize('h', $event.target.value)">
@@ -270,16 +249,12 @@
 
             <div class="rj-dz-side-total">
                 <div class="rj-dz-total-row">
-                    <span>Sheet</span>
-                    <span x-text="'$' + sheetPrice.toFixed(2)"></span>
+                    <span>Unit price</span>
+                    <span x-text="'$' + unitPrice.toFixed(2)"></span>
                 </div>
                 <div class="rj-dz-total-row">
-                    <span>Product</span>
-                    <span x-text="'$' + productPrice.toFixed(2)"></span>
-                </div>
-                <div class="rj-dz-total-row">
-                    <span>Items</span>
-                    <span x-text="itemCount"></span>
+                    <span x-text="'Quantity × ' + (qty || 1)"></span>
+                    <span x-text="'$' + (unitPrice * (qty || 1)).toFixed(2)"></span>
                 </div>
                 <div class="rj-dz-total-row rj-dz-total-grand">
                     <span>Total</span>
@@ -289,7 +264,7 @@
 
             <button type="button"
                     class="rj-dz-add"
-                    :disabled="itemCount === 0 || adding"
+                    :disabled="itemCount === 0 || adding || !selectedMeasurement"
                     @click="addToCart()">
                 <i class="fa-solid" :class="adding ? 'fa-spinner fa-spin' : 'fa-cart-plus'"></i>
                 <span x-text="adding ? 'Adding...' : (itemCount === 0 ? 'Upload to start' : 'Add to Cart')"></span>
@@ -312,16 +287,6 @@
     var MAX_FILE_MB = 30;
     var HISTORY_LIMIT = 40;
     var MAX_EXPORT_PIXELS = 16000000;
-    var CUSTOM_ID = '__custom__';
-
-    var FALLBACK_ZONES = [
-        { id: 1, name: 'A4', slug: 'a4', width_inch: 8.3, height_inch: 11.7, label: 'A4 (8.3 × 11.7 in)', price_addon: 4.50 },
-        { id: 2, name: 'A3', slug: 'a3', width_inch: 11.7, height_inch: 16.5, label: 'A3 (11.7 × 16.5 in)', price_addon: 7.50 },
-        { id: 3, name: '12 × 12', slug: '12x12', width_inch: 12, height_inch: 12, label: '12 × 12 in', price_addon: 6.00 },
-        { id: 4, name: '12 × 24', slug: '12x24', width_inch: 12, height_inch: 24, label: '12 × 24 in', price_addon: 10.00 },
-        { id: 5, name: '13 × 19', slug: '13x19', width_inch: 13, height_inch: 19, label: '13 × 19 in', price_addon: 9.00 },
-        { id: 6, name: '22 × 24', slug: '22x24', width_inch: 22, height_inch: 24, label: '22 × 24 in', price_addon: 18.00 }
-    ];
 
     var removeBgModulePromise = null;
 
@@ -340,30 +305,8 @@
     function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
     window.designStudio = function (config) {
-        var incoming = (config.zones && config.zones.length) ? config.zones : FALLBACK_ZONES;
-        var zones = incoming.map(function (z) {
-            return {
-                id: z.id,
-                name: z.name || '',
-                slug: z.slug || '',
-                width_inch: Number(z.width_inch) || 12,
-                height_inch: Number(z.height_inch) || 12,
-                label: z.label || ((Number(z.width_inch) || 12) + ' × ' + (Number(z.height_inch) || 12) + ' in'),
-                price_addon: Number(z.price_addon) || 0
-            };
-        });
-
         var products = config.allProducts || [];
         var initialProduct = config.product || null;
-
-        var cfgPricing = config.pricing || {};
-        var pricing = {
-            enabled: cfgPricing.enabled !== false && cfgPricing.enabled !== 0 && cfgPricing.enabled !== '0',
-            per_sq_inch: (cfgPricing.per_sq_inch !== null && cfgPricing.per_sq_inch !== undefined && cfgPricing.per_sq_inch !== '') ? parseFloat(cfgPricing.per_sq_inch) : 0.05,
-            min_price: (cfgPricing.min_price !== null && cfgPricing.min_price !== undefined && cfgPricing.min_price !== '') ? parseFloat(cfgPricing.min_price) : 4.50,
-            min_inch: (cfgPricing.min_inch !== null && cfgPricing.min_inch !== undefined && cfgPricing.min_inch !== '') ? parseFloat(cfgPricing.min_inch) : 1,
-            max_inch: (cfgPricing.max_inch !== null && cfgPricing.max_inch !== undefined && cfgPricing.max_inch !== '') ? parseFloat(cfgPricing.max_inch) : 60
-        };
 
         var canvas = null;
         var hist = [];
@@ -374,14 +317,12 @@
         var resizeObs = null;
 
         return {
-            zones: zones,
             products: products,
             product: initialProduct,
-            pricing: pricing,
-            zoneId: zones[0] ? zones[0].id : null,
-            customW: null,
-            customH: null,
-            isCustom: false,
+
+            measurements: (initialProduct && initialProduct.measurements) ? initialProduct.measurements : [],
+            selectedMeasurement: null,
+
             qty: 1,
 
             itemCount: 0,
@@ -405,13 +346,12 @@
             init() {
                 var self = this;
                 this.buildProductOptions();
-                this.buildZoneOptions();
 
                 this.$nextTick(function () {
                     self.setupCanvas();
                     self.bindGlobalEvents();
                     self.$nextTick(function () {
-                        self.readQueryParams();
+                        self.selectInitialSize();
                         self.ready = true;
                     });
                 });
@@ -435,73 +375,82 @@
                 if (this.product) s.value = this.product.id;
             },
 
-            buildZoneOptions() {
-                var s = this.$refs.zoneSelect;
+            buildSizeOptions() {
+                var s = this.$refs.sizeSelect;
                 if (!s) return;
 
-                var opts = this.zones.map(function (z) {
-                    var safe = String(z.label).replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    return '<option value="' + z.id + '">' + safe + '</option>';
-                });
-
-                if (this.pricing.enabled) {
-                    opts.push('<option value="' + CUSTOM_ID + '">Custom size (see below)</option>');
+                if (!this.measurements.length) {
+                    s.innerHTML = '<option value="">— No sizes —</option>';
+                    s.disabled = true;
+                    return;
                 }
 
-                s.innerHTML = opts.join('');
+                s.disabled = false;
+                s.innerHTML = this.measurements.map(function (m) {
+                    var safe = String(m.label).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    return '<option value="' + m.id + '">' + safe + ' — $' + Number(m.price).toFixed(2) + '</option>';
+                }).join('');
 
-                if (this.zoneId) {
-                    s.value = this.zoneId;
-                } else if (this.zones[0]) {
-                    this.zoneId = this.zones[0].id;
-                    s.value = this.zoneId;
-                }
+                if (this.selectedMeasurement) s.value = this.selectedMeasurement.id;
             },
 
-            readQueryParams() {
-                var w = parseFloat(getQuery('w'));
-                var h = parseFloat(getQuery('h'));
-
-                if (w > 0 && h > 0 && this.pricing.enabled) {
-                    this.customW = clamp(w, this.pricing.min_inch, this.pricing.max_inch);
-                    this.customH = clamp(h, this.pricing.min_inch, this.pricing.max_inch);
-                    this.isCustom = true;
-                    if (this.$refs.zoneSelect) this.$refs.zoneSelect.value = CUSTOM_ID;
-                    this.applyZoneSize();
-                }
-            },
-
-            get currentZone() {
-                if (this.isCustom && this.customW > 0 && this.customH > 0) {
-                    return {
-                        id: CUSTOM_ID,
-                        name: 'Custom',
-                        slug: 'custom',
-                        width_inch: this.customW,
-                        height_inch: this.customH,
-                        label: 'Custom (' + this.customW + ' × ' + this.customH + ' in)',
-                        price_addon: this.calculateCustomPrice()
-                    };
+            selectInitialSize() {
+                if (!this.measurements.length) {
+                    this.buildSizeOptions();
+                    return;
                 }
 
-                if (!this.zones.length) return null;
-                if (!this.zoneId) return this.zones[0];
-                var found = this.zones.find(z => Number(z.id) === Number(this.zoneId));
-                return found || this.zones[0];
+                var qw = parseFloat(getQuery('w'));
+                var qh = parseFloat(getQuery('h'));
+                var pick = null;
+
+                if (qw > 0 && qh > 0) {
+                    pick = this.measurements.find(function (m) {
+                        return Math.abs(m.width - qw) < 0.01 && Math.abs(m.height - qh) < 0.01;
+                    }) || null;
+                }
+
+                if (!pick) {
+                    pick = this.measurements.find(function (m) { return m.is_default; }) || this.measurements[0];
+                }
+
+                this.selectedMeasurement = pick;
+                this.buildSizeOptions();
+                this.applyMeasurementSize();
             },
 
-            calculateCustomPrice() {
-                if (!this.customW || !this.customH) return 0;
-                var perSqInch = Number(this.pricing.per_sq_inch) || 0;
-                var minPrice = Number(this.pricing.min_price) || 0;
-                var calculated = this.customW * this.customH * perSqInch;
-                return Math.round(Math.max(calculated, minPrice) * 100) / 100;
+            changeSize(e) {
+                var id = parseInt(e.target.value);
+                var m = this.measurements.find(function (x) { return x.id === id; });
+                if (!m) return;
+
+                this.selectedMeasurement = m;
+                this.applyMeasurementSize();
             },
 
-            get sheetPrice() { return this.currentZone ? (Number(this.currentZone.price_addon) || 0) : 0; },
-            get productPrice() { return this.product ? Number(this.product.base_price) || 0 : 0; },
-            get basePrice() { return this.sheetPrice + this.productPrice; },
-            get totalPrice() { return this.basePrice * (this.qty || 1); },
+            applyMeasurementSize() {
+                var m = this.selectedMeasurement;
+                if (!m || !canvas) return;
+
+                var newW = Math.max(1, Math.round(m.width * DPI));
+                var newH = Math.max(1, Math.round(m.height * DPI));
+
+                if (newW !== canvas.getWidth() || newH !== canvas.getHeight()) {
+                    canvas.setDimensions({ width: newW, height: newH });
+                    canvas.renderAll();
+                }
+
+                this.fitStage();
+                this.refreshStats();
+            },
+
+            get unitPrice() {
+                return this.selectedMeasurement ? Number(this.selectedMeasurement.price) || 0 : 0;
+            },
+
+            get totalPrice() {
+                return this.unitPrice * (this.qty || 1);
+            },
 
             get dpiClass() {
                 var d = Number(this.sel.dpi) || 0;
@@ -542,7 +491,7 @@
                 canvas.on('object:moving', function () { self.refreshStats(); });
                 canvas.on('object:modified', function () { self.commit(); });
 
-                this.applyZoneSize();
+                this.applyMeasurementSize();
                 this.pushHistory();
             },
 
@@ -717,22 +666,6 @@
                 this.canRedo = hIndex < hist.length - 1;
             },
 
-            applyZoneSize() {
-                var z = this.currentZone;
-                if (!z || !canvas) return;
-
-                var newW = Math.max(1, Math.round(Number(z.width_inch) * DPI));
-                var newH = Math.max(1, Math.round(Number(z.height_inch) * DPI));
-
-                if (newW !== canvas.getWidth() || newH !== canvas.getHeight()) {
-                    canvas.setDimensions({ width: newW, height: newH });
-                    canvas.renderAll();
-                }
-
-                this.fitStage();
-                this.refreshStats();
-            },
-
             fitStage() {
                 var stage = this.$refs.stage;
                 if (!stage || !canvas) return;
@@ -773,61 +706,12 @@
                 });
             },
 
-            changeZone(e) {
-                var val = e && e.target ? e.target.value : this.zoneId;
-
-                if (val === CUSTOM_ID) {
-                    this.isCustom = true;
-                    this.zoneId = null;
-                    if (this.customW > 0 && this.customH > 0) this.applyZoneSize();
-                    return;
-                }
-
-                this.isCustom = false;
-                this.customW = null;
-                this.customH = null;
-                this.zoneId = Number(val);
-                this.applyZoneSize();
-            },
-
-            applyCustom() {
-                if (!this.customW || !this.customH) return;
-
-                var min = Number(this.pricing.min_inch) || 1;
-                var max = Number(this.pricing.max_inch) || 60;
-
-                this.customW = clamp(this.customW, min, max);
-                this.customH = clamp(this.customH, min, max);
-
-                this.isCustom = true;
-                this.zoneId = null;
-                if (this.$refs.zoneSelect) this.$refs.zoneSelect.value = CUSTOM_ID;
-
-                this.applyZoneSize();
-            },
-
-            clearCustom() {
-                this.customW = null;
-                this.customH = null;
-                this.isCustom = false;
-                if (this.zones[0]) {
-                    this.zoneId = this.zones[0].id;
-                    if (this.$refs.zoneSelect) this.$refs.zoneSelect.value = this.zoneId;
-                }
-                this.applyZoneSize();
-            },
-
             changeProduct(e) {
                 var id = Number(e.target.value);
                 var p = this.products.find(x => Number(x.id) === id);
                 if (!p) return;
-                this.product = p;
 
-                if (p.slug) {
-                    var url = new URL(window.location.href);
-                    url.pathname = '/design/' + p.slug;
-                    window.history.replaceState({}, '', url.toString());
-                }
+                window.location.href = '/design/' + p.slug;
             },
 
             onFiles(e) {
@@ -1154,7 +1038,7 @@
                 this.commit();
 
                 if (this.outCount > 0) {
-                    this.toast('Not everything fits — choose a larger sheet');
+                    this.toast('Not everything fits — choose a larger size');
                 }
             },
 
@@ -1199,8 +1083,8 @@
                 var cap = Math.sqrt(MAX_EXPORT_PIXELS / (cw * ch));
                 var mult = Math.max(1, Math.min(target, cap));
 
-                var z = this.currentZone;
-                var name = 'gang-sheet-' + (z ? (z.width_inch + 'x' + z.height_inch + 'in') : 'custom') + '.png';
+                var m = this.selectedMeasurement;
+                var name = 'gang-sheet-' + (m ? (m.width + 'x' + m.height + 'in') : 'sheet') + '.png';
                 var self = this;
 
                 try {
@@ -1217,12 +1101,12 @@
                         self.toast('Downloaded (' + Math.round(mult * DPI) + ' DPI)');
                     }, 'image/png');
                 } catch (e) {
-                    this.toast('Export failed — try a smaller sheet');
+                    this.toast('Export failed — try a smaller size');
                 }
             },
 
             async addToCart() {
-                if (this.itemCount === 0 || this.adding) return;
+                if (this.itemCount === 0 || this.adding || !this.selectedMeasurement) return;
 
                 if (this.outCount > 0 || this.lowDpiCount > 0) {
                     var msg = [];
@@ -1233,12 +1117,11 @@
 
                 this.adding = true;
 
-                var z = this.currentZone;
-                var widthIn = z ? Number(z.width_inch) : 0;
-                var heightIn = z ? Number(z.height_inch) : 0;
-                var sizeLabel = z ? (widthIn + ' × ' + heightIn + ' in') : 'Custom';
-                var sheetPrice = this.sheetPrice;
-                var productPrice = this.productPrice;
+                var m = this.selectedMeasurement;
+                var widthIn = Number(m.width);
+                var heightIn = Number(m.height);
+                var unitPrice = Number(m.price);
+                var sizeLabel = m.label;
                 var snapshot = null;
 
                 try {
@@ -1249,23 +1132,19 @@
                 }
 
                 var attributes = {
-                    'Sheet Size': sizeLabel,
+                    'Size': sizeLabel,
                     'Width (in)': widthIn,
                     'Height (in)': heightIn,
-                    'Sheet Price': '$' + sheetPrice.toFixed(2),
-                    'Product Price': '$' + productPrice.toFixed(2),
                     'Items': this.itemCount
                 };
-
-                if (this.isCustom) attributes['Custom'] = 'yes';
 
                 var payload = {
                     product_id: this.product ? this.product.id : null,
                     product_name: this.product ? this.product.name : null,
-                    name: this.product ? this.product.name : ('Custom Gang Sheet — ' + (z ? z.label : 'Custom')),
-                    unit_price: this.basePrice,
-                    product_price: productPrice,
-                    sheet_price: sheetPrice,
+                    name: this.product ? this.product.name : 'Custom Gang Sheet',
+                    unit_price: unitPrice,
+                    product_price: unitPrice,
+                    sheet_price: 0,
                     width_inch: widthIn,
                     height_inch: heightIn,
                     qty: this.qty,
