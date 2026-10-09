@@ -1,288 +1,226 @@
+@extends('theme.rjshop-theme.layouts.app')
+
+@section('meta_title', $model->meta_title ?: $model->name)
+@section('meta_description', $model->meta_description ?: $model->description)
+@section('meta_keywords', $model->meta_keywords)
+
+@section('content')
+
 @php
-    $eyebrow = $widget->getSetting('eyebrow', 'Large-Format Print');
-    $title = $widget->getSetting('title', "Custom Signs, Vinyl\n& Banners");
-    $subtitle = $widget->getSetting('subtitle', "Send the artwork. We print it.\nYou collect.");
+    $signHeroWidget = \App\Models\Widget::where('key', 'sign-hero')
+        ->where('is_active', 1)
+        ->first();
 
-    $imgUrl = function ($path) {
-        if (!$path) return null;
-        return str_starts_with($path, 'http') ? $path : asset('storage/' . $path);
-    };
-
-    $mainImageUrl = $imgUrl($widget->getSetting('main_image'));
-    $image2Url = $imgUrl($widget->getSetting('image_2'));
-    $image3Url = $imgUrl($widget->getSetting('image_3'));
-
-    $step1 = $widget->getSetting('step1_text', 'Send the file');
-    $step2 = $widget->getSetting('step2_text', 'We print it');
-    $step3 = $widget->getSetting('step3_text', 'You collect');
+    $products = $model->products()
+        ->where('status', 1)
+        ->with('images')
+        ->orderBy('sort_order')
+        ->get();
 @endphp
 
-<section class="q-widget rj-sh" id="rjHero">
-    <div class="q-widget-grid"></div>
-    <div class="q-widget-orb-a"></div>
-    <div class="q-widget-orb-b"></div>
+@if($signHeroWidget)
+    @include('theme.rjshop-theme.widgets.sign-hero', ['widget' => $signHeroWidget])
+@endif
 
-    <div class="q-widget-inner rj-sh-pad">
-
-        <div class="rj-sh-layout">
-
-            <div class="rj-sh-text">
-                @if($eyebrow)
-                    <div class="q-widget-eyebrow">
-                        <span class="q-widget-eyebrow-line"></span>
-                        <span class="q-widget-eyebrow-text">{{ $eyebrow }}</span>
-                    </div>
-                @endif
-
-                @if($title)
-                    <h1 class="rj-sh-title">{!! nl2br(e($title)) !!}</h1>
-                @endif
-
-                @if($subtitle)
-                    <p class="rj-sh-subtitle">{!! nl2br(e($subtitle)) !!}</p>
-                @endif
-            </div>
-
-            <div class="rj-sh-gallery">
-                <div class="rj-sh-gallery-main">
-                    @if($mainImageUrl)
-                        <img src="{{ $mainImageUrl }}" alt="{{ $eyebrow }}">
-                    @else
-                        <div class="rj-sh-placeholder">
-                            <i class="fa-regular fa-image"></i>
-                            <span>Main Image</span>
-                        </div>
-                    @endif
-                </div>
-
-                <div class="rj-sh-gallery-side">
-                    <div class="rj-sh-gallery-small">
-                        @if($image2Url)
-                            <img src="{{ $image2Url }}" alt="">
-                        @else
-                            <div class="rj-sh-placeholder">
-                                <i class="fa-regular fa-image"></i>
-                            </div>
-                        @endif
-                    </div>
-
-                    <div class="rj-sh-gallery-small">
-                        @if($image3Url)
-                            <img src="{{ $image3Url }}" alt="">
-                        @else
-                            <div class="rj-sh-placeholder">
-                                <i class="fa-regular fa-image"></i>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
+@if($products->count())
+<section class="rj-sgn-products">
+    <div class="rj-sgn-inner">
+        <div class="rj-sgn-head">
+            <p class="rj-sgn-head-eyebrow">THE THREE WE PRINT</p>
+            <h2 class="rj-sgn-head-title">What each one is for.</h2>
         </div>
 
-        @if($step1 || $step2 || $step3)
-            <div class="rj-sh-steps">
-                @if($step1)
-                    <div class="rj-sh-step">
-                        <span class="rj-sh-step-num">1</span>
-                        <span class="rj-sh-step-text">{{ $step1 }}</span>
+        <div class="rj-sgn-grid">
+            @foreach($products as $product)
+                @php
+                    $img = $product->images->first();
+                    $imgSrc = $img ? $img->url : null;
+                    $short = $product->short_description;
+                    $full = $product->description;
+                @endphp
+                <div class="rj-sgn-card">
+                    <div class="rj-sgn-card-img">
+                        @if($imgSrc)
+                            <img src="{{ $imgSrc }}" alt="{{ $product->name }}">
+                        @else
+                            <div class="rj-sgn-card-img-empty">
+                                <i class="fa-regular fa-image"></i>
+                            </div>
+                        @endif
                     </div>
-                @endif
-                @if($step2)
-                    <div class="rj-sh-step">
-                        <span class="rj-sh-step-num">2</span>
-                        <span class="rj-sh-step-text">{{ $step2 }}</span>
-                    </div>
-                @endif
-                @if($step3)
-                    <div class="rj-sh-step">
-                        <span class="rj-sh-step-num">3</span>
-                        <span class="rj-sh-step-text">{{ $step3 }}</span>
-                    </div>
-                @endif
-            </div>
-        @endif
 
+                    <div class="rj-sgn-card-body">
+                        <h3 class="rj-sgn-card-title">{{ $product->name }}</h3>
+
+                        @if($short)
+                            <p class="rj-sgn-card-lead">{{ $short }}</p>
+                        @endif
+
+                        @if($full)
+                            <p class="rj-sgn-card-desc">{{ strip_tags($full) }}</p>
+                        @endif
+
+                        <a href="{{ url('product/' . $product->slug) }}" class="rj-sgn-card-btn">
+                            <span>Order {{ \Illuminate\Support\Str::lower($product->name) }}</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            @endforeach
+        </div>
     </div>
 </section>
+@endif
+
+@if($model->description)
+<section class="rj-sgn-about">
+    <div class="rj-sgn-inner">
+        <div class="rj-sgn-about-content">
+            {!! $model->description !!}
+        </div>
+    </div>
+</section>
+@endif
 
 <style>
-    .rj-sh-pad {
-        padding-top: 2.5rem;
-        padding-bottom: 3rem;
+    .rj-sgn-products,
+    .rj-sgn-about {
+        position: relative;
+        background: #05030f;
+        color: #fff;
+        overflow: hidden;
     }
-    @media (min-width: 768px) {
-        .rj-sh-pad { padding-top: 4rem; padding-bottom: 4.5rem; }
+    .rj-sgn-products { padding: 3rem 0 5rem; }
+    .rj-sgn-about { padding: 3rem 0 5rem; }
+
+    .rj-sgn-inner {
+        position: relative; max-width: 80rem; margin: 0 auto; padding: 0 1.5rem;
+    }
+    @media (min-width: 1024px) { .rj-sgn-inner { padding: 0 3rem; } }
+
+    .rj-sgn-head {
+        margin-bottom: 2.5rem;
+        max-width: 48rem;
+    }
+    .rj-sgn-head-eyebrow {
+        font-family: ui-monospace, monospace;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.25em;
+        color: #f97316;
+        margin: 0 0 0.75rem;
+        font-weight: 700;
+    }
+    .rj-sgn-head-title {
+        font-size: clamp(1.75rem, 3vw, 2.5rem);
+        font-weight: 900;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        color: #fff;
+        margin: 0;
     }
 
-    .rj-sh-layout {
+    .rj-sgn-grid {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 2.5rem;
-        align-items: center;
-        margin-bottom: 3rem;
+        gap: 1.5rem;
     }
-    @media (min-width: 900px) {
-        .rj-sh-layout {
-            grid-template-columns: 1fr 1.35fr;
-            gap: 3.5rem;
-            margin-bottom: 4rem;
-        }
-    }
+    @media (min-width: 700px) { .rj-sgn-grid { grid-template-columns: repeat(3, 1fr); } }
 
-    .rj-sh-title {
-        font-size: clamp(2.25rem, 5vw, 4rem);
-        font-weight: 900;
-        line-height: 1.02;
-        letter-spacing: -0.035em;
-        color: var(--q-text);
-        margin: 0 0 1.5rem;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-
-    .rj-sh-subtitle {
-        font-size: clamp(1rem, 1.4vw, 1.125rem);
-        color: var(--q-text-dim);
-        line-height: 1.6;
-        margin: 0;
-        max-width: 26rem;
-        font-weight: 300;
-    }
-
-    /* ---------- Gallery: 4:3 images ---------- */
-    .rj-sh-gallery {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 0.75rem;
-    }
-    @media (min-width: 768px) {
-        .rj-sh-gallery { gap: 0.875rem; }
-    }
-
-    .rj-sh-gallery-main {
-        aspect-ratio: 4 / 3;
-        border-radius: 14px;
-        overflow: hidden;
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid var(--q-border);
-        position: relative;
-        transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .rj-sh-gallery-main:hover {
-        border-color: var(--q-border-accent);
-        box-shadow: 0 20px 48px -16px rgba(var(--q-accent-1-rgb), 0.35);
-    }
-
-    .rj-sh-gallery-side {
-        display: grid;
-        grid-template-rows: 1fr 1fr;
-        gap: 0.75rem;
-    }
-    @media (min-width: 768px) {
-        .rj-sh-gallery-side { gap: 0.875rem; }
-    }
-
-    .rj-sh-gallery-small {
-        aspect-ratio: 4 / 3;
-        border-radius: 14px;
-        overflow: hidden;
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid var(--q-border);
-        position: relative;
-        transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .rj-sh-gallery-small:hover {
-        border-color: var(--q-border-accent);
-        box-shadow: 0 20px 48px -16px rgba(var(--q-accent-1-rgb), 0.35);
-    }
-
-    .rj-sh-gallery img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-        transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .rj-sh-gallery-main:hover img,
-    .rj-sh-gallery-small:hover img {
-        transform: scale(1.05);
-    }
-
-    .rj-sh-placeholder {
-        width: 100%;
-        height: 100%;
+    .rj-sgn-card {
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        color: var(--q-text-dark);
-        font-size: 1.5rem;
-        background:
-            linear-gradient(135deg, rgba(var(--q-accent-1-rgb), 0.06), rgba(var(--q-accent-3-rgb), 0.04));
+        background: rgba(255, 255, 255, 0.015);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .rj-sh-placeholder span {
-        font-size: 10px;
-        font-family: ui-monospace, SFMono-Regular, monospace;
-        text-transform: uppercase;
-        letter-spacing: 0.2em;
-        color: var(--q-text-dim);
+    .rj-sgn-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(249, 115, 22, 0.4);
+        box-shadow: 0 20px 40px -20px rgba(249, 115, 22, 0.35);
     }
 
-    /* ---------- Steps ---------- */
-    .rj-sh-steps {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 1rem;
-        padding-top: 2rem;
-        border-top: 1px solid var(--q-border);
+    .rj-sgn-card-img {
+        aspect-ratio: 4 / 3;
+        overflow: hidden;
+        background: #0a0715;
+        position: relative;
     }
-    @media (min-width: 768px) {
-        .rj-sh-steps {
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
-            padding-top: 2.5rem;
-        }
+    .rj-sgn-card-img img {
+        width: 100%; height: 100%; object-fit: cover;
+        transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .rj-sgn-card:hover .rj-sgn-card-img img { transform: scale(1.05); }
+    .rj-sgn-card-img-empty {
+        width: 100%; height: 100%;
+        display: flex; align-items: center; justify-content: center;
+        color: rgba(255, 255, 255, 0.06);
+        font-size: 2.5rem;
     }
 
-    .rj-sh-step {
+    .rj-sgn-card-body {
+        padding: 1.5rem 1.5rem 1.5rem;
         display: flex;
-        align-items: center;
-        gap: 0.875rem;
+        flex-direction: column;
+        gap: 0.75rem;
+        flex: 1;
     }
-
-    .rj-sh-step-num {
-        width: 38px;
-        height: 38px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, var(--q-accent-1), var(--q-accent-2));
+    .rj-sgn-card-title {
+        font-size: 1.375rem;
+        font-weight: 800;
         color: #fff;
-        font-weight: 900;
-        font-size: 15px;
-        display: flex;
+        letter-spacing: -0.02em;
+        margin: 0;
+        line-height: 1.2;
+    }
+    .rj-sgn-card-lead {
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: #e5e7eb;
+        line-height: 1.45;
+        margin: 0;
+    }
+    .rj-sgn-card-desc {
+        font-size: 0.8125rem;
+        color: #6b7280;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .rj-sgn-card-btn {
+        display: inline-flex;
         align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-        box-shadow:
-            0 8px 24px -8px rgba(var(--q-accent-1-rgb), 0.7),
-            0 0 0 1px rgba(var(--q-accent-1-rgb), 0.2);
-    }
-
-    .rj-sh-step-text {
-        font-size: 1.0625rem;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0.875rem 1.25rem;
+        background: #f97316;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 10px;
+        font-size: 14px;
         font-weight: 700;
-        color: var(--q-text);
-        letter-spacing: -0.01em;
-        line-height: 1.3;
+        transition: all 0.3s;
+        margin-top: 1rem;
     }
+    .rj-sgn-card-btn:hover {
+        background: #ea580c;
+        box-shadow: 0 0 30px -8px rgba(249, 115, 22, 0.6);
+        transform: translateY(-1px);
+    }
+    .rj-sgn-card-btn i { font-size: 11px; }
 
-    @media (max-width: 640px) {
-        .rj-sh-gallery {
-            grid-template-columns: 1fr 1fr;
-        }
-        .rj-sh-gallery-side {
-            grid-template-rows: auto auto;
-        }
+    .rj-sgn-about-content {
+        color: #d1d5db;
+        font-size: 1rem;
+        line-height: 1.85;
+        max-width: 48rem;
     }
+    .rj-sgn-about-content h1,
+    .rj-sgn-about-content h2,
+    .rj-sgn-about-content h3 { color: #fff; font-weight: 800; letter-spacing: -0.02em; margin: 2rem 0 1rem; }
+    .rj-sgn-about-content p { margin-bottom: 1rem; color: #9ca3af; }
 </style>
+
+@endsection
