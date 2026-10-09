@@ -7,7 +7,7 @@
 @section('content')
 
 @php
-    $signHeroWidget = \App\Models\Widget::where('key', 'sign-hero')
+    $signHeroWidget = \App\Models\Widget::where('key', 'sign_hero')
         ->where('is_active', 1)
         ->first();
 
