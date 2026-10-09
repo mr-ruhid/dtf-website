@@ -251,8 +251,7 @@ class WidgetSeeder extends Seeder
                             'description' => 'Upload your art on the Glitter DTF Gang Sheet and we print it the same day. Glitter DTF is the only specialty film we sell right now. No minimums.',
                         ],
                     ],
-                    'cta_text' => 'Upload your Glitter DTF design',
-                    'cta_url' => '/design/glitter-dtf-transfers',
+
                 ],
             ],
         ];
