@@ -7,13 +7,9 @@
 @section('content')
 
 @php
-    $hero = \App\Models\Widget::where('key', 'sign-hero')->where('is_active', 1)->first();
-    $heroSettings = $hero ? ($hero->settings ?? []) : [];
-
-    $imgUrl = function ($path) {
-        if (!$path) return null;
-        return str_starts_with($path, 'http') ? $path : asset('storage/' . $path);
-    };
+    $signHeroWidget = \App\Models\Widget::where('key', 'sign_hero')
+        ->where('is_active', 1)
+        ->first();
 
     $products = $model->products()
         ->where('status', 1)
@@ -22,63 +18,8 @@
         ->get();
 @endphp
 
-@if(!empty($heroSettings))
-<section class="rj-sgn-hero">
-    <div class="rj-sgn-bg"></div>
-    <div class="rj-sgn-inner">
-        <div class="rj-sgn-hero-grid">
-
-            <div class="rj-sgn-hero-text">
-                @if(!empty($heroSettings['eyebrow']))
-                    <p class="rj-sgn-eyebrow">{{ $heroSettings['eyebrow'] }}</p>
-                @endif
-
-                @if(!empty($heroSettings['title']))
-                    <h1 class="rj-sgn-title">{!! nl2br(e($heroSettings['title'])) !!}</h1>
-                @endif
-
-                @if(!empty($heroSettings['subtitle']))
-                    <p class="rj-sgn-sub">{!! nl2br(e($heroSettings['subtitle'])) !!}</p>
-                @endif
-
-                @if(!empty($heroSettings['step1_text']) || !empty($heroSettings['step2_text']) || !empty($heroSettings['step3_text']))
-                    <div class="rj-sgn-steps">
-                        @foreach(['step1_text', 'step2_text', 'step3_text'] as $i => $key)
-                            @if(!empty($heroSettings[$key]))
-                                <div class="rj-sgn-step">
-                                    <span class="rj-sgn-step-num">{{ $i + 1 }}</span>
-                                    <span>{{ $heroSettings[$key] }}</span>
-                                </div>
-                            @endif
-                        @endforeach
-                    </div>
-                @endif
-            </div>
-
-            <div class="rj-sgn-hero-images">
-                @if(!empty($heroSettings['main_image']))
-                    <div class="rj-sgn-img-main">
-                        <img src="{{ $imgUrl($heroSettings['main_image']) }}" alt="">
-                    </div>
-                @endif
-
-                <div class="rj-sgn-img-sm-col">
-                    @if(!empty($heroSettings['image_2']))
-                        <div class="rj-sgn-img-sm">
-                            <img src="{{ $imgUrl($heroSettings['image_2']) }}" alt="">
-                        </div>
-                    @endif
-                    @if(!empty($heroSettings['image_3']))
-                        <div class="rj-sgn-img-sm">
-                            <img src="{{ $imgUrl($heroSettings['image_3']) }}" alt="">
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-        </div>
-    </div>
-</section>
+@if($signHeroWidget)
+    @include('theme.rjshop-theme.widgets.sign-hero', ['widget' => $signHeroWidget])
 @endif
 
 @if($products->count())
@@ -94,7 +35,6 @@
                 @php
                     $img = $product->images->first();
                     $imgSrc = $img ? $img->url : null;
-                    $buttonLabel = $product->name;
                     $short = $product->short_description;
                     $full = $product->description;
                 @endphp
@@ -143,7 +83,6 @@
 @endif
 
 <style>
-    .rj-sgn-hero,
     .rj-sgn-products,
     .rj-sgn-about {
         position: relative;
@@ -151,116 +90,13 @@
         color: #fff;
         overflow: hidden;
     }
-    .rj-sgn-hero { padding: 3rem 0 4rem; }
     .rj-sgn-products { padding: 3rem 0 5rem; }
     .rj-sgn-about { padding: 3rem 0 5rem; }
 
-    .rj-sgn-bg {
-        position: absolute; inset: 0; opacity: 0.03; pointer-events: none;
-        background-image:
-            linear-gradient(rgba(99, 102, 241, 0.5) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(99, 102, 241, 0.5) 1px, transparent 1px);
-        background-size: 40px 40px;
-    }
     .rj-sgn-inner {
         position: relative; max-width: 80rem; margin: 0 auto; padding: 0 1.5rem;
     }
     @media (min-width: 1024px) { .rj-sgn-inner { padding: 0 3rem; } }
-
-    .rj-sgn-hero-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 3rem;
-        align-items: center;
-    }
-    @media (min-width: 900px) {
-        .rj-sgn-hero-grid { grid-template-columns: 1fr 1.1fr; gap: 4rem; }
-    }
-
-    .rj-sgn-eyebrow {
-        font-family: ui-monospace, monospace;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.25em;
-        color: #f97316;
-        margin: 0 0 1rem;
-        font-weight: 700;
-    }
-    .rj-sgn-title {
-        font-size: clamp(2rem, 4.5vw, 3.5rem);
-        font-weight: 900;
-        line-height: 1.05;
-        letter-spacing: -0.03em;
-        color: #fff;
-        margin: 0 0 1.25rem;
-    }
-    .rj-sgn-sub {
-        font-size: 1.0625rem;
-        color: #d1d5db;
-        line-height: 1.6;
-        margin: 0 0 2rem;
-        max-width: 32rem;
-    }
-
-    .rj-sgn-steps {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem 1.5rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .rj-sgn-step {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.625rem;
-        font-size: 13px;
-        color: #9ca3af;
-    }
-    .rj-sgn-step-num {
-        width: 22px; height: 22px;
-        border-radius: 50%;
-        background: #f97316;
-        color: #fff;
-        font-size: 11px;
-        font-weight: 700;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-family: ui-monospace, monospace;
-    }
-
-    .rj-sgn-hero-images {
-        display: grid;
-        grid-template-columns: 1.6fr 1fr;
-        grid-template-rows: 1fr;
-        gap: 0.75rem;
-        aspect-ratio: 4 / 3;
-    }
-    .rj-sgn-img-main {
-        border-radius: 16px;
-        overflow: hidden;
-        background: #0a0715;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .rj-sgn-img-main img {
-        width: 100%; height: 100%; object-fit: cover; display: block;
-    }
-    .rj-sgn-img-sm-col {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-    .rj-sgn-img-sm {
-        flex: 1;
-        border-radius: 16px;
-        overflow: hidden;
-        background: #0a0715;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        min-height: 0;
-    }
-    .rj-sgn-img-sm img {
-        width: 100%; height: 100%; object-fit: cover; display: block;
-    }
 
     .rj-sgn-head {
         margin-bottom: 2.5rem;
@@ -354,8 +190,6 @@
     }
 
     .rj-sgn-card-btn {
-        margin-top: auto;
-        padding-top: 1rem;
         display: inline-flex;
         align-items: center;
         justify-content: space-between;
