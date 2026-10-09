@@ -106,6 +106,28 @@ class CartService
             $baseUnitPrice = (float) ($product->sale_price ?: $product->base_price);
         }
 
+        $printType = $data['print_type'] ?? 'none';
+
+        $widthInch = isset($data['width_inch']) && $data['width_inch'] !== null && $data['width_inch'] !== ''
+            ? round((float) $data['width_inch'], 2)
+            : null;
+
+        $heightInch = isset($data['height_inch']) && $data['height_inch'] !== null && $data['height_inch'] !== ''
+            ? round((float) $data['height_inch'], 2)
+            : null;
+
+        $sheetPrice = isset($data['sheet_price']) && $data['sheet_price'] !== null && $data['sheet_price'] !== ''
+            ? round((float) $data['sheet_price'], 2)
+            : null;
+
+        $productPrice = isset($data['product_price']) && $data['product_price'] !== null && $data['product_price'] !== ''
+            ? round((float) $data['product_price'], 2)
+            : null;
+
+        if ($productPrice === null && $product) {
+            $productPrice = round((float) ($product->sale_price ?: $product->base_price), 2);
+        }
+
         return [
             'key' => $key,
             'product_id' => $data['product_id'] ?? null,
@@ -118,9 +140,13 @@ class CartService
             'total' => 0,
             'attributes' => $data['attributes'] ?? [],
             'options' => $data['options'] ?? [],
-            'print_type' => $data['print_type'] ?? 'none',
+            'print_type' => $printType,
             'note' => $data['note'] ?? null,
             'tier_label' => null,
+            'width_inch' => $widthInch,
+            'height_inch' => $heightInch,
+            'sheet_price' => $sheetPrice,
+            'product_price' => $productPrice,
         ];
     }
 
@@ -132,6 +158,15 @@ class CartService
 
         if ($unitPrice <= 0) {
             $unitPrice = $baseUnitPrice;
+        }
+
+        $printType = $item['print_type'] ?? 'none';
+
+        if ($printType === 'custom_size') {
+            $item['unit_price'] = round($unitPrice, 2);
+            $item['total'] = round($item['unit_price'] * $qty, 2);
+            $item['tier_label'] = null;
+            return;
         }
 
         $tier = $this->resolveTier($item['product_id'] ?? null, $qty);
@@ -196,6 +231,8 @@ class CartService
         $payload = [
             'product_id' => $data['product_id'] ?? 0,
             'name' => $data['name'] ?? null,
+            'width_inch' => $data['width_inch'] ?? null,
+            'height_inch' => $data['height_inch'] ?? null,
             'attributes' => $data['attributes'] ?? [],
             'options' => $data['options'] ?? [],
         ];
