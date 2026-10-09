@@ -18,7 +18,7 @@ class ModelController extends Controller
         }
 
         if ($model->isCustom && $model->custom_view) {
-            $view = 'theme.rjshop-theme.models.' . $model->custom_view;
+            $view = 'theme.rjshop-theme.rjshop.model.' . $model->custom_view;
 
             if (view()->exists($view)) {
                 return view($view, compact('model'));
@@ -34,6 +34,7 @@ class ModelController extends Controller
             'images',
             'prices',
             'options.values',
+            'options.measurements',
             'attributeValues.attribute',
             'attributeValues.attributeValue',
             'printZones',
@@ -59,7 +60,7 @@ class ModelController extends Controller
             ->limit(6)
             ->get();
 
-        return view('theme.rjshop-theme.models.single', compact('model', 'product', 'relatedProducts', 'faqs'));
+        return view('theme.rjshop-theme.rjshop.model.single', compact('model', 'product', 'relatedProducts', 'faqs'));
     }
 
     protected function showGrid(ProductModel $model)
