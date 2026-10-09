@@ -102,6 +102,7 @@ class ProductController extends Controller
             'options.values',
             'options.measurements',
             'variants',
+            'model',
         ]);
 
         $models = ProductModel::orderBy('name')->get();
@@ -125,6 +126,7 @@ class ProductController extends Controller
 
         try {
             $product->update($data);
+            $product->load('model');
 
             $this->saveImages($product, $request);
             $this->savePrices($product, $request);
@@ -146,6 +148,8 @@ class ProductController extends Controller
         DB::beginTransaction();
 
         try {
+            $product->load(['prices', 'attributeValues', 'options.values', 'options.measurements', 'printZones']);
+
             $newProduct = $product->replicate();
             $newProduct->name = $product->name . ' (Copy)';
             $newProduct->slug = null;
@@ -306,6 +310,8 @@ class ProductController extends Controller
             return;
         }
 
+        $isDiscount = $product->pricing_type === 'discount';
+
         $product->prices()->delete();
 
         foreach ($tiers as $tier) {
@@ -313,10 +319,16 @@ class ProductController extends Controller
                 continue;
             }
 
+            $price = (float) $tier['price'];
+
+            if ($isDiscount) {
+                $price = max(0, min(100, $price));
+            }
+
             $product->prices()->create([
                 'min_qty' => (int) $tier['min_qty'],
                 'max_qty' => !empty($tier['max_qty']) ? (int) $tier['max_qty'] : null,
-                'price' => (float) $tier['price'],
+                'price' => $price,
             ]);
         }
     }
@@ -529,6 +541,18 @@ class ProductController extends Controller
     {
         if ($option->type !== 'measurement') {
             $option->measurements()->delete();
+            return;
+        }
+
+        $hasValidIncoming = false;
+        foreach ($measurements as $r) {
+            if (!empty($r['width_value']) && !empty($r['height_value'])) {
+                $hasValidIncoming = true;
+                break;
+            }
+        }
+
+        if (!$hasValidIncoming && $option->measurements()->exists()) {
             return;
         }
 
