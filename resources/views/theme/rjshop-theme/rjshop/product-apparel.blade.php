@@ -10,6 +10,9 @@
     $images = $product->images;
     $firstImage = $images->first();
     $basePrice = $product->sale_price ?: $product->base_price;
+    $prices = $product->prices;
+    $pricingType = $product->pricing_type;
+    $isDiscount = $pricingType === 'discount';
 
     $imgUrl = function ($path) {
         if (!$path) return null;
@@ -61,12 +64,20 @@
     }
 
     $defaultImageUrl = $firstImage ? $firstImage->url : '';
+
+    $volumeTiers = $prices->map(fn($p) => [
+        'min_qty' => (int) $p->min_qty,
+        'max_qty' => $p->max_qty !== null ? (int) $p->max_qty : null,
+        'value' => (float) $p->price,
+    ])->values();
 @endphp
 
 <section class="rj-ap-hero"
          x-data="apparelProduct({
             productId: {{ $product->id }},
             basePrice: {{ (float) $basePrice }},
+            pricingType: '{{ $pricingType }}',
+            volumeTiers: {{ \Illuminate\Support\Js::from($volumeTiers) }},
             defaultImage: '{{ $defaultImageUrl }}',
             colors: {{ \Illuminate\Support\Js::from($colors) }},
             sizes: {{ \Illuminate\Support\Js::from($sizes) }}
@@ -158,6 +169,62 @@
                         <span>Free shipping $99+</span>
                     </span>
                 </div>
+
+                @if($prices->count())
+                    <div class="rj-ap-volume" x-data="{ expanded: false }">
+                        <button type="button" @click="expanded = !expanded" class="rj-ap-volume-head">
+                            <div class="rj-ap-volume-head-left">
+                                <i class="fa-solid" :class="expanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                <span>Volume Pricing</span>
+                                <span class="rj-ap-volume-mode">{{ $isDiscount ? 'Discount' : 'Fixed' }}</span>
+                            </div>
+                            <span class="rj-ap-volume-toggle" x-text="expanded ? 'Hide' : 'View all tiers'"></span>
+                        </button>
+
+                        <div class="rj-ap-volume-chips">
+                            @foreach($prices->take(3) as $tier)
+                                <span class="rj-ap-volume-chip">
+                                    <strong>{{ $tier->min_qty }}@if($tier->max_qty)–{{ $tier->max_qty }}@else+@endif</strong>
+                                    @if($isDiscount)
+                                        <span class="rj-ap-volume-discount">{{ rtrim(rtrim(number_format((float) $tier->price, 2, '.', ''), '0'), '.') }}% off</span>
+                                    @else
+                                        <span class="rj-ap-volume-price">${{ number_format($tier->price, 2) }}</span>
+                                    @endif
+                                </span>
+                            @endforeach
+                            @if($prices->count() > 3)
+                                <span class="rj-ap-volume-more">+{{ $prices->count() - 3 }} more</span>
+                            @endif
+                        </div>
+
+                        <div x-show="expanded" x-collapse x-cloak class="rj-ap-volume-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Quantity</th>
+                                        <th>{{ $isDiscount ? 'Discount' : 'Unit Price' }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($prices as $tier)
+                                        <tr>
+                                            <td class="rj-ap-mono">
+                                                {{ $tier->min_qty }}@if($tier->max_qty)–{{ $tier->max_qty }}@else+@endif pcs
+                                            </td>
+                                            <td class="rj-ap-mono">
+                                                @if($isDiscount)
+                                                    {{ rtrim(rtrim(number_format((float) $tier->price, 2, '.', ''), '0'), '.') }}%
+                                                @else
+                                                    ${{ number_format($tier->price, 2) }}
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endif
 
                 @if($colors->count())
                     <div class="rj-ap-block">
@@ -416,6 +483,95 @@
         display: flex; align-items: center; justify-content: center;
     }
 
+    .rj-ap-volume {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.015);
+        overflow: hidden;
+    }
+    .rj-ap-volume-head {
+        width: 100%;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0.875rem 1rem;
+        background: transparent; border: none; cursor: pointer;
+        color: #fff; font-family: inherit; font-size: 13px;
+        text-align: left;
+        transition: background 0.2s;
+    }
+    .rj-ap-volume-head:hover { background: rgba(99, 102, 241, 0.06); }
+    .rj-ap-volume-head-left {
+        display: inline-flex; align-items: center; gap: 0.625rem;
+        font-weight: 600;
+    }
+    .rj-ap-volume-head-left i {
+        font-size: 10px; color: #818cf8;
+    }
+    .rj-ap-volume-mode {
+        font-family: ui-monospace, monospace;
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        padding: 2px 8px;
+        background: rgba(99, 102, 241, 0.15);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 9999px;
+        color: #a5b4fc;
+        font-weight: 600;
+    }
+    .rj-ap-volume-toggle {
+        font-family: ui-monospace, monospace;
+        font-size: 10px;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+    }
+    .rj-ap-volume-chips {
+        display: flex; flex-wrap: wrap; gap: 0.5rem;
+        padding: 0 1rem 0.875rem;
+    }
+    .rj-ap-volume-chip {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        padding: 5px 10px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        font-family: ui-monospace, monospace;
+        font-size: 10px;
+    }
+    .rj-ap-volume-chip strong {
+        color: #fff;
+        font-weight: 700;
+    }
+    .rj-ap-volume-discount { color: #34d399; font-weight: 600; }
+    .rj-ap-volume-price { color: #a5b4fc; font-weight: 600; }
+    .rj-ap-volume-more {
+        display: inline-flex; align-items: center;
+        padding: 5px 10px;
+        font-family: ui-monospace, monospace;
+        font-size: 10px; color: #6b7280;
+    }
+    .rj-ap-volume-table {
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 0.5rem 0;
+    }
+    .rj-ap-volume-table table {
+        width: 100%; border-collapse: collapse;
+    }
+    .rj-ap-volume-table th {
+        font-family: ui-monospace, monospace;
+        font-size: 9px; color: #6b7280;
+        text-transform: uppercase; letter-spacing: 0.15em;
+        padding: 6px 1rem; text-align: left;
+        font-weight: 600;
+    }
+    .rj-ap-volume-table td {
+        padding: 6px 1rem;
+        color: #d1d5db;
+        font-size: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .rj-ap-mono { font-family: ui-monospace, monospace; }
+
     .rj-ap-block { display: flex; flex-direction: column; gap: 0.625rem; }
     .rj-ap-block-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
     .rj-ap-block-label {
@@ -592,6 +748,8 @@ function apparelProduct(config) {
     return {
         productId: config.productId,
         basePrice: config.basePrice,
+        pricingType: config.pricingType || 'fixed',
+        volumeTiers: config.volumeTiers || [],
         defaultImage: config.defaultImage || '',
         colors: config.colors || [],
         sizes: config.sizes || [],
@@ -610,7 +768,7 @@ function apparelProduct(config) {
             return this.thumbImage || this.defaultImage || '';
         },
 
-        get finalPrice() {
+        get rawPrice() {
             let price = this.basePrice;
             if (this.selectedColor && this.selectedColor.price_override !== null && this.selectedColor.price_override !== undefined) {
                 price = parseFloat(this.selectedColor.price_override);
@@ -618,6 +776,28 @@ function apparelProduct(config) {
                 price = parseFloat(this.selectedSize.price_override);
             }
             return price;
+        },
+
+        get matchedTier() {
+            if (!this.volumeTiers.length) return null;
+            const q = this.qty || 1;
+            return this.volumeTiers.find(t => {
+                const min = Number(t.min_qty) || 0;
+                const max = (t.max_qty !== null && t.max_qty !== undefined) ? Number(t.max_qty) : null;
+                return q >= min && (max === null || q <= max);
+            }) || null;
+        },
+
+        get finalPrice() {
+            const base = this.rawPrice;
+            const tier = this.matchedTier;
+            if (!tier) return base;
+
+            if (this.pricingType === 'discount') {
+                const pct = parseFloat(tier.value) || 0;
+                return Math.round(base * (1 - pct / 100) * 100) / 100;
+            }
+            return Math.round(parseFloat(tier.value) * 100) / 100;
         },
 
         get totalPrice() {
