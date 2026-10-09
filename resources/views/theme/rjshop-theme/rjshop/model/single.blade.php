@@ -43,9 +43,8 @@
                         'width' => (float) $m->width_value,
                         'height' => (float) $m->height_value,
                         'price' => (float) $m->price,
-                        'label' => rtrim(rtrim(number_format((float) $m->width_value, 2, '.', ''), '0'), '.')
-                            . ' × '
-                            . rtrim(rtrim(number_format((float) $m->height_value, 2, '.', ''), '0'), '.'),
+                        'width_label' => rtrim(rtrim(number_format((float) $m->width_value, 2, '.', ''), '0'), '.'),
+                        'height_label' => rtrim(rtrim(number_format((float) $m->height_value, 2, '.', ''), '0'), '.'),
                         'is_default' => (bool) $m->is_default,
                     ])->values()
                     : collect();
@@ -169,7 +168,7 @@
                             <div class="rj-sp-volume-head-left">
                                 <i class="fa-solid" :class="expanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                                 <span>// Volume Pricing</span>
-                                <span class="rj-sp-volume-mode" x-text="'{{ $isDiscount ? 'Discount' : 'Fixed' }}'"></span>
+                                <span class="rj-sp-volume-mode">{{ $isDiscount ? 'Discount' : 'Fixed' }}</span>
                             </div>
                             <span class="rj-sp-volume-toggle" x-text="expanded ? 'Hide' : 'View all tiers'"></span>
                         </button>
@@ -231,74 +230,111 @@
                     <div class="rj-sp-options">
                         @foreach($options as $option)
                             <div class="rj-sp-option">
-                                <label class="rj-sp-option-label">
-                                    {{ $option->name }}
-                                    @if($option->is_required)
-                                        <span class="rj-sp-req">*</span>
-                                    @endif
-                                    @if($option->type === 'measurement')
-                                        <span class="rj-sp-option-unit">({{ $unitLabels[$option->measurement_unit] ?? 'in' }})</span>
-                                    @endif
-                                </label>
 
-                                @if($option->type === 'select')
-                                    <div class="rj-sp-select-wrap">
-                                        <select class="rj-sp-select"
-                                                @change="pickOption({{ $option->id }}, $event.target.value)">
-                                            <option value="">— Select {{ $option->name }} —</option>
-                                            @foreach($option->values->where('status', 1) as $value)
-                                                <option value="{{ $value->id }}">
-                                                    {{ $value->value }}
-                                                    @if($value->price_addon > 0)
-                                                        (+${{ number_format($value->price_addon, 2) }})
-                                                    @endif
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        <i class="fa-solid fa-chevron-down rj-sp-select-icon"></i>
-                                    </div>
-                                @elseif($option->type === 'text')
-                                    <input type="text" class="rj-sp-input"
-                                           placeholder="Enter {{ $option->name }}"
-                                           @input="pickOptionText({{ $option->id }}, $event.target.value)">
-                                @elseif($option->type === 'number')
-                                    <input type="number" class="rj-sp-input"
-                                           placeholder="0"
-                                           @input="pickOptionText({{ $option->id }}, $event.target.value)">
-                                @elseif($option->type === 'measurement')
+                                @if($option->type === 'measurement')
                                     @php $hasMeasurements = $option->activeMeasurements->count() > 0; @endphp
 
-                                    @if($hasMeasurements)
+                                    <div class="rj-sp-measure-block">
+                                        <div class="rj-sp-measure-head">
+                                            <label class="rj-sp-option-label">
+                                                {{ $option->name }}
+                                                @if($option->is_required)
+                                                    <span class="rj-sp-req">*</span>
+                                                @endif
+                                                <span class="rj-sp-option-unit">({{ $unitLabels[$option->measurement_unit] ?? 'in' }})</span>
+                                            </label>
+
+                                            <template x-if="getMeasurementSelection({{ $option->id }})">
+                                                <span class="rj-sp-measure-selected" x-text="getMeasurementSelection({{ $option->id }})"></span>
+                                            </template>
+                                        </div>
+
+                                        @if($hasMeasurements)
+                                            <div class="rj-sp-measure-picker">
+                                                <div class="rj-sp-measure-col">
+                                                    <div class="rj-sp-measure-col-head">
+                                                        <span class="rj-sp-measure-col-label">Width</span>
+                                                        <span class="rj-sp-measure-col-unit">{{ $unitLabels[$option->measurement_unit] ?? 'in' }}</span>
+                                                    </div>
+                                                    <div class="rj-sp-measure-btns">
+                                                        <template x-for="w in getAvailableWidths({{ $option->id }})" :key="w">
+                                                            <button type="button"
+                                                                    @click="pickWidth({{ $option->id }}, w)"
+                                                                    :class="selectedWidths[{{ $option->id }}] === w ? 'rj-sp-measure-btn-active' : ''"
+                                                                    class="rj-sp-measure-btn">
+                                                                <span x-text="w"></span>
+                                                            </button>
+                                                        </template>
+                                                    </div>
+                                                </div>
+
+                                                <div class="rj-sp-measure-col" :class="!selectedWidths[{{ $option->id }}] ? 'rj-sp-measure-col-disabled' : ''">
+                                                    <div class="rj-sp-measure-col-head">
+                                                        <span class="rj-sp-measure-col-label">Height</span>
+                                                        <span class="rj-sp-measure-col-unit">{{ $unitLabels[$option->measurement_unit] ?? 'in' }}</span>
+                                                    </div>
+                                                    <div class="rj-sp-measure-btns">
+                                                        <template x-if="!selectedWidths[{{ $option->id }}]">
+                                                            <span class="rj-sp-measure-hint-mini">← Choose width first</span>
+                                                        </template>
+                                                        <template x-if="selectedWidths[{{ $option->id }}]">
+                                                            <template x-for="h in getAvailableHeights({{ $option->id }})" :key="h.id">
+                                                                <button type="button"
+                                                                        @click="pickHeight({{ $option->id }}, h)"
+                                                                        :class="selectedHeights[{{ $option->id }}] && selectedHeights[{{ $option->id }}].id === h.id ? 'rj-sp-measure-btn-active' : ''"
+                                                                        class="rj-sp-measure-btn"
+                                                                        :title="'$' + parseFloat(h.price).toFixed(2)">
+                                                                    <span x-text="h.height"></span>
+                                                                    <span class="rj-sp-measure-btn-price" x-text="'$' + parseFloat(h.price).toFixed(2)"></span>
+                                                                </button>
+                                                            </template>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="rj-sp-measure-missing">
+                                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                                <span>No sizes available — please contact us</span>
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                @else
+                                    <label class="rj-sp-option-label">
+                                        {{ $option->name }}
+                                        @if($option->is_required)
+                                            <span class="rj-sp-req">*</span>
+                                        @endif
+                                    </label>
+
+                                    @if($option->type === 'select')
                                         <div class="rj-sp-select-wrap">
                                             <select class="rj-sp-select"
-                                                    @change="pickMeasurement({{ $option->id }}, $event.target.value)">
+                                                    @change="pickOption({{ $option->id }}, $event.target.value)">
                                                 <option value="">— Select {{ $option->name }} —</option>
-                                                @foreach($option->activeMeasurements as $m)
-                                                    @php
-                                                        $w = rtrim(rtrim(number_format((float) $m->width_value, 2, '.', ''), '0'), '.');
-                                                        $h = rtrim(rtrim(number_format((float) $m->height_value, 2, '.', ''), '0'), '.');
-                                                        $u = $unitLabels[$option->measurement_unit] ?? 'in';
-                                                    @endphp
-                                                    <option value="{{ $m->id }}">
-                                                        {{ $w }} × {{ $h }} {{ $u }}
-                                                        @if($m->price > 0)
-                                                            (+${{ number_format($m->price, 2) }})
-                                                        @endif
-                                                        @if($m->is_default)
-                                                            · Default
+                                                @foreach($option->values->where('status', 1) as $value)
+                                                    <option value="{{ $value->id }}">
+                                                        {{ $value->value }}
+                                                        @if($value->price_addon > 0)
+                                                            (+${{ number_format($value->price_addon, 2) }})
                                                         @endif
                                                     </option>
                                                 @endforeach
                                             </select>
                                             <i class="fa-solid fa-chevron-down rj-sp-select-icon"></i>
                                         </div>
-                                    @else
-                                        <div class="rj-sp-measure-missing">
-                                            <i class="fa-solid fa-triangle-exclamation"></i>
-                                            <span>No sizes available — please contact us</span>
-                                        </div>
+                                    @elseif($option->type === 'text')
+                                        <input type="text" class="rj-sp-input"
+                                               placeholder="Enter {{ $option->name }}"
+                                               @input="pickOptionText({{ $option->id }}, $event.target.value)">
+                                    @elseif($option->type === 'number')
+                                        <input type="number" class="rj-sp-input"
+                                               placeholder="0"
+                                               @input="pickOptionText({{ $option->id }}, $event.target.value)">
                                     @endif
                                 @endif
+
                             </div>
                         @endforeach
                     </div>
@@ -446,6 +482,8 @@ function singleProduct(config) {
         options: config.options || [],
 
         selections: {},
+        selectedWidths: {},
+        selectedHeights: {},
         qty: 1,
         adding: false,
 
@@ -454,18 +492,89 @@ function singleProduct(config) {
                 if (opt.type === 'measurement' && opt.measurements && opt.measurements.length) {
                     const def = opt.measurements.find(m => m.is_default);
                     if (def) {
-                        this.selections[opt.id] = {
-                            option_id: opt.id,
-                            option_name: opt.name,
-                            measurement_id: def.id,
-                            label: def.label + ' ' + (opt.unit || 'in'),
-                            value: def.label + ' ' + (opt.unit || 'in'),
-                            price_addon: parseFloat(def.price || 0),
-                            type: 'measurement',
-                        };
+                        this.selectedWidths[opt.id] = def.width;
+                        this.selectedHeights[opt.id] = def;
+                        this.updateSelection(opt);
                     }
                 }
             });
+        },
+
+        getAvailableWidths(optionId) {
+            const opt = this.options.find(o => o.id === optionId);
+            if (!opt || !opt.measurements) return [];
+
+            const widths = new Set();
+            opt.measurements.forEach(m => widths.add(m.width));
+
+            return Array.from(widths).sort((a, b) => a - b);
+        },
+
+        getAvailableHeights(optionId) {
+            const opt = this.options.find(o => o.id === optionId);
+            if (!opt || !opt.measurements) return [];
+
+            const selectedW = this.selectedWidths[optionId];
+            if (selectedW === undefined || selectedW === null) return [];
+
+            return opt.measurements
+                .filter(m => m.width === selectedW)
+                .sort((a, b) => a.height - b.height);
+        },
+
+        pickWidth(optionId, width) {
+            if (this.selectedWidths[optionId] === width) {
+                return;
+            }
+
+            this.selectedWidths[optionId] = width;
+            this.selectedHeights[optionId] = null;
+
+            delete this.selections[optionId];
+        },
+
+        pickHeight(optionId, h) {
+            const opt = this.options.find(o => o.id === optionId);
+            if (!opt) return;
+
+            if (this.selectedHeights[optionId] && this.selectedHeights[optionId].id === h.id) {
+                this.selectedHeights[optionId] = null;
+                delete this.selections[optionId];
+                return;
+            }
+
+            this.selectedHeights[optionId] = h;
+            this.updateSelection(opt);
+        },
+
+        updateSelection(opt) {
+            const w = this.selectedWidths[opt.id];
+            const h = this.selectedHeights[opt.id];
+
+            if (w === undefined || w === null || !h) {
+                delete this.selections[opt.id];
+                return;
+            }
+
+            const unit = opt.unit || 'in';
+            const wLabel = h.width_label || String(w);
+            const hLabel = h.height_label || String(h.height);
+            const label = wLabel + ' × ' + hLabel + ' ' + unit;
+
+            this.selections[opt.id] = {
+                option_id: opt.id,
+                option_name: opt.name,
+                measurement_id: h.id,
+                label: label,
+                value: label,
+                price_addon: parseFloat(h.price || 0),
+                type: 'measurement',
+            };
+        },
+
+        getMeasurementSelection(optionId) {
+            const sel = this.selections[optionId];
+            return sel && sel.type === 'measurement' ? sel.label : '';
         },
 
         get optionsAddon() {
@@ -572,32 +681,6 @@ function singleProduct(config) {
                 value: value,
                 price_addon: 0,
                 type: 'text',
-            };
-        },
-
-        pickMeasurement(optionId, measurementId) {
-            if (!measurementId) {
-                delete this.selections[optionId];
-                return;
-            }
-
-            const opt = this.options.find(o => o.id === optionId);
-            if (!opt) return;
-
-            const m = (opt.measurements || []).find(x => x.id == measurementId);
-            if (!m) return;
-
-            const unit = opt.unit || 'in';
-            const label = m.label + ' ' + unit;
-
-            this.selections[optionId] = {
-                option_id: optionId,
-                option_name: opt.name,
-                measurement_id: m.id,
-                label: label,
-                value: label,
-                price_addon: parseFloat(m.price || 0),
-                type: 'measurement',
             };
         },
 
