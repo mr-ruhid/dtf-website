@@ -107,7 +107,6 @@ class CartService
         }
 
         $pricingType = $product?->pricing_type ?? 'fixed';
-
         $printType = $data['print_type'] ?? 'none';
 
         $widthInch = isset($data['width_inch']) && $data['width_inch'] !== null && $data['width_inch'] !== ''
@@ -156,7 +155,6 @@ class CartService
     protected function recalculateItem(array &$item): void
     {
         $qty = max(1, (int) ($item['qty'] ?? 1));
-
         $baseUnitPrice = (float) ($item['base_unit_price'] ?? 0);
 
         if ($baseUnitPrice <= 0) {
@@ -165,8 +163,16 @@ class CartService
         }
 
         $productId = $item['product_id'] ?? null;
-        $pricingType = $item['pricing_type'] ?? 'fixed';
         $printType = $item['print_type'] ?? 'none';
+
+        $pricingType = $item['pricing_type'] ?? null;
+
+        if (!$pricingType && $productId) {
+            $pricingType = Product::where('id', $productId)->value('pricing_type') ?: 'fixed';
+            $item['pricing_type'] = $pricingType;
+        }
+
+        $pricingType = $pricingType ?: 'fixed';
 
         $tier = $this->resolveTier($productId, $qty);
 
