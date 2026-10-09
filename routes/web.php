@@ -29,6 +29,8 @@ Route::get('/design/{slug}', [DesignController::class, 'index'])->name('design.p
 
 Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.show');
 
+Route::get('/model/{slug}/{category?}', [ModelController::class, 'show'])->name('model.show');
+
 Route::prefix('cart')->name('cart.')->group(function () {
     Route::get('/items', [CartController::class, 'items'])->name('items');
     Route::post('/add', [CartController::class, 'add'])->name('add');
@@ -50,4 +52,4 @@ Route::prefix('track')->name('track.')->group(function () {
     Route::get('/{token}', [TrackController::class, 'show'])->name('show');
 });
 
-Route::get('/{slug}', [ModelController::class, 'show'])->name('model.show');
+Route::get('/{slug}', [ModelController::class, 'show'])->name('model.legacy');
