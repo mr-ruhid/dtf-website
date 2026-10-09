@@ -51,20 +51,19 @@
         ->first();
 @endphp
 
-<section class="rj-sf"
-         @if($product) x-data="specialFilms({
-            productId: {{ $product->id }},
-            productSlug: @js($product->slug),
-            basePrice: {{ $basePrice }},
-            unit: '{{ $unit }}',
-            widthOptions: {{ \Illuminate\Support\Js::from($widths) }},
-            heightMap: {{ \Illuminate\Support\Js::from($heightMap) }}
-         })" @endif>
+<div @if($product) x-data="specialFilms({
+        productId: {{ $product->id }},
+        productSlug: @js($product->slug),
+        basePrice: {{ $basePrice }},
+        unit: '{{ $unit }}',
+        widthOptions: {{ \Illuminate\Support\Js::from($widths) }},
+        heightMap: {{ \Illuminate\Support\Js::from($heightMap) }}
+     })" @endif>
 
+<section class="rj-sf">
     <div class="rj-sf-bg"></div>
 
     <div class="rj-sf-inner">
-
         <nav class="rj-sf-crumb">
             <a href="{{ url('/') }}">Home</a>
             <span>/</span>
@@ -73,7 +72,6 @@
 
         @if($product)
             <div class="rj-sf-hero">
-
                 <div class="rj-sf-hero-text">
                     <p class="rj-sf-eyebrow">THE ONLY SPECIALTY FILM</p>
                     <h1 class="rj-sf-title">{{ $product->name }}</h1>
@@ -100,71 +98,7 @@
                         @endif
                     </div>
                 </div>
-
             </div>
-
-            @if($measurements->count())
-                <div class="rj-sf-config">
-
-                    <div class="rj-sf-config-head">
-                        <p class="rj-sf-config-title"><span class="rj-sf-num">1</span> SIZE (W × H, {{ strtoupper($unit) }})</p>
-                    </div>
-
-                    <div class="rj-sf-measure">
-                        <div class="rj-sf-select-wrap">
-                            <select class="rj-sf-select" x-model.number="width" @change="onWidthChange()">
-                                <option value="">Width</option>
-                                <template x-for="w in widthOptions" :key="w">
-                                    <option :value="w" x-text="formatNum(w) + ' {{ $unit }}'"></option>
-                                </template>
-                            </select>
-                            <i class="fa-solid fa-chevron-down"></i>
-                        </div>
-
-                        <span class="rj-sf-x">×</span>
-
-                        <div class="rj-sf-select-wrap">
-                            <select class="rj-sf-select" x-model.number="heightId" :disabled="!width" @change="onHeightChange()">
-                                <option value="">Height</option>
-                                <template x-for="h in availableHeights" :key="h.id">
-                                    <option :value="h.id" x-text="h.label + ' {{ $unit }}'"></option>
-                                </template>
-                            </select>
-                            <i class="fa-solid fa-chevron-down"></i>
-                        </div>
-                    </div>
-
-                    <p class="rj-sf-hint" x-show="!width || !heightId">Pick a width, then a height to continue.</p>
-                    <p class="rj-sf-hint rj-sf-hint-ok" x-show="width && heightId" x-cloak>
-                        <i class="fa-solid fa-check"></i>
-                        <span x-text="formatNum(width) + ' × ' + selectedHeightLabel + ' {{ $unit }} — $' + unitPrice.toFixed(2) + ' per unit'"></span>
-                    </p>
-
-                    <div class="rj-sf-cta">
-                        <button type="button"
-                                class="rj-sf-btn"
-                                :disabled="!canContinue"
-                                @click="goToDesign()">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i>
-                            <span>Continue to design</span>
-                            <i class="fa-solid fa-arrow-right"></i>
-                        </button>
-
-                        <div class="rj-sf-price-tag" x-show="canContinue" x-cloak>
-                            <span>From</span>
-                            <strong x-text="'$' + unitPrice.toFixed(2)"></strong>
-                        </div>
-                    </div>
-
-                </div>
-            @else
-                <div class="rj-sf-config">
-                    <div class="rj-sf-alert">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>No sizes configured for this product yet.</span>
-                    </div>
-                </div>
-            @endif
         @else
             <div class="rj-sf-hero">
                 <div class="rj-sf-hero-text">
@@ -176,7 +110,6 @@
                 </div>
             </div>
         @endif
-
     </div>
 </section>
 
@@ -184,15 +117,90 @@
     @include('theme.rjshop-theme.widgets.special-films-story', ['widget' => $storyWidget])
 @endif
 
+@if($product)
+<section class="rj-sf">
+    <div class="rj-sf-inner">
+        @if($measurements->count())
+            <div class="rj-sf-config">
+                <div class="rj-sf-config-head">
+                    <p class="rj-sf-config-title"><span class="rj-sf-num">1</span> SIZE (W × H, {{ strtoupper($unit) }})</p>
+                </div>
+
+                <div class="rj-sf-measure">
+                    <div class="rj-sf-select-wrap">
+                        <select class="rj-sf-select" x-model.number="width" @change="onWidthChange()">
+                            <option value="">Width</option>
+                            <template x-for="w in widthOptions" :key="w">
+                                <option :value="w" x-text="formatNum(w) + ' {{ $unit }}'"></option>
+                            </template>
+                        </select>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+
+                    <span class="rj-sf-x">×</span>
+
+                    <div class="rj-sf-select-wrap">
+                        <select class="rj-sf-select" x-model.number="heightId" :disabled="!width" @change="onHeightChange()">
+                            <option value="">Height</option>
+                            <template x-for="h in availableHeights" :key="h.id">
+                                <option :value="h.id" x-text="h.label + ' {{ $unit }}'"></option>
+                            </template>
+                        </select>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                </div>
+
+                <p class="rj-sf-hint" x-show="!width || !heightId">Pick a width, then a height to continue.</p>
+                <p class="rj-sf-hint rj-sf-hint-ok" x-show="width && heightId" x-cloak>
+                    <i class="fa-solid fa-check"></i>
+                    <span x-text="formatNum(width) + ' × ' + selectedHeightLabel + ' {{ $unit }} — $' + unitPrice.toFixed(2) + ' per unit'"></span>
+                </p>
+
+                <div class="rj-sf-cta">
+                    <button type="button"
+                            class="rj-sf-btn"
+                            :disabled="!canContinue"
+                            @click="goToDesign()">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Continue to design</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+
+                    <div class="rj-sf-price-tag" x-show="canContinue" x-cloak>
+                        <span>From</span>
+                        <strong x-text="'$' + unitPrice.toFixed(2)"></strong>
+                    </div>
+                </div>
+            </div>
+        @else
+            <div class="rj-sf-config">
+                <div class="rj-sf-alert">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>No sizes configured for this product yet.</span>
+                </div>
+            </div>
+        @endif
+    </div>
+</section>
+@endif
+
+</div>
+
 <style>
     .rj-sf {
         position: relative;
         background: #05030f;
         color: #fff;
-        padding: 2.5rem 0 5rem;
+        padding: 2.5rem 0 0;
         overflow: hidden;
     }
-    @media (min-width: 768px) { .rj-sf { padding: 3.5rem 0 6rem; } }
+    .rj-sf:last-of-type {
+        padding-bottom: 5rem;
+    }
+    @media (min-width: 768px) {
+        .rj-sf { padding: 3.5rem 0 0; }
+        .rj-sf:last-of-type { padding-bottom: 6rem; }
+    }
 
     .rj-sf-bg {
         position: absolute; inset: 0; opacity: 0.025; pointer-events: none;
@@ -231,7 +239,6 @@
         grid-template-columns: 1fr;
         gap: 2.5rem;
         align-items: center;
-        margin-bottom: 4rem;
     }
     @media (min-width: 900px) {
         .rj-sf-hero {
