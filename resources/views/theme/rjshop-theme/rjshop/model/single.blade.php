@@ -14,10 +14,9 @@
     $images = $product->images;
     $options = $product->options->where('status', 1);
     $prices = $product->prices;
-    $basePrice = $product->sale_price ?: $product->base_price;
+    $basePrice = (float) ($product->sale_price ?: $product->base_price);
     $pricingType = $product->pricing_type;
     $isDiscount = $pricingType === 'discount';
-    $breadcrumbParent = $product->model;
     $isDesignable = $product->print_type === 'custom_size';
 
     $unitLabels = ['inch' => 'in', 'feet' => 'ft', 'cm' => 'cm'];
@@ -33,7 +32,7 @@
          x-data="singleProduct({
             productId: {{ $product->id }},
             slug: '{{ $product->slug }}',
-            basePrice: {{ (float) $basePrice }},
+            basePrice: {{ $basePrice }},
             pricingType: '{{ $pricingType }}',
             options: {{ \Illuminate\Support\Js::from($options->map(function ($o) use ($unitLabels) {
                 $measurements = $o->type === 'measurement'
@@ -70,9 +69,9 @@
     <div class="rj-sp-inner">
         <nav class="rj-sp-breadcrumb">
             <a href="{{ url('/') }}">Home</a>
-            @if($breadcrumbParent)
+            @if($product->model)
                 <span>/</span>
-                <a href="{{ url($breadcrumbParent->slug) }}">{{ $breadcrumbParent->name }}</a>
+                <a href="{{ url('model/' . $product->model->slug) }}">{{ $product->model->name }}</a>
             @endif
             <span>/</span>
             <span class="current">{{ $product->name }}</span>
@@ -390,7 +389,7 @@
 
         <div class="rj-prod-grid">
             @foreach($relatedProducts as $rel)
-                @include('theme.rjshop-theme.partials.product-card', ['product' => $rel])
+                @include('theme.rjshop-theme.rjshop.partials.product-card', ['product' => $rel])
             @endforeach
         </div>
     </div>
@@ -473,24 +472,27 @@ function singleProduct(config) {
         },
 
         recalc() {
-            const addon = this.calcOptionsAddon();
-            this.finalPrice = Math.round((this.basePrice + addon) * 100) / 100;
-            this.canAdd = this.computeCanAdd();
-        },
+            let measurementPrice = 0;
+            let hasMeasurement = false;
+            let otherAddon = 0;
 
-        calcOptionsAddon() {
-            let total = 0;
             this.options.forEach(opt => {
                 const sel = this.selections[opt.id];
                 if (!sel) return;
-                if (opt.type === 'select' && sel.value_id) {
+
+                if (opt.type === 'measurement' && sel.measurement_id) {
+                    measurementPrice += parseFloat(sel.price_addon || 0);
+                    hasMeasurement = true;
+                } else if (opt.type === 'select' && sel.value_id) {
                     const v = opt.values.find(x => x.id === sel.value_id);
-                    if (v) total += parseFloat(v.price_addon || 0);
-                } else if (opt.type === 'measurement' && sel.measurement_id) {
-                    total += parseFloat(sel.price_addon || 0);
+                    if (v) otherAddon += parseFloat(v.price_addon || 0);
                 }
             });
-            return total;
+
+            const base = hasMeasurement ? measurementPrice : this.basePrice;
+
+            this.finalPrice = Math.round((base + otherAddon) * 100) / 100;
+            this.canAdd = this.computeCanAdd();
         },
 
         computeCanAdd() {
@@ -588,12 +590,13 @@ function singleProduct(config) {
                 value: label,
                 price_addon: parseFloat(h.price || 0),
                 type: 'measurement',
+                width: parseFloat(w),
+                height: parseFloat(h.height),
             };
         },
 
         effectiveTierPrice(percent) {
-            const addon = this.calcOptionsAddon();
-            const base = this.basePrice + addon;
+            const base = this.finalPrice;
             return Math.round(base * (1 - (parseFloat(percent) || 0) / 100) * 100) / 100;
         },
 
@@ -645,7 +648,22 @@ function singleProduct(config) {
                 this.flash('Please select all required options');
                 return;
             }
-            window.location.href = '/design/' + this.slug;
+
+            let w = null, h = null;
+
+            for (const id in this.selections) {
+                const s = this.selections[id];
+                if (s.type === 'measurement' && s.width && s.height) {
+                    w = s.width;
+                    h = s.height;
+                    break;
+                }
+            }
+
+            let url = '/design/' + this.slug;
+            if (w && h) url += '?w=' + w + '&h=' + h;
+
+            window.location.href = url;
         },
 
         async addToCart() {
@@ -658,6 +676,7 @@ function singleProduct(config) {
 
             const attributes = {};
             const optionsPayload = [];
+            let w = null, h = null;
 
             Object.values(this.selections).forEach(s => {
                 attributes[s.option_name] = s.value;
@@ -666,6 +685,10 @@ function singleProduct(config) {
                     option_value: s.value,
                     price_addon: s.price_addon,
                 });
+                if (s.type === 'measurement' && s.width && s.height) {
+                    w = s.width;
+                    h = s.height;
+                }
             });
 
             const payload = {
@@ -674,7 +697,9 @@ function singleProduct(config) {
                 qty: 1,
                 attributes: attributes,
                 options: optionsPayload,
-                print_type: '{{ $product->print_type ?: "none" }}'
+                print_type: '{{ $product->print_type ?: "none" }}',
+                width_inch: w,
+                height_inch: h,
             };
 
             try {
