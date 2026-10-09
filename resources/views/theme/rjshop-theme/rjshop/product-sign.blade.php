@@ -60,14 +60,22 @@
 
         <div class="rj-sg2-grid">
 
-            <div class="rj-sg2-media">
-                @if($mainImage)
-                    <img src="{{ $mainImage->url }}" alt="{{ $product->name }}">
-                @else
-                    <div class="rj-sg2-media-empty">
-                        <i class="fa-regular fa-image"></i>
-                    </div>
-                @endif
+            <div class="rj-sg2-media-wrap">
+                <div class="rj-sg2-quantum">
+                    <div class="rj-sg2-orbit o1"><span class="rj-sg2-particle p-o"></span></div>
+                    <div class="rj-sg2-orbit o2"><span class="rj-sg2-particle p-i"></span></div>
+                    <div class="rj-sg2-orbit o3"><span class="rj-sg2-particle p-p"></span></div>
+                </div>
+
+                <div class="rj-sg2-media">
+                    @if($mainImage)
+                        <img src="{{ $mainImage->url }}" alt="{{ $product->name }}">
+                    @else
+                        <div class="rj-sg2-media-empty">
+                            <i class="fa-regular fa-image"></i>
+                        </div>
+                    @endif
+                </div>
             </div>
 
             <div class="rj-sg2-info">
@@ -247,11 +255,11 @@
     @media (min-width: 768px) { .rj-sg2 { padding: 3.5rem 0 6rem; } }
 
     .rj-sg2-inner {
-        max-width: 78rem;
+        max-width: 88rem;
         margin: 0 auto;
         padding: 0 1.5rem;
     }
-    @media (min-width: 1024px) { .rj-sg2-inner { padding: 0 3rem; } }
+    @media (min-width: 1024px) { .rj-sg2-inner { padding: 0 2.5rem; } }
 
     .rj-sg2-crumb {
         display: flex;
@@ -276,31 +284,88 @@
     }
     @media (min-width: 900px) {
         .rj-sg2-grid {
-            grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+            grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
             gap: 3.5rem;
             align-items: flex-start;
         }
     }
 
+    .rj-sg2-media-wrap {
+        position: sticky;
+        top: 100px;
+        padding: 26px;
+    }
+
+    .rj-sg2-quantum {
+        position: absolute;
+        inset: 26px;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .rj-sg2-orbit {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        border-radius: 50%;
+        transform-origin: center;
+        animation: rj-quantum-orbit linear infinite;
+        will-change: transform;
+    }
+    .rj-sg2-orbit.o1 { width: 100%; height: 100%; animation-duration: 14s; }
+    .rj-sg2-orbit.o2 { width: 116%; height: 116%; animation-duration: 20s; animation-direction: reverse; }
+    .rj-sg2-orbit.o3 { width: 84%; height: 84%; animation-duration: 10s; animation-direction: reverse; }
+
+    @keyframes rj-quantum-orbit {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    .rj-sg2-particle {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        opacity: 0.35;
+        transition: opacity 0.4s, filter 0.4s;
+    }
+    .p-o { background: #f97316; box-shadow: 0 0 10px 3px rgba(249, 115, 22, 0.55); }
+    .p-i { background: #818cf8; box-shadow: 0 0 10px 3px rgba(129, 140, 248, 0.55); width: 7px; height: 7px; }
+    .p-p { background: #ec4899; box-shadow: 0 0 10px 3px rgba(236, 72, 153, 0.55); width: 5px; height: 5px; }
+
     .rj-sg2-media {
         position: relative;
+        z-index: 2;
         border-radius: 16px;
         overflow: hidden;
         background: #f8f7f4;
         border: 1px solid rgba(255, 255, 255, 0.08);
         aspect-ratio: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: sticky;
-        top: 100px;
+        transition: box-shadow 0.5s;
     }
+    .rj-sg2-media::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at center, transparent 45%, rgba(249, 115, 22, 0.18) 100%);
+        opacity: 0;
+        transition: opacity 0.5s;
+        pointer-events: none;
+        z-index: 3;
+    }
+
     .rj-sg2-media img {
         width: 100%;
         height: 100%;
         object-fit: cover;
         display: block;
+        transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: transform;
     }
+
     .rj-sg2-media-empty {
         width: 100%;
         height: 100%;
@@ -309,6 +374,16 @@
         justify-content: center;
         color: #d1d5db;
         font-size: 2.5rem;
+    }
+
+    .rj-sg2-media-wrap:hover .rj-sg2-media {
+        box-shadow: 0 0 70px -12px rgba(249, 115, 22, 0.5), 0 0 0 1px rgba(249, 115, 22, 0.25);
+    }
+    .rj-sg2-media-wrap:hover .rj-sg2-media::after { opacity: 1; }
+    .rj-sg2-media-wrap:hover .rj-sg2-media img { transform: scale(1.06); }
+    .rj-sg2-media-wrap:hover .rj-sg2-particle {
+        opacity: 1;
+        filter: brightness(1.6) drop-shadow(0 0 6px currentColor);
     }
 
     .rj-sg2-info {
