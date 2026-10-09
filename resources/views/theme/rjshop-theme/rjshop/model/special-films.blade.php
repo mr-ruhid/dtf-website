@@ -45,6 +45,10 @@
 
     $mainImage = $product ? $product->images->first() : null;
     $basePrice = $product ? (float) ($product->sale_price ?: $product->base_price) : 0;
+
+    $storyWidget = \App\Models\Widget::where('key', 'special_films_story')
+        ->where('is_active', 1)
+        ->first();
 @endphp
 
 <section class="rj-sf"
@@ -175,6 +179,10 @@
 
     </div>
 </section>
+
+@if($storyWidget)
+    @include('theme.rjshop-theme.widgets.special-films-story', ['widget' => $storyWidget])
+@endif
 
 <style>
     .rj-sf {
