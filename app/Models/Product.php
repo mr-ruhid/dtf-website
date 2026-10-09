@@ -112,6 +112,13 @@ class Product extends Model
         return $this->images->first();
     }
 
+    public function getPricingTypeAttribute(): string
+    {
+        $displayType = $this->model?->display_type ?? 'grid';
+
+        return $displayType === 'grid' ? 'fixed' : 'discount';
+    }
+
     public function getPriceForQuantity(int $qty): float
     {
         $tier = $this->prices()
@@ -127,5 +134,26 @@ class Product extends Model
         }
 
         return (float) ($this->sale_price ?: $this->base_price);
+    }
+
+    public function getTierDiscountForQuantity(int $qty): float
+    {
+        if ($this->pricing_type !== 'discount') {
+            return 0.0;
+        }
+
+        $tier = $this->prices()
+            ->where('min_qty', '<=', $qty)
+            ->where(function ($q) use ($qty) {
+                $q->whereNull('max_qty')->orWhere('max_qty', '>=', $qty);
+            })
+            ->orderByDesc('min_qty')
+            ->first();
+
+        if (!$tier) {
+            return 0.0;
+        }
+
+        return (float) $tier->price;
     }
 }
