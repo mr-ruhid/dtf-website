@@ -35,7 +35,6 @@
             slug: '{{ $product->slug }}',
             basePrice: {{ (float) $basePrice }},
             pricingType: '{{ $pricingType }}',
-            volumeTiers: {{ \Illuminate\Support\Js::from($volumeTiers) }},
             options: {{ \Illuminate\Support\Js::from($options->map(function ($o) use ($unitLabels) {
                 $measurements = $o->type === 'measurement'
                     ? $o->activeMeasurements->map(fn($m) => [
@@ -130,9 +129,6 @@
 
                 <div class="rj-sp-price-row">
                     <span class="rj-sp-price">$<span x-text="finalPrice.toFixed(2)"></span></span>
-                    <template x-if="volumePercent > 0">
-                        <span class="rj-sp-save" x-text="'-' + volumePercent + '%'"></span>
-                    </template>
                     @if($product->sale_price && $product->base_price > $product->sale_price)
                         <span class="rj-sp-price-old">${{ number_format($product->base_price, 2) }}</span>
                         <span class="rj-sp-save">Save ${{ number_format($product->base_price - $product->sale_price, 2) }}</span>
@@ -336,15 +332,6 @@
                     </div>
                 @endif
 
-                <div class="rj-sp-qty-row">
-                    <label class="rj-sp-option-label">Quantity</label>
-                    <div class="rj-sp-qty">
-                        <button type="button" @click="decQty()" class="rj-sp-qty-btn">−</button>
-                        <input type="number" x-model.number="qty" min="1" class="rj-sp-qty-input">
-                        <button type="button" @click="incQty()" class="rj-sp-qty-btn">+</button>
-                    </div>
-                </div>
-
                 @if(!$isDesignable)
                     <div class="rj-sp-actions">
                         <button type="button"
@@ -353,7 +340,7 @@
                                 class="rj-sp-btn rj-sp-btn-primary">
                             <i class="fa-solid" :class="adding ? 'fa-spinner fa-spin' : 'fa-bag-shopping'"></i>
                             <span x-text="adding ? 'Adding...' : 'Add to Cart'"></span>
-                            <span class="rj-sp-btn-price">$<span x-text="totalPrice.toFixed(2)"></span></span>
+                            <span class="rj-sp-btn-price">$<span x-text="finalPrice.toFixed(2)"></span></span>
                         </button>
                     </div>
                 @endif
@@ -461,14 +448,15 @@ function singleProduct(config) {
         slug: config.slug,
         basePrice: parseFloat(config.basePrice) || 0,
         pricingType: config.pricingType || 'fixed',
-        volumeTiers: config.volumeTiers || [],
         options: config.options || [],
 
         selections: {},
         selectedWidths: {},
         selectedHeights: {},
-        qty: 1,
         adding: false,
+
+        finalPrice: 0,
+        canAdd: false,
 
         init() {
             this.options.forEach(opt => {
@@ -481,6 +469,35 @@ function singleProduct(config) {
                     }
                 }
             });
+            this.recalc();
+        },
+
+        recalc() {
+            const addon = this.calcOptionsAddon();
+            this.finalPrice = Math.round((this.basePrice + addon) * 100) / 100;
+            this.canAdd = this.computeCanAdd();
+        },
+
+        calcOptionsAddon() {
+            let total = 0;
+            this.options.forEach(opt => {
+                const sel = this.selections[opt.id];
+                if (!sel) return;
+                if (opt.type === 'select' && sel.value_id) {
+                    const v = opt.values.find(x => x.id === sel.value_id);
+                    if (v) total += parseFloat(v.price_addon || 0);
+                } else if (opt.type === 'measurement' && sel.measurement_id) {
+                    total += parseFloat(sel.price_addon || 0);
+                }
+            });
+            return total;
+        },
+
+        computeCanAdd() {
+            for (const opt of this.options) {
+                if (opt.required && !this.selections[opt.id]) return false;
+            }
+            return true;
         },
 
         getAvailableWidths(optionId) {
@@ -518,6 +535,7 @@ function singleProduct(config) {
                 this.selectedWidths[optionId] = null;
                 this.selectedHeights[optionId] = null;
                 delete this.selections[optionId];
+                this.recalc();
                 return;
             }
 
@@ -529,6 +547,7 @@ function singleProduct(config) {
             this.selectedHeights[optionId] = null;
 
             delete this.selections[optionId];
+            this.recalc();
         },
 
         pickHeight(optionId, h) {
@@ -538,11 +557,13 @@ function singleProduct(config) {
             if (!h) {
                 this.selectedHeights[optionId] = null;
                 delete this.selections[optionId];
+                this.recalc();
                 return;
             }
 
             this.selectedHeights[optionId] = h;
             this.updateSelection(opt);
+            this.recalc();
         },
 
         updateSelection(opt) {
@@ -570,77 +591,16 @@ function singleProduct(config) {
             };
         },
 
-        get optionsAddon() {
-            let total = 0;
-            this.options.forEach(opt => {
-                const sel = this.selections[opt.id];
-                if (!sel) return;
-
-                if (opt.type === 'select' && sel.value_id) {
-                    const v = opt.values.find(x => x.id === sel.value_id);
-                    if (v) total += parseFloat(v.price_addon || 0);
-                } else if (opt.type === 'measurement' && sel.measurement_id) {
-                    total += parseFloat(sel.price_addon || 0);
-                }
-            });
-            return total;
-        },
-
-        get rawPrice() {
-            return this.basePrice + this.optionsAddon;
-        },
-
-        get volumePercent() {
-            if (this.pricingType !== 'discount') return 0;
-            if (!this.volumeTiers.length) return 0;
-
-            const q = this.qty || 1;
-            const match = this.volumeTiers.find(t => {
-                const min = Number(t.min_qty) || 0;
-                const max = t.max_qty !== null && t.max_qty !== undefined ? Number(t.max_qty) : null;
-                return q >= min && (max === null || q <= max);
-            });
-
-            return match ? parseFloat(match.value || 0) : 0;
-        },
-
-        get finalPrice() {
-            const base = this.rawPrice;
-            if (this.pricingType === 'discount') {
-                const pct = this.volumePercent;
-                return Math.round(base * (1 - pct / 100) * 100) / 100;
-            }
-            if (this.volumeTiers.length) {
-                const q = this.qty || 1;
-                const match = this.volumeTiers.find(t => {
-                    const min = Number(t.min_qty) || 0;
-                    const max = t.max_qty !== null && t.max_qty !== undefined ? Number(t.max_qty) : null;
-                    return q >= min && (max === null || q <= max);
-                });
-                if (match) return parseFloat(match.value || 0) + this.optionsAddon;
-            }
-            return base;
-        },
-
-        get totalPrice() {
-            return this.finalPrice * (this.qty || 1);
-        },
-
-        get canAdd() {
-            for (const opt of this.options) {
-                if (opt.required && !this.selections[opt.id]) return false;
-            }
-            return true;
-        },
-
         effectiveTierPrice(percent) {
-            const base = this.rawPrice;
+            const addon = this.calcOptionsAddon();
+            const base = this.basePrice + addon;
             return Math.round(base * (1 - (parseFloat(percent) || 0) / 100) * 100) / 100;
         },
 
         pickOption(optionId, valueId) {
             if (!valueId) {
                 delete this.selections[optionId];
+                this.recalc();
                 return;
             }
             const opt = this.options.find(o => o.id === optionId);
@@ -656,6 +616,7 @@ function singleProduct(config) {
                 price_addon: parseFloat(v.price_addon || 0),
                 type: 'select',
             };
+            this.recalc();
         },
 
         pickOptionText(optionId, value) {
@@ -664,6 +625,7 @@ function singleProduct(config) {
 
             if (!value) {
                 delete this.selections[optionId];
+                this.recalc();
                 return;
             }
 
@@ -675,10 +637,8 @@ function singleProduct(config) {
                 price_addon: 0,
                 type: 'text',
             };
+            this.recalc();
         },
-
-        incQty() { this.qty = Math.min(999, (this.qty || 1) + 1); },
-        decQty() { this.qty = Math.max(1, (this.qty || 1) - 1); },
 
         goToDesign() {
             if (!this.canAdd) {
@@ -711,7 +671,7 @@ function singleProduct(config) {
             const payload = {
                 product_id: this.productId,
                 unit_price: this.finalPrice,
-                qty: this.qty,
+                qty: 1,
                 attributes: attributes,
                 options: optionsPayload,
                 print_type: '{{ $product->print_type ?: "none" }}'
