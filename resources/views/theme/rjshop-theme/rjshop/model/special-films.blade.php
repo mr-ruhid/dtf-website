@@ -374,16 +374,17 @@
         filter: brightness(1.6) drop-shadow(0 0 6px currentColor);
     }
 
-    .rj-sf-config {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        max-width: 44rem;
-        padding: 1.75rem 1.75rem 1.5rem;
-        background: rgba(255, 255, 255, 0.015);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 18px;
-    }
+.rj-sf-config {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 44rem;
+    margin: 0 auto;
+    padding: 1.75rem 1.75rem 1.5rem;
+    background: rgba(255, 255, 255, 0.015);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+}
 
     .rj-sf-config-head {
         display: flex;

@@ -1,262 +1,249 @@
-@php
-    $stats = $widget->getSetting('stats', [
-        ['value' => '310°F', 'sub' => '155°C', 'label' => 'Temperature'],
-        ['value' => 'Medium', 'sub' => '', 'label' => 'Pressure'],
-        ['value' => '12–15 sec', 'sub' => '', 'label' => 'Press time'],
-        ['value' => '~5 sec', 'sub' => '', 'label' => 'Then peel'],
-        ['value' => '5–10 sec', 'sub' => '', 'label' => 'Second press'],
-    ]);
+@extends('admin.app')
 
-    $storyEyebrow = $widget->getSetting('story_eyebrow', 'THE STORY');
-    $storyTitle = $widget->getSetting('story_title', 'Want it. Press it. Send the file.');
+@section('title', 'Edit Special Films Story Widget')
 
-    $steps = $widget->getSetting('steps', [
-        [
-            'title' => 'You wanted sparkle',
-            'description' => 'Glitter DTF is a standard DTF transfer with a durable glitter layer built into the print. It does not flake like loose glitter vinyl. Chunky sparkle stays in the film - no glitter fallout on the press. Dance, cheer, birthday, and statement apparel.',
-        ],
-        [
-            'title' => 'You press it the way you already know',
-            'description' => 'Same settings as standard DTF: 310°F / 155°C, medium pressure, 12–15 seconds. Peel after about 5 seconds, then a second press of 5–10 seconds. Works on cotton, blends, and the blanks you already buy from us.',
-        ],
-        [
-            'title' => 'Then you send the art',
-            'description' => 'Upload your art on the Glitter DTF Gang Sheet and we print it the same day. Glitter DTF is the only specialty film we sell right now. No minimums.',
-        ],
-    ]);
+@section('content')
 
-    if (!is_array($stats)) $stats = [];
-    if (!is_array($steps)) $steps = [];
-@endphp
+<div x-data="specialFilmsStoryEditor({{ json_encode($widget->settings ?? []) }})">
 
-<section class="rj-sfs">
-    <div class="rj-sfs-inner">
-
-        @if(count($stats))
-            <div class="rj-sfs-stats">
-                @foreach($stats as $stat)
-                    <div class="rj-sfs-stat">
-                        <p class="rj-sfs-stat-value">{{ $stat['value'] ?? '' }}</p>
-                        @if(!empty($stat['sub']))
-                            <p class="rj-sfs-stat-sub">{{ $stat['sub'] }}</p>
-                        @endif
-                        @if(!empty($stat['label']))
-                            <p class="rj-sfs-stat-label">{{ $stat['label'] }}</p>
-                        @endif
-                    </div>
-                @endforeach
-            </div>
-        @endif
-
-        @if($storyEyebrow || $storyTitle || count($steps))
-            <div class="rj-sfs-story">
-                @if($storyEyebrow)
-                    <p class="rj-sfs-eyebrow">{{ $storyEyebrow }}</p>
-                @endif
-
-                @if($storyTitle)
-                    <h2 class="rj-sfs-title">{{ $storyTitle }}</h2>
-                @endif
-
-                @if(count($steps))
-                    <ol class="rj-sfs-steps">
-                        @foreach($steps as $i => $step)
-                            <li class="rj-sfs-step">
-                                <div class="rj-sfs-step-num">{{ $i + 1 }}</div>
-                                <div class="rj-sfs-step-body">
-                                    @if(!empty($step['title']))
-                                        <h3 class="rj-sfs-step-title">{{ $step['title'] }}</h3>
-                                    @endif
-                                    @if(!empty($step['description']))
-                                        <p class="rj-sfs-step-desc">{{ $step['description'] }}</p>
-                                    @endif
-                                </div>
-                            </li>
-                        @endforeach
-                    </ol>
-                @endif
-            </div>
-        @endif
-
+    <div class="mb-6">
+        <a href="{{ route('admin.widgets.index') }}" class="text-sm text-gray-500 hover:text-gray-700">
+            <i class="fa-solid fa-arrow-left text-xs mr-1"></i> Back to widgets
+        </a>
+        <div class="flex items-center gap-3 mt-2">
+            <h2 class="text-xl font-semibold text-gray-800">Edit Special Films Story Widget</h2>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-700">
+                <i class="fa-solid fa-puzzle-piece text-[9px]"></i> {{ $widget->name }}
+            </span>
+        </div>
+        <p class="text-xs text-gray-400 font-mono mt-1">{{ $widget->key }}</p>
     </div>
-</section>
 
-<style>
-    .rj-sfs {
-        position: relative;
-        background: #05030f;
-        color: #fff;
-        padding: 4rem 0 4rem;
-        overflow: hidden;
-    }
-    @media (min-width: 768px) { .rj-sfs { padding: 5rem 0 5rem; } }
+    @if (session('status'))
+        <div class="mb-4 px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-lg">
+            <i class="fa-solid fa-circle-check mr-1"></i> {{ session('status') }}
+        </div>
+    @endif
 
-    .rj-sfs-inner {
-        max-width: 76rem;
-        margin: 0 auto;
-        padding: 0 1.5rem;
-    }
-    @media (min-width: 1024px) { .rj-sfs-inner { padding: 0 2.5rem; } }
+    @if ($errors->any())
+        <div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+            <ul class="list-disc list-inside space-y-1">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-    .rj-sfs-stats {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 0.875rem;
-        margin-bottom: 4rem;
-    }
-    @media (min-width: 640px) { .rj-sfs-stats { grid-template-columns: repeat(2, 1fr); } }
-    @media (min-width: 900px) { .rj-sfs-stats { grid-template-columns: repeat(5, 1fr); gap: 1rem; } }
+    <form method="POST" action="{{ route('admin.widgets.update', $widget) }}" class="space-y-6">
+        @csrf
+        @method('PUT')
 
-    .rj-sfs-stat {
-        padding: 1.125rem 1.25rem 1.25rem;
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 14px;
-        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .rj-sfs-stat:hover {
-        transform: translateY(-3px);
-        border-color: rgba(168, 85, 247, 0.4);
-        box-shadow: 0 12px 32px -16px rgba(168, 85, 247, 0.5);
-        background: rgba(168, 85, 247, 0.03);
-    }
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-    .rj-sfs-stat-value {
-        font-size: 1.375rem;
-        font-weight: 800;
-        color: #fff;
-        margin: 0;
-        letter-spacing: -0.02em;
-        line-height: 1.1;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
+            <div class="lg:col-span-2 space-y-6">
 
-    .rj-sfs-stat-sub {
-        font-family: ui-monospace, monospace;
-        font-size: 11px;
-        color: #a855f7;
-        margin: 0.25rem 0 0;
-        font-weight: 600;
-    }
+                <div class="bg-white rounded-xl border border-gray-200 p-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                            <i class="fa-solid fa-gauge-high text-xs"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 text-sm">Stats Row</h3>
+                            <p class="text-xs text-gray-400">Top stats: temperature, pressure, timing (up to 8)</p>
+                        </div>
+                    </div>
 
-    .rj-sfs-stat-label {
-        font-family: ui-monospace, monospace;
-        font-size: 11px;
-        color: #6b7280;
-        margin: 0.5rem 0 0;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-    }
+                    <div class="space-y-3">
+                        <template x-for="(stat, index) in stats" :key="index">
+                            <div class="flex items-center gap-2">
+                                <input type="text" :name="`stats[${index}][value]`" x-model="stat.value" maxlength="30"
+                                       placeholder="310°F"
+                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" :name="`stats[${index}][sub]`" x-model="stat.sub" maxlength="30"
+                                       placeholder="155°C"
+                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" :name="`stats[${index}][label]`" x-model="stat.label" maxlength="60"
+                                       placeholder="Temperature"
+                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <button type="button" @click="stats.splice(index, 1)"
+                                        class="w-9 h-9 flex items-center justify-center rounded hover:bg-red-50 text-red-500 transition">
+                                    <i class="fa-solid fa-trash text-xs"></i>
+                                </button>
+                            </div>
+                        </template>
 
-    .rj-sfs-story {
-        max-width: 56rem;
-    }
+                        <button type="button" @click="stats.push({value:'', sub:'', label:''})"
+                                class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium px-3 py-1.5 rounded-lg transition">
+                            <i class="fa-solid fa-plus text-[10px] mr-1"></i> Add Stat
+                        </button>
+                    </div>
+                </div>
 
-    .rj-sfs-eyebrow {
-        font-family: ui-monospace, monospace;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.25em;
-        color: #c084fc;
-        margin: 0 0 0.875rem;
-        font-weight: 700;
-    }
+                <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                            <i class="fa-solid fa-heading text-xs"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 text-sm">Story Header</h3>
+                            <p class="text-xs text-gray-400">Eyebrow + big title</p>
+                        </div>
+                    </div>
 
-    .rj-sfs-title {
-        font-size: clamp(1.75rem, 3.2vw, 2.5rem);
-        font-weight: 900;
-        line-height: 1.1;
-        letter-spacing: -0.025em;
-        color: #fff;
-        margin: 0 0 3rem;
-    }
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Eyebrow</label>
+                        <input type="text" name="story_eyebrow" x-model="story_eyebrow" maxlength="100"
+                               placeholder="THE STORY"
+                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
 
-    .rj-sfs-steps {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 2.5rem;
-        position: relative;
-    }
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                        <input type="text" name="story_title" x-model="story_title" maxlength="200"
+                               placeholder="Want it. Press it. Send the file."
+                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
 
-    .rj-sfs-step {
-        display: grid;
-        grid-template-columns: 48px 1fr;
-        gap: 1.25rem;
-        align-items: flex-start;
-        position: relative;
-    }
+                <div class="bg-white rounded-xl border border-gray-200 p-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                            <i class="fa-solid fa-list-ol text-xs"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 text-sm">Story Steps</h3>
+                            <p class="text-xs text-gray-400">Numbered steps (up to 10)</p>
+                        </div>
+                    </div>
 
-    .rj-sfs-step:not(:last-child)::after {
-        content: '';
-        position: absolute;
-        left: 23px;
-        top: 52px;
-        bottom: -2.5rem;
-        width: 2px;
-        background: linear-gradient(180deg, rgba(168, 85, 247, 0.4), rgba(168, 85, 247, 0.05));
-    }
+                    <div class="space-y-3">
+                        <template x-for="(step, index) in steps" :key="index">
+                            <div class="border border-gray-200 rounded-lg p-3 space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold flex items-center justify-center flex-shrink-0"
+                                          x-text="index + 1"></span>
+                                    <input type="text" :name="`steps[${index}][title]`" x-model="step.title" maxlength="150"
+                                           placeholder="Step title"
+                                           class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <button type="button" @click="steps.splice(index, 1)"
+                                            class="w-9 h-9 flex items-center justify-center rounded hover:bg-red-50 text-red-500 transition">
+                                        <i class="fa-solid fa-trash text-xs"></i>
+                                    </button>
+                                </div>
+                                <textarea :name="`steps[${index}][description]`" x-model="step.description" rows="3" maxlength="2000"
+                                          placeholder="Step description"
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                            </div>
+                        </template>
 
-    .rj-sfs-step-num {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #a855f7, #ec4899);
-        color: #fff;
-        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-        font-size: 18px;
-        font-weight: 900;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow:
-            0 8px 24px -8px rgba(168, 85, 247, 0.7),
-            0 0 0 1px rgba(168, 85, 247, 0.25);
-        flex-shrink: 0;
-        position: relative;
-        z-index: 2;
-    }
+                        <button type="button" @click="steps.push({title:'', description:''})"
+                                class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium px-3 py-1.5 rounded-lg transition">
+                            <i class="fa-solid fa-plus text-[10px] mr-1"></i> Add Step
+                        </button>
+                    </div>
+                </div>
 
-    .rj-sfs-step-body {
-        padding-top: 0.25rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.625rem;
-    }
+                <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
+                            <i class="fa-solid fa-link text-xs"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 text-sm">CTA Button</h3>
+                            <p class="text-xs text-gray-400">Bottom button text and URL</p>
+                        </div>
+                    </div>
 
-    .rj-sfs-step-title {
-        font-size: 1.25rem;
-        font-weight: 800;
-        color: #fff;
-        letter-spacing: -0.02em;
-        margin: 0;
-        line-height: 1.25;
-    }
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Button Text</label>
+                            <input type="text" name="cta_text" x-model="cta_text" maxlength="100"
+                                   placeholder="Upload your Glitter DTF design"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Button URL</label>
+                            <input type="text" name="cta_url" x-model="cta_url" maxlength="255"
+                                   placeholder="/design/glitter-dtf-transfers"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                </div>
 
-    .rj-sfs-step-desc {
-        font-size: 0.9375rem;
-        color: #9ca3af;
-        line-height: 1.65;
-        margin: 0;
-        font-weight: 400;
-    }
+            </div>
 
-    @media (max-width: 640px) {
-        .rj-sfs-step {
-            grid-template-columns: 40px 1fr;
-            gap: 1rem;
-        }
-        .rj-sfs-step-num {
-            width: 40px;
-            height: 40px;
-            font-size: 16px;
-        }
-        .rj-sfs-step:not(:last-child)::after {
-            left: 19px;
-            top: 44px;
-        }
-        .rj-sfs-step-title { font-size: 1.0625rem; }
-    }
-</style>
+            <div class="space-y-6">
+
+                <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+                    <h3 class="font-semibold text-gray-700 text-sm">Status</h3>
+
+                    <div class="flex items-center gap-3 px-3 py-3 rounded-lg border {{ $widget->is_active ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-200' }}">
+                        <div class="w-8 h-8 rounded-lg {{ $widget->is_active ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-200 text-gray-500' }} flex items-center justify-center">
+                            <i class="fa-solid {{ $widget->is_active ? 'fa-circle-check' : 'fa-circle-xmark' }} text-xs"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-800">{{ $widget->is_active ? 'Active' : 'Inactive' }}</p>
+                            <p class="text-xs text-gray-500">Toggle from widgets list</p>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-gray-100 space-y-2">
+                        <button type="submit"
+                                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition">
+                            <i class="fa-solid fa-floppy-disk text-xs mr-1"></i> Save Changes
+                        </button>
+                        <a href="{{ route('admin.widgets.index') }}"
+                           class="block text-center text-sm text-gray-600 hover:text-gray-800 py-2">Cancel</a>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
+                    <i class="fa-solid fa-circle-info text-amber-600 mt-0.5"></i>
+                    <div class="text-xs text-amber-800">
+                        <p class="font-medium mb-1">Usage</p>
+                        <p>This widget is included on the <code class="bg-amber-100 px-1 rounded">special-films</code> model page.</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+
+<script>
+function specialFilmsStoryEditor(settings) {
+    var s = settings || {};
+
+    return {
+        stats: Array.isArray(s.stats) && s.stats.length ? s.stats.map(function (x) {
+            return { value: x.value || '', sub: x.sub || '', label: x.label || '' };
+        }) : [
+            { value: '310°F', sub: '155°C', label: 'Temperature' },
+            { value: 'Medium', sub: '', label: 'Pressure' },
+            { value: '12–15 sec', sub: '', label: 'Press time' },
+            { value: '~5 sec', sub: '', label: 'Then peel' },
+            { value: '5–10 sec', sub: '', label: 'Second press' },
+        ],
+
+        story_eyebrow: s.story_eyebrow || 'THE STORY',
+        story_title: s.story_title || 'Want it. Press it. Send the file.',
+
+        steps: Array.isArray(s.steps) && s.steps.length ? s.steps.map(function (x) {
+            return { title: x.title || '', description: x.description || '' };
+        }) : [
+            { title: 'You wanted sparkle', description: '' },
+            { title: 'You press it the way you already know', description: '' },
+            { title: 'Then you send the art', description: '' },
+        ],
+
+        cta_text: s.cta_text || 'Upload your Glitter DTF design',
+        cta_url: s.cta_url || '/design/glitter-dtf-transfers',
+    };
+}
+</script>
+
+@endsection
