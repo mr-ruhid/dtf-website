@@ -84,7 +84,7 @@ class ProductController extends Controller
 
             return redirect()->route('admin.products.edit', $product)
                 ->with('status', 'Product created. You can now add options and variants.');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Failed to create product: ' . $e->getMessage()])->withInput();
         }
@@ -137,7 +137,7 @@ class ProductController extends Controller
             DB::commit();
 
             return back()->with('status', 'Product updated successfully.');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Failed to update product: ' . $e->getMessage()])->withInput();
         }
@@ -217,7 +217,7 @@ class ProductController extends Controller
 
             return redirect()->route('admin.products.edit', $newProduct)
                 ->with('status', 'Product duplicated. Review and activate when ready.');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Failed to duplicate: ' . $e->getMessage()]);
         }
@@ -437,72 +437,67 @@ class ProductController extends Controller
         $product->printZones()->sync($zones);
     }
 
-    protected function saveOptions(Product $product, Request $request): void
-    {
-        if (!$request->has('options')) {
-            return;
+protected function saveOptions(Product $product, Request $request): void
+{
+    if (!$request->has('options')) {
+        return;
+    }
+
+    $options = $request->input('options', []);
+
+    if (!is_array($options) || count($options) === 0) {
+        return;
+    }
+
+    $existingIds = $product->options()->pluck('id')->toArray();
+    $keptIds = [];
+
+    foreach ($options as $optionData) {
+        $hasMeasurements = !empty($optionData['measurements']) && is_array($optionData['measurements']);
+        $hasValues = !empty($optionData['values']) && is_array($optionData['values']);
+
+        if (empty($optionData['name']) && !$hasMeasurements && !$hasValues) {
+            continue;
         }
 
-        $options = $request->input('options', []);
+        $name = !empty($optionData['name']) ? $optionData['name'] : 'Option';
 
-        if (!is_array($options) || count($options) === 0) {
-            return;
-        }
+        $optionId = !empty($optionData['id']) ? (int) $optionData['id'] : null;
+        $optionPayload = [
+            'name' => $name,
+            'type' => $optionData['type'] ?? 'select',
+            'price_addon' => (float) ($optionData['price_addon'] ?? 0),
+            'measurement_unit' => $optionData['measurement_unit'] ?? 'inch',
+            'is_required' => !empty($optionData['is_required']),
+            'sort_order' => (int) ($optionData['sort_order'] ?? 0),
+            'status' => !isset($optionData['status']) || !empty($optionData['status']),
+        ];
 
-        $hasAnyName = false;
-        foreach ($options as $opt) {
-            if (!empty($opt['name'])) {
-                $hasAnyName = true;
-                break;
-            }
-        }
-
-        if (!$hasAnyName) {
-            return;
-        }
-
-        $existingIds = $product->options()->pluck('id')->toArray();
-        $keptIds = [];
-
-        foreach ($options as $optionData) {
-            if (empty($optionData['name'])) {
+        if ($optionId && in_array($optionId, $existingIds, true)) {
+            $option = $product->options()->find($optionId);
+            if ($option) {
+                $option->update($optionPayload);
+                $keptIds[] = $option->id;
+            } else {
                 continue;
             }
-
-            $optionId = $optionData['id'] ?? null;
-            $optionPayload = [
-                'name' => $optionData['name'],
-                'type' => $optionData['type'] ?? 'select',
-                'price_addon' => (float) ($optionData['price_addon'] ?? 0),
-                'measurement_unit' => $optionData['measurement_unit'] ?? 'inch',
-                'is_required' => !empty($optionData['is_required']),
-                'sort_order' => (int) ($optionData['sort_order'] ?? 0),
-                'status' => !isset($optionData['status']) || !empty($optionData['status']),
-            ];
-
-            if ($optionId && in_array((int) $optionId, $existingIds)) {
-                $option = $product->options()->find($optionId);
-                if ($option) {
-                    $option->update($optionPayload);
-                    $keptIds[] = $option->id;
-                } else {
-                    continue;
-                }
-            } else {
-                $option = $product->options()->create($optionPayload);
-                $keptIds[] = $option->id;
-            }
-
-            $this->saveOptionValues($option, $optionData['values'] ?? []);
-            $this->saveOptionMeasurements($option, $optionData['measurements'] ?? []);
+        } else {
+            $option = $product->options()->create($optionPayload);
+            $keptIds[] = $option->id;
         }
 
+        $this->saveOptionValues($option, $optionData['values'] ?? []);
+        $this->saveOptionMeasurements($option, $optionData['measurements'] ?? []);
+    }
+
+    if (!empty($keptIds)) {
         $product->options()->whereNotIn('id', $keptIds)->each(function ($opt) {
             $opt->values()->delete();
             $opt->measurements()->delete();
             $opt->delete();
         });
     }
+}
 
     protected function saveOptionValues(ProductOption $option, array $values): void
     {
@@ -514,7 +509,7 @@ class ProductController extends Controller
                 continue;
             }
 
-            $valueId = $valueData['id'] ?? null;
+            $valueId = !empty($valueData['id']) ? (int) $valueData['id'] : null;
             $payload = [
                 'value' => $valueData['value'],
                 'price_addon' => (float) ($valueData['price_addon'] ?? 0),
@@ -522,7 +517,7 @@ class ProductController extends Controller
                 'status' => !isset($valueData['status']) || !empty($valueData['status']),
             ];
 
-            if ($valueId && in_array((int) $valueId, $valueIds)) {
+            if ($valueId && in_array($valueId, $valueIds, true)) {
                 $val = $option->values()->find($valueId);
                 if ($val) {
                     $val->update($payload);
@@ -534,7 +529,9 @@ class ProductController extends Controller
             }
         }
 
-        $option->values()->whereNotIn('id', $keptValueIds)->delete();
+        if (!empty($keptValueIds)) {
+            $option->values()->whereNotIn('id', $keptValueIds)->delete();
+        }
     }
 
     protected function saveOptionMeasurements(ProductOption $option, array $measurements): void
@@ -544,22 +541,11 @@ class ProductController extends Controller
             return;
         }
 
-        $hasValidIncoming = false;
-        foreach ($measurements as $r) {
-            if (!empty($r['width_value']) && !empty($r['height_value'])) {
-                $hasValidIncoming = true;
-                break;
-            }
-        }
-
-        if (!$hasValidIncoming && $option->measurements()->exists()) {
-            return;
-        }
-
         $existingIds = $option->measurements()->pluck('id')->toArray();
         $keptIds = [];
         $seen = [];
         $defaultAssigned = false;
+        $hasIncoming = false;
 
         foreach ($measurements as $row) {
             $width = isset($row['width_value']) && $row['width_value'] !== '' ? (float) $row['width_value'] : null;
@@ -569,8 +555,9 @@ class ProductController extends Controller
                 continue;
             }
 
-            $key = $width . 'x' . $height;
+            $hasIncoming = true;
 
+            $key = $width . 'x' . $height;
             if (isset($seen[$key])) {
                 continue;
             }
@@ -590,9 +577,9 @@ class ProductController extends Controller
                 'status' => !isset($row['status']) || !empty($row['status']),
             ];
 
-            $measurementId = $row['id'] ?? null;
+            $measurementId = !empty($row['id']) ? (int) $row['id'] : null;
 
-            if ($measurementId && in_array((int) $measurementId, $existingIds)) {
+            if ($measurementId && in_array($measurementId, $existingIds, true)) {
                 $m = $option->measurements()->find($measurementId);
                 if ($m) {
                     $m->update($payload);
@@ -604,9 +591,11 @@ class ProductController extends Controller
             }
         }
 
-        $option->measurements()->whereNotIn('id', $keptIds)->delete();
+        if ($hasIncoming && !empty($keptIds)) {
+            $option->measurements()->whereNotIn('id', $keptIds)->delete();
+        }
 
-        if (!$defaultAssigned) {
+        if (!$defaultAssigned && !empty($keptIds)) {
             $first = $option->measurements()->orderBy('sort_order')->orderBy('id')->first();
             if ($first) {
                 $first->update(['is_default' => true]);

@@ -888,66 +888,71 @@ function productForm() {
         selectedAttributeValues: {},
         options: [],
 
-        init() {
-            const oldTiers = @json(old('tiers'));
+init() {
+    const oldTiers = @json(old('tiers'));
 
-            if (oldTiers && oldTiers.length) {
-                this.tiers = oldTiers.map(t => ({min_qty: t.min_qty || '', max_qty: t.max_qty || '', price: t.price || ''}));
-            } else if (dbTiers.length) {
-                this.tiers = dbTiers;
-            } else {
-                this.tiers = [{min_qty: 1, max_qty: 11, price: ''}];
-            }
+    if (oldTiers && oldTiers.length) {
+        this.tiers = oldTiers.map(t => ({min_qty: t.min_qty || '', max_qty: t.max_qty || '', price: t.price || ''}));
+    } else if (dbTiers.length) {
+        this.tiers = dbTiers;
+    } else {
+        this.tiers = [{min_qty: 1, max_qty: 11, price: ''}];
+    }
 
-            const oldAttrValues = @json(old('attribute_values'));
+    const oldAttrValues = @json(old('attribute_values'));
 
-            if (oldAttrValues) {
-                Object.keys(oldAttrValues).forEach(attrId => {
-                    this.selectedAttributeValues[attrId] = {};
-                    Object.values(oldAttrValues[attrId]).forEach((v, idx) => {
-                        if (v.value_id) {
-                            this.selectedAttributeValues[attrId][v.value_id] = {
-                                index: idx,
-                                value_id: v.value_id,
-                                price_override: (v.price_override !== undefined && v.price_override !== '') ? parseFloat(v.price_override) : null,
-                                product_image_id: (v.product_image_id !== undefined && v.product_image_id !== '') ? parseInt(v.product_image_id) : null,
-                                temp_override: '',
-                                editing: false,
-                                default_price: defaultPrices[v.value_id] || 0
-                            };
-                        }
-                    });
-                });
-            } else {
-                let attrIndexMap = {};
-                dbAttributeValues.forEach(pav => {
-                    const attrId = pav.attribute_id;
-                    if (!this.selectedAttributeValues[attrId]) {
-                        this.selectedAttributeValues[attrId] = {};
-                        attrIndexMap[attrId] = 0;
-                    }
-                    const idx = attrIndexMap[attrId]++;
-                    this.selectedAttributeValues[attrId][pav.value_id] = {
+    if (oldAttrValues) {
+        Object.keys(oldAttrValues).forEach(attrId => {
+            this.selectedAttributeValues[attrId] = {};
+            Object.values(oldAttrValues[attrId]).forEach((v, idx) => {
+                if (v.value_id) {
+                    this.selectedAttributeValues[attrId][v.value_id] = {
                         index: idx,
-                        value_id: pav.value_id,
-                        price_override: pav.price_override !== null ? parseFloat(pav.price_override) : null,
-                        product_image_id: pav.product_image_id || null,
+                        value_id: v.value_id,
+                        price_override: (v.price_override !== undefined && v.price_override !== '') ? parseFloat(v.price_override) : null,
+                        product_image_id: (v.product_image_id !== undefined && v.product_image_id !== '') ? parseInt(v.product_image_id) : null,
                         temp_override: '',
                         editing: false,
-                        default_price: defaultPrices[pav.value_id] || 0
+                        default_price: defaultPrices[v.value_id] || 0
                     };
-                });
+                }
+            });
+        });
+    } else {
+        let attrIndexMap = {};
+        dbAttributeValues.forEach(pav => {
+            const attrId = pav.attribute_id;
+            if (!this.selectedAttributeValues[attrId]) {
+                this.selectedAttributeValues[attrId] = {};
+                attrIndexMap[attrId] = 0;
             }
+            const idx = attrIndexMap[attrId]++;
+            this.selectedAttributeValues[attrId][pav.value_id] = {
+                index: idx,
+                value_id: pav.value_id,
+                price_override: pav.price_override !== null ? parseFloat(pav.price_override) : null,
+                product_image_id: pav.product_image_id || null,
+                temp_override: '',
+                editing: false,
+                default_price: defaultPrices[pav.value_id] || 0
+            };
+        });
+    }
 
-            const oldOptions = @json(old('options'));
+    const oldOptions = @json(old('options'));
+    const hasValidOldOptions = Array.isArray(oldOptions)
+        && oldOptions.some(o => o && o.name && String(o.name).trim() !== '');
 
-            if (oldOptions && oldOptions.length) {
-                this.options = oldOptions.map(o => this.normalizeOption(o));
-            } else if (dbOptions.length) {
-                this.options = dbOptions.map(o => this.normalizeOption(o));
-            }
-        },
-
+    if (hasValidOldOptions) {
+        this.options = oldOptions
+            .filter(o => o && o.name && String(o.name).trim() !== '')
+            .map(o => this.normalizeOption(o));
+    } else if (dbOptions.length) {
+        this.options = dbOptions.map(o => this.normalizeOption(o));
+    } else {
+        this.options = [];
+    }
+},
         normalizeOption(o) {
             return {
                 id: o.id || null,
