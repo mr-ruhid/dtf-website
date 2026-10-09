@@ -22,7 +22,15 @@ class DesignController extends Controller
         $product = null;
 
         if ($slug) {
-            $product = Product::with(['printZones', 'images', 'model'])
+            $product = Product::with([
+                    'printZones',
+                    'images',
+                    'model',
+                    'options' => function ($q) {
+                        $q->where('status', 1);
+                    },
+                    'options.activeMeasurements',
+                ])
                 ->where('slug', $slug)
                 ->where('status', 1)
                 ->first();
@@ -84,6 +92,7 @@ class DesignController extends Controller
                 'print_type' => $product->print_type,
                 'model_name' => $product->model?->name,
                 'model_slug' => $product->model?->slug,
+                'measurements' => $this->measurementPayload($product),
             ];
         }
 
@@ -92,5 +101,41 @@ class DesignController extends Controller
             'product' => $productPayload,
             'allProducts' => $allProducts,
         ]);
+    }
+
+    protected function measurementPayload(Product $product): array
+    {
+        $unitLabels = ['inch' => 'in', 'feet' => 'ft', 'cm' => 'cm'];
+        $list = [];
+
+        foreach ($product->options as $option) {
+            if ($option->type !== 'measurement') {
+                continue;
+            }
+
+            $unit = $unitLabels[$option->measurement_unit] ?? 'in';
+
+            foreach ($option->activeMeasurements as $m) {
+                $w = (float) $m->width_value;
+                $h = (float) $m->height_value;
+
+                $list[] = [
+                    'id' => $m->id,
+                    'option_id' => $option->id,
+                    'option_name' => $option->name,
+                    'width' => $w,
+                    'height' => $h,
+                    'price' => (float) $m->price,
+                    'unit' => $unit,
+                    'is_default' => (bool) $m->is_default,
+                    'label' => rtrim(rtrim(number_format($w, 2, '.', ''), '0'), '.')
+                        . ' × '
+                        . rtrim(rtrim(number_format($h, 2, '.', ''), '0'), '.')
+                        . ' ' . $unit,
+                ];
+            }
+        }
+
+        return $list;
     }
 }
