@@ -1,7 +1,40 @@
 @php
     $img = $product->images->first();
     $imgUrl = $img ? $img->url : null;
-    $price = $product->sale_price ?: $product->base_price;
+
+    $basePrice = (float) ($product->sale_price ?: $product->base_price);
+
+    $minVariant = null;
+    if ($product->relationLoaded('variants') && $product->variants->count()) {
+        $prices = $product->variants
+            ->where('status', 1)
+            ->pluck('price')
+            ->filter(fn($v) => $v !== null && (float) $v > 0)
+            ->map(fn($v) => (float) $v);
+
+        if ($prices->count()) {
+            $minVariant = (float) $prices->min();
+        }
+    }
+
+    $minAttrAdj = 0.0;
+    if ($product->relationLoaded('attributeValues')) {
+        $adjs = $product->attributeValues
+            ->pluck('attributeValue.price_adjustment')
+            ->filter(fn($v) => $v !== null)
+            ->map(fn($v) => (float) $v);
+
+        if ($adjs->count()) {
+            $minAttrAdj = (float) $adjs->min();
+        }
+    }
+
+    $lowest = $minVariant !== null
+        ? $minVariant
+        : $basePrice + $minAttrAdj;
+
+    $lowest = max(0, round($lowest, 2));
+
     $hasSale = $product->sale_price && $product->base_price > $product->sale_price;
     $productUrl = url('product/' . $product->slug);
 @endphp
@@ -33,8 +66,14 @@
         @endif
 
         <div class="rj-pcard-price">
-            <span class="rj-pcard-price-current">${{ number_format($price, 2) }}</span>
-            @if($hasSale)
+            <span class="rj-pcard-price-current">
+                @if($minVariant !== null)
+                    From ${{ number_format($lowest, 2) }}
+                @else
+                    ${{ number_format($lowest, 2) }}
+                @endif
+            </span>
+            @if($hasSale && $minVariant === null)
                 <span class="rj-pcard-price-old">${{ number_format($product->base_price, 2) }}</span>
             @endif
         </div>
