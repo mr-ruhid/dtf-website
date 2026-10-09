@@ -1234,6 +1234,11 @@
                 this.adding = true;
 
                 var z = this.currentZone;
+                var widthIn = z ? Number(z.width_inch) : 0;
+                var heightIn = z ? Number(z.height_inch) : 0;
+                var sizeLabel = z ? (widthIn + ' × ' + heightIn + ' in') : 'Custom';
+                var sheetPrice = this.sheetPrice;
+                var productPrice = this.productPrice;
                 var snapshot = null;
 
                 try {
@@ -1244,7 +1249,11 @@
                 }
 
                 var attributes = {
-                    'Sheet Size': z ? (z.width_inch + ' × ' + z.height_inch + ' in') : 'Custom',
+                    'Sheet Size': sizeLabel,
+                    'Width (in)': widthIn,
+                    'Height (in)': heightIn,
+                    'Sheet Price': '$' + sheetPrice.toFixed(2),
+                    'Product Price': '$' + productPrice.toFixed(2),
                     'Items': this.itemCount
                 };
 
@@ -1252,12 +1261,17 @@
 
                 var payload = {
                     product_id: this.product ? this.product.id : null,
+                    product_name: this.product ? this.product.name : null,
                     name: this.product ? this.product.name : ('Custom Gang Sheet — ' + (z ? z.label : 'Custom')),
                     unit_price: this.basePrice,
+                    product_price: productPrice,
+                    sheet_price: sheetPrice,
+                    width_inch: widthIn,
+                    height_inch: heightIn,
                     qty: this.qty,
                     attributes: attributes,
                     print_type: 'custom_size',
-                    note: this.itemCount + ' design item(s) · ' + (z ? (z.width_inch + '×' + z.height_inch + ' in') : ''),
+                    note: this.itemCount + ' design item(s) · ' + sizeLabel,
                     image: snapshot
                 };
 
