@@ -207,6 +207,54 @@ class WidgetSeeder extends Seeder
                     'offline_message' => 'We are offline. Leave a message and we will get back to you.',
                 ],
             ],
+            [
+                'key' => 'sign_hero',
+                'name' => 'Sign Hero',
+                'sort_order' => 16,
+                'settings' => [
+                    'eyebrow' => 'Large-Format Print',
+                    'title' => "Custom Signs, Vinyl\n& Banners",
+                    'subtitle' => "Send the artwork. We print it.\nYou collect.",
+                    'main_image' => '',
+                    'image_2' => '',
+                    'image_3' => '',
+                    'step1_text' => 'Send the file',
+                    'step2_text' => 'We print it',
+                    'step3_text' => 'You collect',
+                ],
+            ],
+            [
+                'key' => 'special_films_story',
+                'name' => 'Special Films Story',
+                'sort_order' => 17,
+                'settings' => [
+                    'stats' => [
+                        ['value' => '310°F', 'sub' => '155°C', 'label' => 'Temperature'],
+                        ['value' => 'Medium', 'sub' => '', 'label' => 'Pressure'],
+                        ['value' => '12–15 sec', 'sub' => '', 'label' => 'Press time'],
+                        ['value' => '~5 sec', 'sub' => '', 'label' => 'Then peel'],
+                        ['value' => '5–10 sec', 'sub' => '', 'label' => 'Second press'],
+                    ],
+                    'story_eyebrow' => 'THE STORY',
+                    'story_title' => 'Want it. Press it. Send the file.',
+                    'steps' => [
+                        [
+                            'title' => 'You wanted sparkle',
+                            'description' => 'Glitter DTF is a standard DTF transfer with a durable glitter layer built into the print. It does not flake like loose glitter vinyl. Chunky sparkle stays in the film - no glitter fallout on the press. Dance, cheer, birthday, and statement apparel.',
+                        ],
+                        [
+                            'title' => 'You press it the way you already know',
+                            'description' => 'Same settings as standard DTF: 310°F / 155°C, medium pressure, 12–15 seconds. Peel after about 5 seconds, then a second press of 5–10 seconds. Works on cotton, blends, and the blanks you already buy from us.',
+                        ],
+                        [
+                            'title' => 'Then you send the art',
+                            'description' => 'Upload your art on the Glitter DTF Gang Sheet and we print it the same day. Glitter DTF is the only specialty film we sell right now. No minimums.',
+                        ],
+                    ],
+                    'cta_text' => 'Upload your Glitter DTF design',
+                    'cta_url' => '/design/glitter-dtf-transfers',
+                ],
+            ],
         ];
 
         foreach ($widgets as $widget) {
