@@ -1,63 +1,76 @@
 <?php
 
-namespace App\Models;
+namespace App\Http\Controllers;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Product;
+use App\Models\ProductModel;
 
-class ProductModel extends Model
+class ModelController extends Controller
 {
-    protected $table = 'models';
-
-    protected $fillable = [
-        'name',
-        'slug',
-        'description',
-        'image',
-        'icon',
-        'sort_order',
-        'status',
-        'meta_title',
-        'meta_description',
-        'meta_keywords',
-        'show_in_header',
-        'display_type',
-        'single_product_id',
-        'custom_view',
-    ];
-
-    protected $casts = [
-        'status' => 'boolean',
-        'sort_order' => 'integer',
-        'show_in_header' => 'boolean',
-    ];
-
-    public function products()
+    public function show(string $slug)
     {
-        return $this->hasMany(Product::class, 'model_id');
+        $model = ProductModel::where('slug', $slug)
+            ->where('status', 1)
+            ->firstOrFail();
+
+        if ($model->isSingle && $model->single_product_id) {
+            return $this->showSingle($model);
+        }
+
+        if ($model->isCustom && $model->custom_view) {
+            $view = 'theme.rjshop-theme.models.' . $model->custom_view;
+
+            if (view()->exists($view)) {
+                return view($view, compact('model'));
+            }
+        }
+
+        return $this->showGrid($model);
     }
 
-    public function rootCategories()
+    protected function showSingle(ProductModel $model)
     {
-        return $this->hasMany(Category::class, 'model_id')->whereNull('parent_id')->orderBy('sort_order');
+        $product = Product::with([
+            'images',
+            'prices',
+            'options.values',
+            'options.measurements',
+            'attributeValues.attribute',
+            'attributeValues.attributeValue',
+            'printZones',
+            'category',
+            'model',
+        ])
+            ->where('id', $model->single_product_id)
+            ->where('status', 1)
+            ->firstOrFail();
+
+        $relatedProducts = Product::where('status', 1)
+            ->where('id', '!=', $product->id)
+            ->where(function ($q) use ($model) {
+                $q->where('model_id', $model->id)
+                  ->orWhereNull('model_id');
+            })
+            ->orderBy('sort_order')
+            ->limit(4)
+            ->get();
+
+        $faqs = \App\Models\Faq::where('status', 1)
+            ->orderBy('sort_order')
+            ->limit(6)
+            ->get();
+
+        return view('theme.rjshop-theme.models.single', compact('model', 'product', 'relatedProducts', 'faqs'));
     }
 
-    public function categories()
+    protected function showGrid(ProductModel $model)
     {
-        return $this->hasMany(Category::class, 'model_id');
-    }
+        $categories = $model->rootCategories()->with('children')->get();
+        $products = Product::where('model_id', $model->id)
+            ->where('status', 1)
+            ->orderBy('sort_order')
+            ->paginate(12);
 
-    public function scopeInHeader($query)
-    {
-        return $query->where('show_in_header', 1)->where('status', 1)->orderBy('sort_order');
-    }
-
-    public function getIsSingleAttribute(): bool
-    {
-        return $this->display_type === 'single' && !empty($this->single_product_id);
-    }
-
-    public function getIsCustomAttribute(): bool
-    {
-        return $this->display_type === 'custom' && !empty($this->custom_view);
+        return view('theme.rjshop-theme.models.grid', compact('model', 'categories', 'products'));
     }
 }
