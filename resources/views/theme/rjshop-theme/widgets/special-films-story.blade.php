@@ -25,9 +25,6 @@
         ],
     ]);
 
-    $ctaText = $widget->getSetting('cta_text', 'Upload your Glitter DTF design');
-    $ctaUrl = $widget->getSetting('cta_url', '/design/glitter-dtf-transfers');
-
     if (!is_array($stats)) $stats = [];
     if (!is_array($steps)) $steps = [];
 @endphp
@@ -78,15 +75,6 @@
                         @endforeach
                     </ol>
                 @endif
-            </div>
-        @endif
-
-        @if($ctaText)
-            <div class="rj-sfs-cta">
-                <a href="{{ $ctaUrl }}" class="rj-sfs-btn">
-                    {{ $ctaText }}
-                    <i class="fa-solid fa-arrow-right"></i>
-                </a>
             </div>
         @endif
 
@@ -254,31 +242,6 @@
         margin: 0;
         font-weight: 400;
     }
-
-    .rj-sfs-cta {
-        margin-top: 3.5rem;
-    }
-
-    .rj-sfs-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 1.125rem 2rem;
-        background: linear-gradient(135deg, #a855f7, #ec4899);
-        color: #fff;
-        text-decoration: none;
-        border-radius: 9999px;
-        font-size: 15px;
-        font-weight: 700;
-        transition: all 0.3s;
-        box-shadow: 0 8px 24px -8px rgba(168, 85, 247, 0.55);
-    }
-    .rj-sfs-btn:hover {
-        filter: brightness(1.1);
-        transform: translateY(-2px);
-        box-shadow: 0 14px 36px -10px rgba(168, 85, 247, 0.75);
-    }
-    .rj-sfs-btn i { font-size: 12px; }
 
     @media (max-width: 640px) {
         .rj-sfs-step {
