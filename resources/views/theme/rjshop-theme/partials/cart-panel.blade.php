@@ -85,9 +85,24 @@
                                     </button>
                                 </div>
 
+                                <template x-if="item.width_inch && item.height_inch">
+                                    <p class="font-mono text-[10px] text-indigo-300">
+                                        <i class="fa-solid fa-ruler-combined mr-1"></i>
+                                        <span x-text="Number(item.width_inch).toFixed(2) + ' × ' + Number(item.height_inch).toFixed(2) + ' in'"></span>
+                                    </p>
+                                </template>
+
                                 <template x-if="item.attributes && Object.keys(item.attributes).length">
                                     <p class="font-mono text-[10px] text-gray-500 truncate"
-                                       x-text="Object.entries(item.attributes).map(([k,v]) => k + ': ' + v).join(' · ')"></p>
+                                       x-text="Object.entries(item.attributes).filter(([k]) => !['Width (in)','Height (in)'].includes(k)).map(([k,v]) => k + ': ' + v).join(' · ')"></p>
+                                </template>
+
+                                <template x-if="item.print_type === 'custom_size' && (item.sheet_price !== null || item.product_price !== null)">
+                                    <div class="flex items-center gap-2 font-mono text-[10px] text-gray-400">
+                                        <span>Sheet <span class="text-white">$<span x-text="Number(item.sheet_price || 0).toFixed(2)"></span></span></span>
+                                        <span class="text-gray-600">·</span>
+                                        <span>Product <span class="text-white">$<span x-text="Number(item.product_price || 0).toFixed(2)"></span></span></span>
+                                    </div>
                                 </template>
 
                                 <div class="flex items-center justify-between mt-auto pt-1 gap-2">
