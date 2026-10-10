@@ -18,7 +18,7 @@
     var GRID_IN = 0.5;
     var MAX_FILE_MB = 30;
     var HISTORY_LIMIT = 40;
-    var MAX_EXPORT_PIXELS = 50000000;
+    var MAX_EXPORT_PIXELS = 60000000;
     var MAX_FILL = 300;
 
     // Properties tracked by undo / redo
