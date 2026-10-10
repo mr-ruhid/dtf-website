@@ -310,6 +310,7 @@ class WidgetController extends Controller
                 'popup_width' => ['nullable', 'integer', 'min:300', 'max:1200'],
                 'popup_height' => ['nullable', 'integer', 'min:400', 'max:1400'],
                 'position' => ['nullable', 'in:bottom-right,bottom-left'],
+                'mode' => ['nullable', 'in:iframe,popup'],
             ]),
 
             default => $request->validate([
