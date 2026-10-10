@@ -10,6 +10,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\TrackController;
 use App\Http\Controllers\OrderDownloadController;
+use App\Http\Controllers\GalleryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('page.home');
@@ -24,6 +25,8 @@ Route::get('/return-policy', [PageController::class, 'returnPolicy'])->name('pag
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
+
+Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery.index');
 
 Route::get('/design', [DesignController::class, 'index'])->name('design.index');
 Route::post('/design/temp-upload', [DesignController::class, 'tempUpload'])->name('design.temp-upload');
