@@ -12,6 +12,7 @@
         <p class="text-sm text-gray-500 mt-1">Manage all customer orders</p>
     </div>
     <div class="flex items-center gap-2 flex-wrap">
+    <div class="flex items-center gap-2 flex-wrap">
         <button type="button" @click="emailsModal = true"
                 class="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-sm font-medium px-4 py-2.5 rounded-lg transition flex items-center gap-2">
             <i class="fa-solid fa-bell text-xs text-amber-500"></i>
@@ -19,10 +20,22 @@
             <span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold"
                   x-text="emails.length"></span>
         </button>
+
+        <form method="POST" action="{{ route('admin.orders.test-notification') }}" class="inline">
+            @csrf
+            <button type="submit"
+                    class="bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-700 text-sm font-medium px-4 py-2.5 rounded-lg transition flex items-center gap-2"
+                    title="Send test notification to the configured emails">
+                <i class="fa-solid fa-paper-plane text-xs"></i>
+                <span>Test</span>
+            </button>
+        </form>
+
         <a href="{{ route('admin.orders.api-docs') }}"
            class="bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition flex items-center gap-2">
             <i class="fa-solid fa-code text-xs"></i> API Documentation
         </a>
+    </div>
     </div>
 </div>
 
