@@ -88,9 +88,46 @@
                             <button type="button" @click="ai_url = 'https://chatgpt.com'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">ChatGPT.com</button>
                             <button type="button" @click="ai_url = 'https://example.com'" class="px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-xs font-medium text-amber-800 transition">example.com (test)</button>
                         </div>
-                        <p class="text-[10px] text-gray-400 mt-2">
-                            Add <code class="font-mono">?url=</code> in iframe src through proxy. Test each one and keep the working ones.
-                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                            <i class="fa-solid fa-display text-xs"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 text-sm">Display Mode</h3>
+                            <p class="text-xs text-gray-400">How the AI opens when the button is clicked</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <label class="relative flex flex-col gap-2 p-4 rounded-lg border-2 cursor-pointer transition"
+                               :class="mode === 'iframe' ? 'border-indigo-500 bg-indigo-50/50' : 'border-gray-200 hover:border-gray-300'">
+                            <input type="radio" name="mode" value="iframe" x-model="mode" class="sr-only">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center"
+                                     :class="mode === 'iframe' ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-500'">
+                                    <i class="fa-solid fa-window-maximize text-xs"></i>
+                                </div>
+                                <span class="font-semibold text-sm text-gray-800">Iframe</span>
+                            </div>
+                            <p class="text-[11px] text-gray-500 leading-relaxed">Opens inside the slide panel. Works only for sites that allow embedding.</p>
+                        </label>
+
+                        <label class="relative flex flex-col gap-2 p-4 rounded-lg border-2 cursor-pointer transition"
+                               :class="mode === 'popup' ? 'border-indigo-500 bg-indigo-50/50' : 'border-gray-200 hover:border-gray-300'">
+                            <input type="radio" name="mode" value="popup" x-model="mode" class="sr-only">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center"
+                                     :class="mode === 'popup' ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-500'">
+                                    <i class="fa-solid fa-up-right-from-square text-xs"></i>
+                                </div>
+                                <span class="font-semibold text-sm text-gray-800">Popup Window</span>
+                            </div>
+                            <p class="text-[11px] text-gray-500 leading-relaxed">Opens in a separate browser window. Works with every AI provider.</p>
+                        </label>
                     </div>
                 </div>
 
@@ -100,19 +137,19 @@
                             <i class="fa-solid fa-window-restore text-xs"></i>
                         </div>
                         <div>
-                            <h3 class="font-semibold text-gray-800 text-sm">Popup Window</h3>
+                            <h3 class="font-semibold text-gray-800 text-sm">Panel / Popup Size</h3>
                             <p class="text-xs text-gray-400">Size and position of the floating button</p>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Popup Width (px)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Width (px)</label>
                             <input type="number" name="popup_width" x-model.number="popup_width" min="300" max="1200"
                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Popup Height (px)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Height (px)</label>
                             <input type="number" name="popup_height" x-model.number="popup_height" min="400" max="1400"
                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
@@ -182,7 +219,7 @@
                     <i class="fa-solid fa-triangle-exclamation text-amber-600 mt-0.5"></i>
                     <div class="text-xs text-amber-800">
                         <p class="font-medium mb-1">Heads up</p>
-                        <p>Some AI providers (ChatGPT, Claude, Gemini) block embedding in iframes and small windows. The button opens them in a popup window instead — this works for all providers.</p>
+                        <p>Some AI providers block embedding in iframes. Use <strong>Popup Window</strong> mode for those — it works with every provider.</p>
                     </div>
                 </div>
 
@@ -205,6 +242,7 @@ function adminAiChatEditor(settings) {
         popup_width: parseInt(s.popup_width) || 460,
         popup_height: parseInt(s.popup_height) || 780,
         position: s.position || 'bottom-right',
+        mode: s.mode || 'iframe',
     };
 }
 </script>
