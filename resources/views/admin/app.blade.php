@@ -139,6 +139,39 @@
             border-radius: 4px;
             border: 1px solid rgba(16,185,129,0.3);
         }
+
+        .rj-chat-btn {
+            animation: rj-chat-float 3s ease-in-out infinite;
+        }
+
+        .rj-chat-btn:hover {
+            animation-play-state: paused;
+            transform: scale(1.06);
+        }
+
+        .rj-chat-icon {
+            animation: rj-chat-wiggle 4s ease-in-out infinite;
+        }
+
+        .rj-chat-dot {
+            animation: rj-chat-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes rj-chat-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        @keyframes rj-chat-wiggle {
+            0%, 90%, 100% { transform: rotate(0); }
+            93% { transform: rotate(-12deg); }
+            96% { transform: rotate(12deg); }
+        }
+
+        @keyframes rj-chat-pulse {
+            0%, 100% { box-shadow: 0 0 6px rgba(52,211,153,0.9); transform: scale(1); }
+            50% { box-shadow: 0 0 12px rgba(52,211,153,1); transform: scale(1.15); }
+        }
     </style>
     @stack('styles')
 </head>
@@ -540,7 +573,184 @@
 
     </aside>
 
+    @php
+        $aiChatWidget = \App\Models\Widget::where('key', 'admin_ai_chat')
+            ->where('is_active', 1)
+            ->first();
+
+        $aiChatSettings = $aiChatWidget ? ($aiChatWidget->settings ?? []) : [];
+        $aiChatEnabledRaw = $aiChatSettings['enabled'] ?? false;
+        $aiChatEnabled = $aiChatEnabledRaw === true || $aiChatEnabledRaw === 1 || $aiChatEnabledRaw === '1';
+        $aiChatUrl = $aiChatSettings['ai_url'] ?? 'https://chat.openai.com';
+        $aiChatWidth = (int) ($aiChatSettings['popup_width'] ?? 460);
+        $aiChatPosition = $aiChatSettings['position'] ?? 'bottom-right';
+    @endphp
+
+    @if($aiChatWidget && $aiChatEnabled && !request()->routeIs('admin.widgets*'))
+        <div x-data="adminAiChatPanel({
+                url: @js($aiChatUrl),
+                panelWidth: {{ $aiChatWidth }}
+             })"
+             x-cloak>
+
+            <button type="button"
+                    @click="open = !open"
+                    title="Chat"
+                    class="fixed z-[9999] {{ $aiChatPosition === 'bottom-left' ? 'bottom-6 left-6' : 'bottom-6 right-6' }} group flex items-center gap-1.5 h-11 pl-2 pr-3.5 rounded-full bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-600 text-white shadow-[0_6px_24px_-4px_rgba(99,102,241,0.7)] hover:shadow-[0_10px_32px_-4px_rgba(99,102,241,0.9)] transition-all duration-300 border border-white/20 rj-chat-btn"
+                    x-show="!open">
+                <span class="relative flex items-center justify-center w-7 h-7 rounded-full bg-white/15 backdrop-blur-sm">
+                    <i class="fa-solid fa-comment-dots text-xs rj-chat-icon"></i>
+                    <span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 rj-chat-dot"></span>
+                </span>
+                <span class="text-xs font-bold whitespace-nowrap">Chat</span>
+            </button>
+
+            <div x-show="open"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="translate-x-full"
+                 x-transition:enter-end="translate-x-0"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="translate-x-0"
+                 x-transition:leave-end="translate-x-full"
+                 class="fixed top-0 right-0 h-full bg-[#0f172a] border-l border-slate-800/60 shadow-[-16px_0_48px_rgba(0,0,0,0.5)] z-[9999] flex flex-col"
+                 :style="'width: ' + panelWidth + 'px; max-width: 100vw;'">
+
+                <div class="h-14 flex items-center justify-between px-4 border-b border-slate-800/60 shrink-0">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                            <i class="fa-solid fa-comment-dots text-white text-xs"></i>
+                        </div>
+                        <div class="leading-tight">
+                            <p class="text-white text-sm font-bold">Chat</p>
+                            <p class="text-[10px] text-slate-500 font-mono">iframe preview</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button type="button"
+                                @click="reload()"
+                                class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                                title="Reload">
+                            <i class="fa-solid fa-rotate text-xs"></i>
+                        </button>
+                        <button type="button"
+                                @click="openPopup()"
+                                class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                                title="Open in new window">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                        </button>
+                        <button type="button"
+                                @click="open = false"
+                                class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                                title="Close">
+                            <i class="fa-solid fa-xmark text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex-1 relative bg-slate-950">
+                    <iframe :src="iframeUrl"
+                            class="w-full h-full border-0"
+                            referrerpolicy="no-referrer-when-downgrade"
+                            allow="clipboard-write; clipboard-read"
+                            x-ref="frame"></iframe>
+
+                    <div x-show="blocked"
+                         x-cloak
+                         class="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/95 p-6 text-center z-10">
+                        <div class="w-14 h-14 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mb-4">
+                            <i class="fa-solid fa-shield-halved text-amber-400 text-xl"></i>
+                        </div>
+                        <p class="text-white font-semibold mb-2">This AI blocks embedding</p>
+                        <p class="text-slate-400 text-xs leading-relaxed mb-5 max-w-xs">
+                            <strong x-text="currentHost"></strong> doesn't allow itself to be shown in an iframe. Open it in a separate window instead.
+                        </p>
+                        <button type="button"
+                                @click="openPopup()"
+                                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-sm font-bold hover:brightness-110 transition">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                            Open in new window
+                        </button>
+                    </div>
+                </div>
+
+                <div class="px-4 py-2.5 border-t border-slate-800/60 bg-slate-900/50 shrink-0">
+                    <p class="text-[10px] text-slate-500 font-mono truncate" x-text="iframeUrl"></p>
+                </div>
+            </div>
+        </div>
+    @endif
+
     @stack('scripts')
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('adminAiChatPanel', (config) => ({
+                url: config.url || 'https://chat.openai.com',
+                panelWidth: config.panelWidth || 460,
+                open: false,
+                blocked: false,
+                iframeUrl: config.url || 'https://chat.openai.com',
+
+                get currentHost() {
+                    try {
+                        return new URL(this.iframeUrl).hostname;
+                    } catch (e) {
+                        return this.iframeUrl;
+                    }
+                },
+
+                init() {
+                    this.$watch('open', (v) => {
+                        if (v) {
+                            this.blocked = false;
+                            setTimeout(() => this.detectBlocked(), 2500);
+                        }
+                    });
+                },
+
+                reload() {
+                    this.blocked = false;
+                    var base = this.url;
+                    var sep = base.indexOf('?') > -1 ? '&' : '?';
+                    this.iframeUrl = base + sep + '_r=' + Date.now();
+                    setTimeout(() => this.detectBlocked(), 2500);
+                },
+
+                detectBlocked() {
+                    const frame = this.$refs.frame;
+                    if (!frame) return;
+
+                    try {
+                        const doc = frame.contentDocument || frame.contentWindow.document;
+
+                        if (!doc || doc.body === null) {
+                            this.blocked = true;
+                            return;
+                        }
+
+                        if (doc.body.innerHTML.trim() === '' || doc.body.children.length === 0) {
+                            this.blocked = true;
+                            return;
+                        }
+
+                        this.blocked = false;
+                    } catch (e) {
+                        this.blocked = false;
+                    }
+                },
+
+                openPopup() {
+                    const w = this.panelWidth;
+                    const h = Math.min(900, window.screen.height - 80);
+                    const left = (window.screen.width - w) / 2;
+                    const top = (window.screen.height - h) / 2;
+
+                    window.open(this.url, 'admin_ai_chat_popup',
+                        'width=' + w + ',height=' + h + ',left=' + Math.max(0, left) + ',top=' + Math.max(0, top) + ',resizable=yes,scrollbars=yes');
+                }
+            }));
+        });
+    </script>
 
 </body>
 </html>
