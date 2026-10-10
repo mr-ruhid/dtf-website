@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\OrderDesign;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\PrintZone;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -151,6 +154,144 @@ class DesignController extends Controller
             'size' => $file->getSize(),
             'mime' => $file->getMimeType() ?: 'application/octet-stream',
         ]);
+    }
+
+    public function adminSave(Request $request)
+    {
+        if (!auth()->check()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $user = auth()->user();
+
+        if (!isset($user->role) || $user->role !== 'admin') {
+            return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
+        }
+
+        $validated = $request->validate([
+            'order_item_id' => ['required', 'integer', 'exists:order_items,id'],
+            'composite_upload' => ['nullable', 'array'],
+            'composite_upload.token' => ['nullable', 'string', 'max:64'],
+            'composite_upload.path' => ['nullable', 'string', 'max:500'],
+            'composite_upload.name' => ['nullable', 'string', 'max:255'],
+            'composite_upload.size' => ['nullable', 'integer', 'min:0'],
+            'composite_upload.mime' => ['nullable', 'string', 'max:100'],
+            'composite_image' => ['nullable', 'string'],
+            'canvas_state' => ['nullable', 'array'],
+            'dpi' => ['nullable', 'integer', 'min:1', 'max:1000'],
+        ]);
+
+        $item = OrderItem::with(['order', 'designs'])->find($validated['order_item_id']);
+
+        if (!$item || !$item->order) {
+            return response()->json(['success' => false, 'message' => 'Order item not found'], 404);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $newPath = null;
+            $mime = 'image/png';
+            $size = 0;
+
+            if (!empty($validated['composite_upload']['path'])) {
+                $srcPath = trim((string) $validated['composite_upload']['path']);
+
+                if (str_starts_with($srcPath, 'tmp/uploads/') && !str_contains($srcPath, '..') && Storage::disk('public')->exists($srcPath)) {
+                    $ext = strtolower(pathinfo($srcPath, PATHINFO_EXTENSION));
+                    $ext = preg_replace('/[^a-z0-9]/', '', $ext) ?: 'png';
+
+                    $newPath = 'orders/designs/' . $item->order_id . '-' . $item->id . '-' . Str::random(8) . '.' . $ext;
+
+                    Storage::disk('public')->copy($srcPath, $newPath);
+
+                    $size = (int) Storage::disk('public')->size($newPath);
+
+                    if (!empty($validated['composite_upload']['mime'])) {
+                        $mime = substr((string) $validated['composite_upload']['mime'], 0, 100);
+                    }
+                }
+            }
+
+            if (!$newPath && !empty($validated['composite_image'])) {
+                $src = (string) $validated['composite_image'];
+
+                if (str_starts_with($src, 'data:')) {
+                    $parts = explode(',', $src, 2);
+
+                    if (count($parts) === 2) {
+                        $decoded = base64_decode($parts[1], true);
+
+                        if ($decoded !== false) {
+                            $newPath = 'orders/designs/' . $item->order_id . '-' . $item->id . '-' . Str::random(8) . '.png';
+                            Storage::disk('public')->put($newPath, $decoded);
+                            $size = strlen($decoded);
+                        }
+                    }
+                }
+            }
+
+            if (!$newPath) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => 'No composite file provided'], 422);
+            }
+
+            $composite = $item->designs()->first();
+
+            if ($composite) {
+                if ($composite->file_path && !str_starts_with($composite->file_path, 'http')) {
+                    Storage::disk('public')->delete($composite->file_path);
+                }
+
+                $composite->update([
+                    'file_path' => $newPath,
+                    'mime_type' => $mime,
+                    'file_size' => $size,
+                    'original_name' => $composite->original_name ?: ('admin-edit-' . $item->id . '.png'),
+                ]);
+            } else {
+                OrderDesign::create([
+                    'order_item_id' => $item->id,
+                    'file_path' => $newPath,
+                    'original_name' => 'admin-edit-' . $item->id . '.png',
+                    'mime_type' => $mime,
+                    'file_size' => $size,
+                    'width' => $item->print_width,
+                    'height' => $item->print_height,
+                ]);
+            }
+
+            $breakdown = $item->price_breakdown ?? [];
+
+            if (!empty($validated['canvas_state']) && is_array($validated['canvas_state'])) {
+                $encoded = json_encode($validated['canvas_state']);
+
+                if ($encoded !== false && strlen($encoded) <= 2097152) {
+                    $breakdown['canvas_state'] = $validated['canvas_state'];
+                }
+            }
+
+            if (!empty($validated['dpi'])) {
+                $breakdown['admin_dpi'] = (int) $validated['dpi'];
+            }
+
+            $breakdown['admin_edited_at'] = now()->toIso8601String();
+            $breakdown['admin_edited_by'] = $user->name ?? 'Admin';
+
+            $item->update(['price_breakdown' => $breakdown]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'redirect_url' => route('admin.orders.show', $item->order_id),
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Admin save failed: ' . $e->getMessage());
+
+            return response()->json(['success' => false, 'message' => 'Save failed: ' . $e->getMessage()], 500);
+        }
     }
 
     protected function resolveCanvasState(Request $request): ?array
