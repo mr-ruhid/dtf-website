@@ -170,6 +170,8 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
 
         Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('orders/api-docs', [OrderController::class, 'apiDocs'])->name('orders.api-docs');
+        Route::get('orders/notification-emails', [OrderController::class, 'notificationEmails'])->name('orders.notification-emails');
+        Route::put('orders/notification-emails', [OrderController::class, 'updateNotificationEmails'])->name('orders.notification-emails.update');
         Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
         Route::put('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
         Route::put('orders/{order}/payment', [OrderController::class, 'updatePayment'])->name('orders.payment');
@@ -177,8 +179,6 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::delete('orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
         Route::delete('orders/{order}/designs/{design}', [OrderController::class, 'deleteDesign'])->name('orders.designs.destroy');
         Route::delete('orders/{order}/transactions/{transaction}/receipt', [OrderController::class, 'deleteReceipt'])->name('orders.receipt.delete');
-        Route::get('orders/notification-emails', [OrderController::class, 'notificationEmails'])->name('orders.notification-emails');
-Route::put('orders/notification-emails', [OrderController::class, 'updateNotificationEmails'])->name('orders.notification-emails.update');
 
         Route::get('support', [SupportController::class, 'index'])->name('support.index');
         Route::get('support/{ticket}', [SupportController::class, 'show'])->name('support.show');
