@@ -67,7 +67,7 @@ class OrderService
 
         $total = round($subtotal + $deliveryCost, 2);
 
-        return DB::transaction(function () use (
+        $order = DB::transaction(function () use (
             $customer, $shipping, $items, $gateway, $gatewayId,
             $subtotal, $deliveryCost, $total, $note,
             $zone, $branch
@@ -200,6 +200,14 @@ class OrderService
 
             return $order->fresh(['items', 'statusLogs']);
         });
+
+        try {
+            app(\App\Services\OrderNotifier::class)->notifyNewOrder($order);
+        } catch (\Throwable $e) {
+            logger()->warning('New order notification failed: ' . $e->getMessage());
+        }
+
+        return $order;
     }
 
     protected function attachDesignIfAny(OrderItem $item, array $row): void
