@@ -285,6 +285,12 @@
                     <span x-show="sidebarOpen" class="text-[13px] font-medium">Settings</span>
                 </a>
 
+                <a href="{{ route('admin.storage.index') }}"
+                   class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.storage*') ? 'active' : '' }}">
+                    <div class="icon-box"><i class="fa-solid fa-database"></i></div>
+                    <span x-show="sidebarOpen" class="text-[13px] font-medium">Storage</span>
+                </a>
+
                 <a href="{{ route('admin.settings.design-pricing') }}"
                    class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings.design-pricing*') ? 'active' : '' }}">
                     <div class="icon-box"><i class="fa-solid fa-calculator"></i></div>
@@ -496,6 +502,10 @@
             <a href="{{ route('admin.settings.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings.index') ? 'active' : '' }}">
                 <div class="icon-box"><i class="fa-solid fa-sliders"></i></div>
                 <span class="text-[13px] font-medium">Settings</span>
+            </a>
+            <a href="{{ route('admin.storage.index') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.storage*') ? 'active' : '' }}">
+                <div class="icon-box"><i class="fa-solid fa-database"></i></div>
+                <span class="text-[13px] font-medium">Storage</span>
             </a>
             <a href="{{ route('admin.settings.design-pricing') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->routeIs('admin.settings.design-pricing*') ? 'active' : '' }}">
                 <div class="icon-box"><i class="fa-solid fa-calculator"></i></div>
