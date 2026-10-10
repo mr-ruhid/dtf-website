@@ -871,7 +871,8 @@ function signProduct(config) {
                 width_inch: parseFloat(this.width),
                 height_inch: parseFloat(this.selectedHeight ? this.selectedHeight.height : 0),
                 note: this.notes || null,
-                image: this.fileData || null
+                image: this.fileData || null,
+                file_name: this.fileName || null
             };
 
             try {
