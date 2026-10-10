@@ -658,6 +658,7 @@
                     <iframe :src="iframeUrl"
                             class="w-full h-full border-0"
                             referrerpolicy="no-referrer-when-downgrade"
+                            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads allow-popups-to-escape-sandbox"
                             allow="clipboard-write; clipboard-read; microphone; camera"
                             x-ref="frame"></iframe>
 
@@ -719,7 +720,7 @@
                     this.$watch('open', (v) => {
                         if (v) {
                             this.blocked = false;
-                            setTimeout(() => this.detectBlocked(), 3000);
+                            setTimeout(() => this.detectBlocked(), 4000);
                         }
                     });
                 },
@@ -738,7 +739,7 @@
                     const sep = base.indexOf('?') > -1 ? '&' : '?';
                     const target = base + sep + '_r=' + Date.now();
                     this.iframeUrl = this.buildProxyUrl(target);
-                    setTimeout(() => this.detectBlocked(), 3000);
+                    setTimeout(() => this.detectBlocked(), 4000);
                 },
 
                 detectBlocked() {
