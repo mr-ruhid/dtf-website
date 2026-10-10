@@ -422,7 +422,7 @@ php artisan optimize:clear        # clear all caches
 
 ## License
 
-Proprietary. All rights reserved.
+RJ CMS Lite is source-available. You may view and modify the code for non-commercial purposes. Commercial use and running it as a live website require prior written permission and a paid license from the author. See [LICENSE.md](LICENSE.md) for details.
 
 ---
 
