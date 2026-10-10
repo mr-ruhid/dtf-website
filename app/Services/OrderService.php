@@ -107,19 +107,34 @@ class OrderService
             ]);
 
             foreach ($items as $row) {
+                $printWidth = isset($row['width_inch']) && $row['width_inch'] !== null && $row['width_inch'] !== ''
+                    ? (float) $row['width_inch']
+                    : null;
+
+                $printHeight = isset($row['height_inch']) && $row['height_inch'] !== null && $row['height_inch'] !== ''
+                    ? (float) $row['height_inch']
+                    : null;
+
+                $rawImage = $row['image'] ?? null;
+                $productImage = null;
+
+                if (is_string($rawImage) && $rawImage !== '' && !Str::startsWith($rawImage, 'data:')) {
+                    $productImage = $rawImage;
+                }
+
                 $orderItem = OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $row['product_id'] ?? null,
                     'product_name' => $row['name'],
                     'product_sku' => null,
-                    'product_image' => $row['image'] ?? null,
+                    'product_image' => $productImage,
 
                     'attributes' => $row['attributes'] ?? [],
                     'print_type' => $row['print_type'] ?? 'none',
                     'print_zone_id' => null,
                     'print_zone_name' => null,
-                    'print_width' => null,
-                    'print_height' => null,
+                    'print_width' => $printWidth,
+                    'print_height' => $printHeight,
 
                     'quantity' => $row['qty'],
                     'unit_price' => $row['unit_price'],
@@ -130,6 +145,7 @@ class OrderService
                         'qty' => $row['qty'],
                         'total' => $row['total'],
                         'tier_label' => $row['tier_label'] ?? null,
+                        'note' => $row['note'] ?? null,
                     ],
                 ]);
 
@@ -210,7 +226,15 @@ class OrderService
                 return;
             }
 
-            $filename = 'orders/designs/' . $item->order_id . '-' . $item->id . '-' . Str::random(8) . '.jpg';
+            $mime = 'image/jpeg';
+            $ext = 'jpg';
+
+            if (preg_match('/^data:image\/(\w+);/', $src, $m)) {
+                $mime = 'image/' . strtolower($m[1]);
+                $ext = $m[1] === 'jpeg' ? 'jpg' : strtolower($m[1]);
+            }
+
+            $filename = 'orders/designs/' . $item->order_id . '-' . $item->id . '-' . Str::random(8) . '.' . $ext;
 
             Storage::disk('public')->put($filename, $decoded);
 
@@ -218,8 +242,10 @@ class OrderService
                 'order_item_id' => $item->id,
                 'file_path' => $filename,
                 'original_name' => null,
-                'mime_type' => 'image/jpeg',
+                'mime_type' => $mime,
                 'file_size' => strlen($decoded),
+                'width' => $row['width_inch'] ?? null,
+                'height' => $row['height_inch'] ?? null,
             ]);
         } catch (\Throwable $e) {
             logger()->warning('Failed to attach design: ' . $e->getMessage());
