@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\PrintZone;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class DesignController extends Controller
 {
@@ -100,6 +103,48 @@ class DesignController extends Controller
             'zones' => $zonesPayload,
             'product' => $productPayload,
             'allProducts' => $allProducts,
+        ]);
+    }
+
+    public function tempUpload(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:png,jpg,jpeg,webp,pdf', 'max:30720'],
+        ]);
+
+        $file = $request->file('file');
+
+        if (!$file || !$file->isValid()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Upload failed.',
+            ], 422);
+        }
+
+        $sessionId = preg_replace('/[^a-zA-Z0-9]/', '', session()->getId());
+        $ext = strtolower($file->getClientOriginalExtension() ?: 'png');
+        $ext = preg_replace('/[^a-z0-9]/', '', $ext) ?: 'png';
+
+        $token = Str::random(16);
+        $filename = $token . '.' . $ext;
+        $dir = 'tmp/uploads/' . $sessionId;
+
+        $path = $file->storeAs($dir, $filename, 'public');
+
+        if (!$path) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not save file.',
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'token' => $token,
+            'path' => $path,
+            'name' => $file->getClientOriginalName(),
+            'size' => $file->getSize(),
+            'mime' => $file->getMimeType() ?: 'application/octet-stream',
         ]);
     }
 
