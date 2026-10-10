@@ -994,16 +994,17 @@
                         continue;
                     }
 
-                    if (isImage) {
-                        await new Promise(function (resolve) {
+                                        if (isImage) {
+                        var dataUrl = await new Promise(function (resolve) {
                             var reader = new FileReader();
-                            reader.onload = function (ev) {
-                                self.addImageFromSrc(ev.target.result, null, f.name);
-                                resolve();
-                            };
-                            reader.onerror = function () { resolve(); };
+                            reader.onload = function (ev) { resolve(ev.target.result); };
+                            reader.onerror = function () { resolve(null); };
                             reader.readAsDataURL(f);
                         });
+
+                        if (dataUrl) {
+                            await self.addImageFromSrc(dataUrl, null, f.name);
+                        }
                     }
                 }
             },
@@ -1039,60 +1040,68 @@
             },
 
             addImageFromSrc(src, replaceObj, name) {
-                if (!canvas) return;
                 var self = this;
 
-                fabric.Image.fromURL(src, function (img) {
-                    if (!img || !img.width) { self.toast('Could not load image'); return; }
+                return new Promise(function (resolve) {
+                    if (!canvas) { resolve(); return; }
 
-                    var cw = canvas.getWidth();
-                    var ch = canvas.getHeight();
+                    fabric.Image.fromURL(src, function (img) {
+                        if (!img || !img.width) {
+                            self.toast('Could not load image');
+                            resolve();
+                            return;
+                        }
 
-                    var scale = Math.min(DPI / TARGET_DPI, (cw * 0.6) / img.width, (ch * 0.6) / img.height);
-                    var cascade = replaceObj ? 0 : (self.itemCount % 6) * DPI * 0.15;
+                        var cw = canvas.getWidth();
+                        var ch = canvas.getHeight();
 
-                    img._rjName = name || (replaceObj && replaceObj._rjName) || 'Image';
+                        var scale = Math.min(DPI / TARGET_DPI, (cw * 0.6) / img.width, (ch * 0.6) / img.height);
+                        var cascade = replaceObj ? 0 : (self.itemCount % 6) * DPI * 0.15;
 
-                    img.set({
-                        originX: 'center',
-                        originY: 'center',
-                        left: cw / 2 + cascade,
-                        top: ch / 2 + cascade,
-                        scaleX: scale,
-                        scaleY: scale
-                    });
+                        img._rjName = name || (replaceObj && replaceObj._rjName) || 'Image';
 
-                    if (replaceObj) {
-                        var idx = canvas.getObjects().indexOf(replaceObj);
-                        var dispW = replaceObj.getScaledWidth();
-                        var dispH = replaceObj.getScaledHeight();
                         img.set({
-                            left: replaceObj.left,
-                            top: replaceObj.top,
-                            scaleX: dispW / img.width,
-                            scaleY: dispH / img.height,
-                            angle: replaceObj.angle,
-                            flipX: replaceObj.flipX,
-                            flipY: replaceObj.flipY,
-                            opacity: replaceObj.opacity
+                            originX: 'center',
+                            originY: 'center',
+                            left: cw / 2 + cascade,
+                            top: ch / 2 + cascade,
+                            scaleX: scale,
+                            scaleY: scale
                         });
-                        canvas.remove(replaceObj);
-                        self.applyHandleSize(img);
-                        canvas.add(img);
-                        if (idx > -1) canvas.moveTo(img, idx);
-                    } else {
-                        self.applyHandleSize(img);
-                        canvas.add(img);
-                    }
 
-                    canvas.setActiveObject(img);
-                    canvas.renderAll();
-                    self.syncActive();
-                    self.syncCount();
-                    self.pushHistory();
-                }, { crossOrigin: 'anonymous' });
+                        if (replaceObj) {
+                            var idx = canvas.getObjects().indexOf(replaceObj);
+                            var dispW = replaceObj.getScaledWidth();
+                            var dispH = replaceObj.getScaledHeight();
+                            img.set({
+                                left: replaceObj.left,
+                                top: replaceObj.top,
+                                scaleX: dispW / img.width,
+                                scaleY: dispH / img.height,
+                                angle: replaceObj.angle,
+                                flipX: replaceObj.flipX,
+                                flipY: replaceObj.flipY,
+                                opacity: replaceObj.opacity
+                            });
+                            canvas.remove(replaceObj);
+                            self.applyHandleSize(img);
+                            canvas.add(img);
+                            if (idx > -1) canvas.moveTo(img, idx);
+                        } else {
+                            self.applyHandleSize(img);
+                            canvas.add(img);
+                        }
+
+                        canvas.setActiveObject(img);
+                        canvas.renderAll();
+                        self.syncActive();
+                        self.syncCount();
+                        self.pushHistory();
+
+                        resolve();
+                    }, { crossOrigin: 'anonymous' });
+                });
             },
-
             async removeBg() {
                 var active = canvas ? canvas.getActiveObject() : null;
                 if (!active || active.type !== 'image') return;
@@ -1103,7 +1112,7 @@
                     var removeFn = await loadRemoveBg();
                     var blob = await removeFn(active.getSrc());
                     var dataUrl = await blobToDataURL(blob);
-                    this.addImageFromSrc(dataUrl, active);
+                    await this.addImageFromSrc(dataUrl, active);
                 } catch (e) {
                     this.toast('Background removal failed');
                 }
