@@ -3,10 +3,8 @@
 namespace App\Mail;
 
 use App\Models\Order;
-use App\Services\OrderArtworkZipper;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -16,8 +14,6 @@ class PaymentConfirmedNotification extends Mailable
     use Queueable, SerializesModels;
 
     public Order $order;
-
-    protected ?string $artworkZipPath = null;
 
     public function __construct(Order $order)
     {
@@ -41,28 +37,11 @@ class PaymentConfirmedNotification extends Mailable
     {
         return new Content(
             view: 'emails.payment-confirmed',
+            with: [
+                'downloadUrl' => $this->order->download_url,
+                'expiresAt' => $this->order->download_expires_at,
+                'isDownloadActive' => $this->order->is_download_active,
+            ],
         );
-    }
-
-    public function attachments(): array
-    {
-        $this->artworkZipPath = app(OrderArtworkZipper::class)->build($this->order);
-
-        if (!$this->artworkZipPath) {
-            return [];
-        }
-
-        return [
-            Attachment::fromPath($this->artworkZipPath)
-                ->as($this->order->order_number . '-artwork.zip')
-                ->withMime('application/zip'),
-        ];
-    }
-
-    public function __destruct()
-    {
-        if ($this->artworkZipPath) {
-            app(OrderArtworkZipper::class)->cleanup($this->artworkZipPath);
-        }
     }
 }
