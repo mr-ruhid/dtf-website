@@ -143,6 +143,35 @@ class Order extends Model
         return route('track.show', ['token' => $this->tracking_token]);
     }
 
+    public function getDownloadExpiresAtAttribute(): ?\Carbon\Carbon
+    {
+        if (!$this->created_at) {
+            return null;
+        }
+
+        return $this->created_at->copy()->addDays(5);
+    }
+
+    public function getIsDownloadActiveAttribute(): bool
+    {
+        $expires = $this->download_expires_at;
+
+        if (!$expires) {
+            return false;
+        }
+
+        return now()->lt($expires);
+    }
+
+    public function getDownloadUrlAttribute(): ?string
+    {
+        if (!$this->tracking_token) {
+            return null;
+        }
+
+        return route('order.download.page', ['token' => $this->tracking_token]);
+    }
+
     public static function generateOrderNumber(): string
     {
         $prefix = 'RJ-' . date('Y') . '-';
