@@ -172,6 +172,7 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::get('orders/api-docs', [OrderController::class, 'apiDocs'])->name('orders.api-docs');
         Route::get('orders/notification-emails', [OrderController::class, 'notificationEmails'])->name('orders.notification-emails');
         Route::put('orders/notification-emails', [OrderController::class, 'updateNotificationEmails'])->name('orders.notification-emails.update');
+        Route::post('orders/test-notification', [OrderController::class, 'testNotification'])->name('orders.test-notification');
         Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
         Route::put('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
         Route::put('orders/{order}/payment', [OrderController::class, 'updatePayment'])->name('orders.payment');
