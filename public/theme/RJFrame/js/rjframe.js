@@ -18,7 +18,7 @@
     var GRID_IN = 0.5;
     var MAX_FILE_MB = 30;
     var HISTORY_LIMIT = 40;
-    var MAX_EXPORT_PIXELS = 25000000;
+    var MAX_EXPORT_PIXELS = 50000000;
     var MAX_FILL = 300;
 
     // Properties tracked by undo / redo
@@ -994,7 +994,7 @@
                         continue;
                     }
 
-                                        if (isImage) {
+                    if (isImage) {
                         var dataUrl = await new Promise(function (resolve) {
                             var reader = new FileReader();
                             reader.onload = function (ev) { resolve(ev.target.result); };
@@ -1102,6 +1102,7 @@
                     }, { crossOrigin: 'anonymous' });
                 });
             },
+
             async removeBg() {
                 var active = canvas ? canvas.getActiveObject() : null;
                 if (!active || active.type !== 'image') return;
@@ -2192,8 +2193,8 @@
                     });
 
                     if (blob) {
-                        var fileName = BRAND + '-gang-sheet-' + widthIn + 'x' + heightIn + 'in.png';
-                        var file = new File([blob], fileName, { type: 'image/png' });
+                        var exportName = BRAND + '-gang-sheet-' + widthIn + 'x' + heightIn + 'in.png';
+                        var file = new File([blob], exportName, { type: 'image/png' });
                         compositeUpload = await this.uploadFile(file);
                     }
 
