@@ -162,6 +162,7 @@ class OrderService
                 }
 
                 $this->attachDesignIfAny($orderItem, $row);
+                $this->moveOriginalUploads($orderItem, $row);
             }
 
             $order->statusLogs()->create([
@@ -277,6 +278,65 @@ class OrderService
             ]);
         } catch (\Throwable $e) {
             logger()->warning('Failed to attach design: ' . $e->getMessage());
+        }
+    }
+
+    protected function moveOriginalUploads(OrderItem $item, array $row): void
+    {
+        if (empty($row['original_uploads']) || !is_array($row['original_uploads'])) {
+            return;
+        }
+
+        foreach ($row['original_uploads'] as $upload) {
+            if (!is_array($upload)) {
+                continue;
+            }
+
+            $srcPath = isset($upload['path']) ? trim((string) $upload['path']) : '';
+
+            if ($srcPath === '' || !str_starts_with($srcPath, 'tmp/uploads/')) {
+                continue;
+            }
+
+            if (!Storage::disk('public')->exists($srcPath)) {
+                logger()->warning('Original upload not found: ' . $srcPath);
+                continue;
+            }
+
+            try {
+                $ext = strtolower(pathinfo($srcPath, PATHINFO_EXTENSION));
+                $ext = preg_replace('/[^a-z0-9]/', '', $ext) ?: 'png';
+
+                $destPath = 'orders/designs/' . $item->order_id . '-' . $item->id . '-' . Str::random(8) . '.' . $ext;
+
+                Storage::disk('public')->copy($srcPath, $destPath);
+
+                $size = (int) Storage::disk('public')->size($destPath);
+
+                $mime = null;
+
+                if (!empty($upload['mime']) && is_string($upload['mime'])) {
+                    $mime = substr($upload['mime'], 0, 100);
+                }
+
+                $originalName = null;
+
+                if (!empty($upload['name']) && is_string($upload['name'])) {
+                    $originalName = substr($upload['name'], 0, 255);
+                }
+
+                OrderDesign::create([
+                    'order_item_id' => $item->id,
+                    'file_path' => $destPath,
+                    'original_name' => $originalName,
+                    'mime_type' => $mime,
+                    'file_size' => $size,
+                    'width' => null,
+                    'height' => null,
+                ]);
+            } catch (\Throwable $e) {
+                logger()->warning('Failed to move original upload: ' . $e->getMessage());
+            }
         }
     }
 
