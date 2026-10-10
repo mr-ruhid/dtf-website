@@ -1,10 +1,11 @@
 @extends('theme.rjshop-theme.layouts.app')
 
-@section('meta_title', 'Design Studio')
-@section('meta_description', 'Build your gang sheet')
+@section('meta_title', 'RJFrame Design Studio')
+@section('meta_description', 'Build your gang sheet with RJFrame')
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('theme/rjshop-theme/css/design-studio.css') }}">
+<link rel="stylesheet" href="{{ asset('theme/RJFrame/css/rjframe.css') }}">
 @endpush
 
 @section('content')
@@ -16,7 +17,16 @@
             allProducts: {{ \Illuminate\Support\Js::from($allProducts) }}
          })">
 
+    {{-- ===================== TOOLBAR ===================== --}}
     <div class="rj-dz-toolbar">
+
+        <div class="rjf-brand" title="RJFrame Design Studio">
+            <span class="rjf-brand-mark">RJ</span>
+            <span class="rjf-brand-name">Frame</span>
+        </div>
+
+        <div class="rj-dz-tb-sep"></div>
+
         <div class="rj-dz-tb-group">
             <label class="rj-dz-tb-btn rj-dz-tb-primary" title="Upload images (or drag & drop / paste)">
                 <i class="fa-solid fa-cloud-arrow-up"></i>
@@ -24,7 +34,12 @@
                 <input type="file" accept="image/png,image/jpeg,image/webp,application/pdf" multiple class="hidden" @change="onFiles($event)">
             </label>
 
-            <button type="button" class="rj-dz-tb-btn" @click="removeBg()" :disabled="!single || bgWorking">
+            <button type="button" class="rj-dz-tb-btn" @click="addText()" title="Add text">
+                <i class="fa-solid fa-font"></i>
+                <span>Text</span>
+            </button>
+
+            <button type="button" class="rj-dz-tb-btn" @click="removeBg()" :disabled="!(kind === 'image' && single) || bgWorking">
                 <i class="fa-solid" :class="bgWorking ? 'fa-spinner fa-spin' : 'fa-wand-magic-sparkles'"></i>
                 <span x-text="bgWorking ? 'Working...' : 'Remove BG'"></span>
             </button>
@@ -47,6 +62,9 @@
             <button type="button" class="rj-dz-tb-btn" @click="flipH()" :disabled="!hasActive" title="Flip horizontally">
                 <i class="fa-solid fa-left-right"></i>
             </button>
+            <button type="button" class="rj-dz-tb-btn" @click="flipV()" :disabled="!hasActive" title="Flip vertically">
+                <i class="fa-solid fa-up-down"></i>
+            </button>
             <button type="button" class="rj-dz-tb-btn" @click="rotate(90)" :disabled="!hasActive" title="Rotate 90°">
                 <i class="fa-solid fa-arrows-spin"></i>
             </button>
@@ -55,6 +73,9 @@
             </button>
             <button type="button" class="rj-dz-tb-btn" @click="layerDown()" :disabled="!hasActive" title="Send backward">
                 <i class="fa-solid fa-arrow-down"></i>
+            </button>
+            <button type="button" class="rj-dz-tb-btn" :class="{ 'is-on': locked }" @click="toggleLockActive()" :disabled="!hasActive" title="Lock / unlock">
+                <i class="fa-solid" :class="locked ? 'fa-lock' : 'fa-lock-open'"></i>
             </button>
             <button type="button" class="rj-dz-tb-btn" @click="duplicate()" :disabled="!hasActive" title="Duplicate (Ctrl+D)">
                 <i class="fa-regular fa-clone"></i>
@@ -70,6 +91,10 @@
             <button type="button" class="rj-dz-tb-btn" @click="autoArrange()" :disabled="itemCount < 2" title="Auto arrange on sheet">
                 <i class="fa-solid fa-table-cells-large"></i>
                 <span>Arrange</span>
+            </button>
+            <button type="button" class="rj-dz-tb-btn" @click="fillSheet()" :disabled="!single" title="Repeat the selected item to fill the sheet">
+                <i class="fa-solid fa-grip"></i>
+                <span>Fill</span>
             </button>
             <button type="button" class="rj-dz-tb-btn rj-dz-tb-danger" @click="clearAll()" :disabled="itemCount === 0" title="Remove all items">
                 <i class="fa-solid fa-broom"></i>
@@ -95,6 +120,35 @@
         <div class="rj-dz-tb-spacer"></div>
 
         <div class="rj-dz-tb-group">
+            <button type="button" class="rj-dz-tb-btn" :class="{ 'is-on': gridOn }" @click="gridOn = !gridOn" title="Show grid">
+                <i class="fa-solid fa-border-all"></i>
+            </button>
+            <button type="button" class="rj-dz-tb-btn" :class="{ 'is-on': snapOn }" @click="snapOn = !snapOn" title="Snap to guides and grid">
+                <i class="fa-solid fa-magnet"></i>
+            </button>
+            <button type="button" class="rj-dz-tb-btn" :class="{ 'is-on': marginOn }" @click="marginOn = !marginOn" title="Show safe margin">
+                <i class="fa-solid fa-vector-square"></i>
+            </button>
+        </div>
+
+        <div class="rj-dz-tb-sep"></div>
+
+        <div class="rj-dz-tb-group">
+            <button type="button" class="rj-dz-tb-btn" @click="saveProject()" :disabled="itemCount === 0" title="Save project file">
+                <i class="fa-solid fa-floppy-disk"></i>
+            </button>
+            <button type="button" class="rj-dz-tb-btn" @click="$refs.projectInput.click()" title="Open project file">
+                <i class="fa-solid fa-folder-open"></i>
+            </button>
+            <input type="file" class="hidden" accept=".json,application/json" x-ref="projectInput" @change="openProject($event)">
+            <button type="button" class="rj-dz-tb-btn" @click="helpOpen = true" title="Keyboard shortcuts">
+                <i class="fa-solid fa-keyboard"></i>
+            </button>
+        </div>
+
+        <div class="rj-dz-tb-sep"></div>
+
+        <div class="rj-dz-tb-group">
             <button type="button" class="rj-dz-tb-btn" @click="toggleBg()" title="Toggle preview background">
                 <i class="fa-solid fa-chess-board"></i>
                 <span x-text="bgMode === 'white' ? 'White' : 'Transparent'"></span>
@@ -113,48 +167,144 @@
 
     <div class="rj-dz-body">
 
+        {{-- ===================== LEFT PANEL ===================== --}}
         <aside class="rj-dz-left">
             <div class="rj-dz-left-inner">
-                <div class="rj-dz-left-label">// Product</div>
 
-                <div class="rj-dz-select-wrap">
-                    <select class="rj-dz-select" x-ref="productSelect" @change="changeProduct($event)"></select>
-                    <i class="fa-solid fa-chevron-down"></i>
+                <div class="rjf-tabs">
+                    <button type="button" class="rjf-tab" :class="{ 'is-on': tab === 'product' }" @click="tab = 'product'">
+                        <i class="fa-solid fa-box"></i><span>Product</span>
+                    </button>
+                    <button type="button" class="rjf-tab" :class="{ 'is-on': tab === 'text' }" @click="tab = 'text'">
+                        <i class="fa-solid fa-font"></i><span>Text</span>
+                    </button>
+                    <button type="button" class="rjf-tab" :class="{ 'is-on': tab === 'shapes' }" @click="tab = 'shapes'">
+                        <i class="fa-solid fa-shapes"></i><span>Shapes</span>
+                    </button>
+                    <button type="button" class="rjf-tab" :class="{ 'is-on': tab === 'layers' }" @click="tab = 'layers'">
+                        <i class="fa-solid fa-layer-group"></i><span>Layers</span>
+                    </button>
                 </div>
 
-                <template x-if="product">
-                    <div class="rj-dz-left-mock-wrap">
-                        <div class="rj-dz-left-mock">
-                            <template x-if="product.image">
-                                <img :src="product.image" :alt="product.name" class="rj-dz-left-img">
-                            </template>
-                            <template x-if="!product.image">
-                                <div class="rj-dz-left-img-empty">
-                                    <i class="fa-regular fa-image"></i>
-                                </div>
-                            </template>
-                            <div class="rj-dz-left-overlay">
-                                <span class="rj-dz-left-dot"></span>
-                                <span x-text="selectedMeasurement ? selectedMeasurement.label : 'No size'"></span>
-                            </div>
-                        </div>
+                {{-- ---------- Product ---------- --}}
+                <div x-show="tab === 'product'">
+                    <div class="rj-dz-left-label">// Product</div>
 
-                        <p class="rj-dz-left-name" x-text="product.name"></p>
-                        <p class="rj-dz-left-meta">
-                            <span x-text="'$' + Number(unitPrice).toFixed(2) + ' / sheet'"></span>
-                            <span class="rj-dz-left-sep">·</span>
-                            <span x-text="selectedMeasurement ? selectedMeasurement.label : '—'"></span>
-                        </p>
+                    <div class="rj-dz-select-wrap">
+                        <select class="rj-dz-select" x-ref="productSelect" @change="changeProduct($event)"></select>
+                        <i class="fa-solid fa-chevron-down"></i>
                     </div>
-                </template>
 
-                <div class="rj-dz-left-tip">
-                    <i class="fa-solid fa-circle-info"></i>
-                    <span>Upload artwork, arrange it on the sheet, then add to cart.</span>
+                    <template x-if="product">
+                        <div class="rj-dz-left-mock-wrap">
+                            <div class="rj-dz-left-mock">
+                                <template x-if="product.image">
+                                    <img :src="product.image" :alt="product.name" class="rj-dz-left-img">
+                                </template>
+                                <template x-if="!product.image">
+                                    <div class="rj-dz-left-img-empty">
+                                        <i class="fa-regular fa-image"></i>
+                                    </div>
+                                </template>
+                                <div class="rj-dz-left-overlay">
+                                    <span class="rj-dz-left-dot"></span>
+                                    <span x-text="selectedMeasurement ? selectedMeasurement.label : 'No size'"></span>
+                                </div>
+                            </div>
+
+                            <p class="rj-dz-left-name" x-text="product.name"></p>
+                            <p class="rj-dz-left-meta">
+                                <span x-text="'$' + Number(unitPrice).toFixed(2) + ' / sheet'"></span>
+                                <span class="rj-dz-left-sep">·</span>
+                                <span x-text="selectedMeasurement ? selectedMeasurement.label : '—'"></span>
+                            </p>
+                        </div>
+                    </template>
+
+                    <div class="rj-dz-left-tip">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>Upload artwork, add text and shapes, arrange everything on the sheet, then add to cart.</span>
+                    </div>
                 </div>
+
+                {{-- ---------- Text ---------- --}}
+                <div x-show="tab === 'text'" x-cloak>
+                    <button type="button" class="rjf-btn rjf-btn-primary rjf-btn-block" @click="addText()">
+                        <i class="fa-solid fa-plus"></i><span>Add text box</span>
+                    </button>
+
+                    <p class="rjf-panel-title" style="margin-top:14px">Styles</p>
+                    <div class="rjf-presets">
+                        <template x-for="p in textPresets" :key="p.id">
+                            <button type="button" class="rjf-preset" :style="presetCss(p)" @click="addText(p)" x-text="p.label"></button>
+                        </template>
+                    </div>
+
+                    <p class="rjf-panel-title" style="margin-top:14px">Font for new text</p>
+                    <button type="button" class="rjf-font-btn" @click="openFonts()">
+                        <span :style="fontCss(defaultFont)" x-text="defaultFont"></span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+
+                    <div class="rjf-row">
+                        <span class="rjf-sub-title">Color</span>
+                        <input type="color" class="rjf-color" x-model="newTextColor">
+                    </div>
+
+                    <label class="rjf-btn rjf-btn-block" style="margin-top:12px">
+                        <i class="fa-solid fa-file-arrow-up"></i><span>Upload your own font</span>
+                        <input type="file" accept=".ttf,.otf,.woff,.woff2" class="hidden" @change="onFontFile($event)">
+                    </label>
+
+                    <div class="rj-dz-left-tip">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>Double-click a text on the sheet to edit it directly.</span>
+                    </div>
+                </div>
+
+                {{-- ---------- Shapes ---------- --}}
+                <div x-show="tab === 'shapes'" x-cloak>
+                    <p class="rjf-panel-title">Add a shape</p>
+                    <div class="rjf-shape-grid">
+                        <template x-for="s in shapes" :key="s.id">
+                            <button type="button" class="rjf-shape" :title="s.label" @click="addShape(s.id)" x-html="s.svg"></button>
+                        </template>
+                    </div>
+
+                    <div class="rjf-row">
+                        <span class="rjf-sub-title">Fill for new shapes</span>
+                        <input type="color" class="rjf-color" x-model="newShapeFill">
+                    </div>
+                </div>
+
+                {{-- ---------- Layers ---------- --}}
+                <div x-show="tab === 'layers'" x-cloak>
+                    <p class="rjf-panel-title" x-text="'Layers (' + layers.length + ')'"></p>
+
+                    <div class="rjf-empty" x-show="layers.length === 0">Nothing on the sheet yet.</div>
+
+                    <div class="rjf-layers">
+                        <template x-for="l in layers" :key="l.id">
+                            <div class="rjf-layer" :class="{ 'is-active': l.active, 'is-hidden': !l.visible }">
+                                <button type="button" class="rjf-layer-main" @click="selectLayer(l.id)">
+                                    <i class="fa-solid" :class="l.kind === 'text' ? 'fa-font' : (l.kind === 'image' ? 'fa-image' : 'fa-shapes')"></i>
+                                    <span x-text="l.name"></span>
+                                </button>
+                                <button type="button" class="rjf-ico" title="Move up" @click="moveLayer(l.id, 1)"><i class="fa-solid fa-chevron-up"></i></button>
+                                <button type="button" class="rjf-ico" title="Move down" @click="moveLayer(l.id, -1)"><i class="fa-solid fa-chevron-down"></i></button>
+                                <button type="button" class="rjf-ico" title="Show / hide" @click="toggleVisible(l.id)"><i class="fa-solid" :class="l.visible ? 'fa-eye' : 'fa-eye-slash'"></i></button>
+                                <button type="button" class="rjf-ico" title="Lock / unlock" @click="toggleLockLayer(l.id)"><i class="fa-solid" :class="l.locked ? 'fa-lock' : 'fa-lock-open'"></i></button>
+                                <button type="button" class="rjf-ico" title="Delete" @click="deleteLayer(l.id)"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <p class="rjf-powered">Powered by <b>RJFrame</b> <span x-text="'v' + version"></span></p>
             </div>
         </aside>
 
+        {{-- ===================== STAGE ===================== --}}
         <div class="rj-dz-stage-wrap"
              x-ref="wrap"
              @dragover.prevent="dragging = true"
@@ -163,13 +313,24 @@
              :class="{ 'rj-dz-dragging': dragging }">
             <div class="rj-dz-stage" x-ref="stage" :class="'rj-dz-bg-' + bgMode">
                 <canvas id="designCanvas"></canvas>
+
+                <div class="rjf-overlay rjf-grid" x-show="gridOn" :style="gridStyle"></div>
+                <div class="rjf-overlay" x-show="marginOn">
+                    <div class="rjf-margin" :style="marginStyle"></div>
+                </div>
+                <div class="rjf-overlay">
+                    <div class="rjf-guide-v" x-show="guideV !== null" :style="vGuideStyle"></div>
+                    <div class="rjf-guide-h" x-show="guideH !== null" :style="hGuideStyle"></div>
+                </div>
+
                 <div class="rj-dz-empty" x-show="itemCount === 0">
                     <i class="fa-regular fa-image"></i>
-                    <p>Upload, drop or paste artwork to start</p>
+                    <p>Upload, drop or paste artwork to start — or add text and shapes</p>
                 </div>
             </div>
         </div>
 
+        {{-- ===================== RIGHT SIDEBAR ===================== --}}
         <aside class="rj-dz-sidebar">
 
             <div class="rj-dz-side-block" x-show="measurements.length > 0">
@@ -188,15 +349,16 @@
                 </div>
             </div>
 
-            <div class="rj-dz-side-block rj-dz-sel" x-show="single" x-cloak>
+            {{-- ----- Selected object: common ----- --}}
+            <div class="rj-dz-side-block rj-dz-sel" x-show="hasActive" x-cloak>
                 <label class="rj-dz-label">
-                    Selected Image
-                    <span class="rj-dz-dpi" :class="'rj-dz-dpi-' + dpiClass" x-text="sel.dpi + ' DPI'"></span>
+                    <span x-text="kindLabel"></span>
+                    <span class="rj-dz-dpi" x-show="kind === 'image' && single" :class="'rj-dz-dpi-' + dpiClass" x-text="sel.dpi + ' DPI'"></span>
                 </label>
 
-                <div class="rj-dz-custom">
+                <div class="rj-dz-custom" x-show="single">
                     <input type="number" step="0.01" min="0.1" :value="sel.w" placeholder="W" @change="setSize('w', $event.target.value)">
-                    <button type="button" class="rj-dz-lock" :class="{ 'is-on': lockRatio }" @click="toggleLock()">
+                    <button type="button" class="rj-dz-lock" :class="{ 'is-on': lockRatio }" @click="toggleRatio()">
                         <i class="fa-solid" :class="lockRatio ? 'fa-lock' : 'fa-lock-open'"></i>
                     </button>
                     <input type="number" step="0.01" min="0.1" :value="sel.h" placeholder="H" @change="setSize('h', $event.target.value)">
@@ -215,15 +377,204 @@
                 </div>
 
                 <div class="rj-dz-actions">
-                    <button type="button" class="rj-dz-mini-btn" @click="fitToSheet()">
+                    <button type="button" class="rj-dz-mini-btn" @click="fitToSheet()" :disabled="!single">
                         <i class="fa-solid fa-maximize"></i><span>Fit</span>
                     </button>
-                    <button type="button" class="rj-dz-mini-btn" @click="center('h')">
+                    <button type="button" class="rj-dz-mini-btn" @click="alignTo('h')">
                         <i class="fa-solid fa-arrows-left-right-to-line"></i><span>Center H</span>
                     </button>
-                    <button type="button" class="rj-dz-mini-btn" @click="center('v')">
+                    <button type="button" class="rj-dz-mini-btn" @click="alignTo('v')">
                         <i class="fa-solid fa-arrows-up-to-line"></i><span>Center V</span>
                     </button>
+                </div>
+
+                <div class="rjf-seg" style="margin-top:8px;width:100%">
+                    <button type="button" class="rjf-btn rjf-grow" title="Align left" @click="alignTo('left')"><i class="fa-solid fa-align-left"></i></button>
+                    <button type="button" class="rjf-btn rjf-grow" title="Align right" @click="alignTo('right')"><i class="fa-solid fa-align-right"></i></button>
+                    <button type="button" class="rjf-btn rjf-grow" title="Align top" @click="alignTo('top')"><i class="fa-solid fa-arrow-up-long"></i></button>
+                    <button type="button" class="rjf-btn rjf-grow" title="Align bottom" @click="alignTo('bottom')"><i class="fa-solid fa-arrow-down-long"></i></button>
+                </div>
+            </div>
+
+            {{-- ----- Text controls ----- --}}
+            <div class="rj-dz-side-block" x-show="kind === 'text'" x-cloak>
+                <label class="rj-dz-label">Text</label>
+
+                <textarea class="rjf-textarea" rows="2"
+                          :value="txt.content"
+                          @input="txtSet('content', $event.target.value)"
+                          @change="txtDone()"></textarea>
+
+                <div class="rjf-row">
+                    <button type="button" class="rjf-font-btn" @click="openFonts()">
+                        <span :style="fontCss(txt.font)" x-text="txt.font"></span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                </div>
+
+                <div class="rjf-row">
+                    <div class="rjf-field rjf-grow">
+                        <span>Size (pt)</span>
+                        <input type="number" min="1" max="600" step="1" :value="txt.size"
+                               @change="txtSet('size', $event.target.value); txtDone()">
+                    </div>
+                    <div class="rjf-field">
+                        <span>Color</span>
+                        <input type="color" class="rjf-color" :value="txt.color"
+                               @input="txtSet('color', $event.target.value)" @change="txtDone()">
+                    </div>
+                </div>
+
+                <div class="rjf-swatches">
+                    <template x-for="c in palette" :key="'t' + c">
+                        <button type="button" class="rjf-swatch" :style="'background:' + c" @click="swatchText(c)"></button>
+                    </template>
+                </div>
+
+                <div class="rjf-row">
+                    <div class="rjf-seg">
+                        <button type="button" class="rjf-btn" :class="{ 'is-on': txt.bold }" title="Bold" @click="txtToggle('bold')"><i class="fa-solid fa-bold"></i></button>
+                        <button type="button" class="rjf-btn" :class="{ 'is-on': txt.italic }" title="Italic" @click="txtToggle('italic')"><i class="fa-solid fa-italic"></i></button>
+                        <button type="button" class="rjf-btn" :class="{ 'is-on': txt.underline }" title="Underline" @click="txtToggle('underline')"><i class="fa-solid fa-underline"></i></button>
+                        <button type="button" class="rjf-btn" :class="{ 'is-on': txt.strike }" title="Strikethrough" @click="txtToggle('strike')"><i class="fa-solid fa-strikethrough"></i></button>
+                    </div>
+                </div>
+
+                <div class="rjf-row">
+                    <div class="rjf-seg">
+                        <button type="button" class="rjf-btn" :class="{ 'is-on': txt.align === 'left' }" @click="txtAlign('left')"><i class="fa-solid fa-align-left"></i></button>
+                        <button type="button" class="rjf-btn" :class="{ 'is-on': txt.align === 'center' }" @click="txtAlign('center')"><i class="fa-solid fa-align-center"></i></button>
+                        <button type="button" class="rjf-btn" :class="{ 'is-on': txt.align === 'right' }" @click="txtAlign('right')"><i class="fa-solid fa-align-right"></i></button>
+                        <button type="button" class="rjf-btn" :class="{ 'is-on': txt.align === 'justify' }" @click="txtAlign('justify')"><i class="fa-solid fa-align-justify"></i></button>
+                    </div>
+                    <div class="rjf-seg">
+                        <button type="button" class="rjf-btn" title="UPPERCASE" @click="txtCase('upper')">AA</button>
+                        <button type="button" class="rjf-btn" title="lowercase" @click="txtCase('lower')">aa</button>
+                        <button type="button" class="rjf-btn" title="Title Case" @click="txtCase('title')">Aa</button>
+                    </div>
+                </div>
+
+                <div class="rjf-label-line"><span>Letter spacing</span><b x-text="txt.spacing"></b></div>
+                <input type="range" class="rjf-range" min="-100" max="800" step="10" :value="txt.spacing"
+                       @input="txtSet('spacing', $event.target.value)" @change="txtDone()">
+
+                <div class="rjf-label-line"><span>Line height</span><b x-text="Number(txt.lineHeight).toFixed(2)"></b></div>
+                <input type="range" class="rjf-range" min="0.6" max="3" step="0.05" :value="txt.lineHeight"
+                       @input="txtSet('lineHeight', $event.target.value)" @change="txtDone()">
+
+                <div class="rjf-sub">
+                    <div class="rjf-sub-title">Outline</div>
+                    <div class="rjf-row">
+                        <input type="color" class="rjf-color" :value="txt.strokeColor"
+                               @input="txtSet('strokeColor', $event.target.value)" @change="txtDone()">
+                        <input type="range" class="rjf-range" min="0" max="20" step="1" :value="txt.strokeW"
+                               @input="txtSet('strokeW', $event.target.value)" @change="txtDone()">
+                        <b x-text="txt.strokeW"></b>
+                    </div>
+                </div>
+
+                <div class="rjf-sub">
+                    <label class="rjf-check">
+                        <input type="checkbox" :checked="txt.shadowOn" @change="txtSet('shadowOn', $event.target.checked); txtDone()">
+                        <span class="rjf-sub-title">Shadow / glow</span>
+                    </label>
+
+                    <div x-show="txt.shadowOn" x-cloak>
+                        <div class="rjf-row">
+                            <input type="color" class="rjf-color" :value="txt.shadowColor"
+                                   @input="txtSet('shadowColor', $event.target.value)" @change="txtDone()">
+                            <div class="rjf-grow">
+                                <div class="rjf-label-line" style="margin-top:0"><span>Blur</span><b x-text="txt.shadowBlur"></b></div>
+                                <input type="range" class="rjf-range" min="0" max="40" step="1" :value="txt.shadowBlur"
+                                       @input="txtSet('shadowBlur', $event.target.value)" @change="txtDone()">
+                            </div>
+                        </div>
+                        <div class="rjf-label-line"><span>Offset</span><b x-text="txt.shadowOff"></b></div>
+                        <input type="range" class="rjf-range" min="0" max="30" step="1" :value="txt.shadowOff"
+                               @input="txtSet('shadowOff', $event.target.value)" @change="txtDone()">
+                    </div>
+                </div>
+            </div>
+
+            {{-- ----- Shape controls ----- --}}
+            <div class="rj-dz-side-block" x-show="kind === 'shape'" x-cloak>
+                <label class="rj-dz-label">Shape</label>
+
+                <div class="rjf-row" x-show="!shp.isLine">
+                    <div class="rjf-field">
+                        <span>Fill</span>
+                        <input type="color" class="rjf-color" :value="shp.fill"
+                               @input="shpSet('fill', $event.target.value)" @change="shpDone()">
+                    </div>
+                    <label class="rjf-check">
+                        <input type="checkbox" :checked="shp.noFill" @change="shpSet('noFill', $event.target.checked); shpDone()">
+                        <span>No fill</span>
+                    </label>
+                </div>
+
+                <div class="rjf-row" x-show="shp.isLine">
+                    <div class="rjf-field">
+                        <span>Color</span>
+                        <input type="color" class="rjf-color" :value="shp.fill"
+                               @input="shpSet('fill', $event.target.value)" @change="shpDone()">
+                    </div>
+                </div>
+
+                <div class="rjf-swatches">
+                    <template x-for="c in palette" :key="'s' + c">
+                        <button type="button" class="rjf-swatch" :style="'background:' + c" @click="swatchShape(c)"></button>
+                    </template>
+                </div>
+
+                <div class="rjf-sub" x-show="!shp.isLine">
+                    <div class="rjf-sub-title">Border</div>
+                    <div class="rjf-row">
+                        <input type="color" class="rjf-color" :value="shp.stroke"
+                               @input="shpSet('stroke', $event.target.value)" @change="shpDone()">
+                        <input type="range" class="rjf-range" min="0" max="30" step="1" :value="shp.strokeW"
+                               @input="shpSet('strokeW', $event.target.value)" @change="shpDone()">
+                        <b x-text="shp.strokeW"></b>
+                    </div>
+                </div>
+
+                <div x-show="shp.isLine">
+                    <div class="rjf-label-line"><span>Thickness</span><b x-text="shp.strokeW"></b></div>
+                    <input type="range" class="rjf-range" min="1" max="40" step="1" :value="shp.strokeW"
+                           @input="shpSet('strokeW', $event.target.value)" @change="shpDone()">
+                </div>
+
+                <div x-show="shp.isRect">
+                    <div class="rjf-label-line"><span>Corner radius</span><b x-text="shp.radius"></b></div>
+                    <input type="range" class="rjf-range" min="0" max="120" step="1" :value="shp.radius"
+                           @input="shpSet('radius', $event.target.value)" @change="shpDone()">
+                </div>
+            </div>
+
+            {{-- ----- Image adjustments ----- --}}
+            <div class="rj-dz-side-block" x-show="kind === 'image'" x-cloak>
+                <label class="rj-dz-label">Adjustments</label>
+
+                <div class="rjf-label-line" style="margin-top:0"><span>Brightness</span><b x-text="img.brightness"></b></div>
+                <input type="range" class="rjf-range" min="-100" max="100" step="1" :value="img.brightness"
+                       @input="img.brightness = $event.target.value" @change="imgSet('brightness', $event.target.value)">
+
+                <div class="rjf-label-line"><span>Contrast</span><b x-text="img.contrast"></b></div>
+                <input type="range" class="rjf-range" min="-100" max="100" step="1" :value="img.contrast"
+                       @input="img.contrast = $event.target.value" @change="imgSet('contrast', $event.target.value)">
+
+                <div class="rjf-label-line"><span>Saturation</span><b x-text="img.saturation"></b></div>
+                <input type="range" class="rjf-range" min="-100" max="100" step="1" :value="img.saturation"
+                       @input="img.saturation = $event.target.value" @change="imgSet('saturation', $event.target.value)">
+
+                <div class="rjf-label-line"><span>Blur</span><b x-text="img.blur"></b></div>
+                <input type="range" class="rjf-range" min="0" max="100" step="1" :value="img.blur"
+                       @input="img.blur = $event.target.value" @change="imgSet('blur', $event.target.value)">
+
+                <div class="rjf-row" style="flex-wrap:wrap">
+                    <button type="button" class="rjf-btn" :class="{ 'is-on': img.grayscale }" @click="imgSet('grayscale', !img.grayscale)">Gray</button>
+                    <button type="button" class="rjf-btn" :class="{ 'is-on': img.sepia }" @click="imgSet('sepia', !img.sepia)">Sepia</button>
+                    <button type="button" class="rjf-btn" :class="{ 'is-on': img.invert }" @click="imgSet('invert', !img.invert)">Invert</button>
+                    <button type="button" class="rjf-btn" @click="imgReset()"><i class="fa-solid fa-rotate-left"></i><span>Reset</span></button>
                 </div>
             </div>
 
@@ -267,999 +618,66 @@
                     :disabled="itemCount === 0 || adding || !selectedMeasurement"
                     @click="addToCart()">
                 <i class="fa-solid" :class="adding ? 'fa-spinner fa-spin' : 'fa-cart-plus'"></i>
-                <span x-text="adding ? 'Adding...' : (itemCount === 0 ? 'Upload to start' : 'Add to Cart')"></span>
+                <span x-text="adding ? 'Adding...' : (itemCount === 0 ? 'Add something to start' : 'Add to Cart')"></span>
             </button>
         </aside>
 
     </div>
+
+    {{-- ===================== FONT PICKER ===================== --}}
+    <div class="rjf-modal" x-show="fontOpen" x-cloak @keydown.escape.window="fontOpen = false">
+        <div class="rjf-modal-backdrop" @click="fontOpen = false"></div>
+        <div class="rjf-modal-card">
+            <div class="rjf-modal-head">
+                <span x-text="'Choose a font (' + filteredFonts.length + ')'"></span>
+                <button type="button" class="rjf-ico" @click="fontOpen = false"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="rjf-modal-body">
+                <input type="text" class="rjf-input" placeholder="Search fonts..." x-model="fontQuery">
+                <input type="text" class="rjf-input" style="margin-top:8px" placeholder="Preview text (optional)" x-model="fontSample">
+
+                <div class="rjf-chips">
+                    <template x-for="c in fontCats" :key="c">
+                        <button type="button" class="rjf-chip" :class="{ 'is-on': fontCat === c }" @click="fontCat = c" x-text="c"></button>
+                    </template>
+                </div>
+
+                <div class="rjf-font-list">
+                    <template x-for="f in filteredFonts" :key="f.name">
+                        <button type="button" class="rjf-font-item"
+                                :class="{ 'is-on': (kind === 'text' ? txt.font : defaultFont) === f.name }"
+                                @click="pickFont(f.name)">
+                            <span class="rjf-font-name" x-text="f.name"></span>
+                            <span class="rjf-font-sample" :style="fontCss(f.name)" x-text="fontSample || f.name"></span>
+                        </button>
+                    </template>
+                </div>
+
+                <div class="rjf-empty" x-show="filteredFonts.length === 0">No fonts match your search.</div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===================== SHORTCUTS ===================== --}}
+    <div class="rjf-modal" x-show="helpOpen" x-cloak @keydown.escape.window="helpOpen = false">
+        <div class="rjf-modal-backdrop" @click="helpOpen = false"></div>
+        <div class="rjf-modal-card">
+            <div class="rjf-modal-head">
+                <span>RJFrame shortcuts</span>
+                <button type="button" class="rjf-ico" @click="helpOpen = false"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="rjf-modal-body">
+                <table class="rjf-keys">
+                    <template x-for="s in shortcuts" :key="s[0]">
+                        <tr><td x-text="s[0]"></td><td x-text="s[1]"></td></tr>
+                    </template>
+                </table>
+            </div>
+        </div>
+    </div>
 </section>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
-
-<script>
-(function () {
-    var DPI = 60;
-    var TARGET_DPI = 300;
-    var LOW_DPI = 100;
-    var GOOD_DPI = 150;
-    var MARGIN_IN = 0.2;
-    var GAP_IN = 0.2;
-    var MAX_FILE_MB = 30;
-    var HISTORY_LIMIT = 40;
-    var MAX_EXPORT_PIXELS = 16000000;
-
-    var removeBgModulePromise = null;
-
-    function loadRemoveBg() {
-        if (!removeBgModulePromise) {
-            removeBgModulePromise = import('https://esm.sh/@imgly/background-removal@1.4.5')
-                .then(function (m) { return m.default; });
-        }
-        return removeBgModulePromise;
-    }
-
-    function getQuery(name) {
-        return new URLSearchParams(window.location.search).get(name);
-    }
-
-    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
-
-    function csrfToken() {
-        var m = document.querySelector('meta[name="csrf-token"]');
-        return m ? m.content : '';
-    }
-
-    window.designStudio = function (config) {
-        var products = config.allProducts || [];
-        var initialProduct = config.product || null;
-
-        var canvas = null;
-        var hist = [];
-        var hIndex = -1;
-        var restoring = false;
-        var cornerPx = 14;
-        var nudgeTimer = null;
-        var resizeObs = null;
-
-        return {
-            products: products,
-            product: initialProduct,
-
-            measurements: (initialProduct && initialProduct.measurements) ? initialProduct.measurements : [],
-            selectedMeasurement: null,
-
-            qty: 1,
-            originalUploads: [],
-
-            itemCount: 0,
-            outCount: 0,
-            lowDpiCount: 0,
-            hasActive: false,
-            single: false,
-            lockRatio: true,
-            sel: { w: '', h: '', angle: 0, opacity: 100, dpi: 0 },
-            canUndo: false,
-            canRedo: false,
-            bgMode: 'white',
-            dragging: false,
-
-            bgWorking: false,
-            adding: false,
-            zoomLevel: 1,
-            fitScale: 1,
-            ready: false,
-
-            init() {
-                var self = this;
-                this.buildProductOptions();
-
-                this.$nextTick(function () {
-                    self.setupCanvas();
-                    self.bindGlobalEvents();
-                    self.$nextTick(function () {
-                        self.selectInitialSize();
-                        self.ready = true;
-                    });
-                });
-            },
-
-            buildProductOptions() {
-                var s = this.$refs.productSelect;
-                if (!s) return;
-
-                if (!this.products.length) {
-                    s.innerHTML = '<option value="">— No designable products —</option>';
-                    s.disabled = true;
-                    return;
-                }
-
-                s.innerHTML = this.products.map(function (p) {
-                    var safe = String(p.name).replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    return '<option value="' + p.id + '">' + safe + '</option>';
-                }).join('');
-
-                if (this.product) s.value = this.product.id;
-            },
-
-            buildSizeOptions() {
-                var s = this.$refs.sizeSelect;
-                if (!s) return;
-
-                if (!this.measurements.length) {
-                    s.innerHTML = '<option value="">— No sizes —</option>';
-                    s.disabled = true;
-                    return;
-                }
-
-                s.disabled = false;
-                s.innerHTML = this.measurements.map(function (m) {
-                    var safe = String(m.label).replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    return '<option value="' + m.id + '">' + safe + ' — $' + Number(m.price).toFixed(2) + '</option>';
-                }).join('');
-
-                if (this.selectedMeasurement) s.value = this.selectedMeasurement.id;
-            },
-
-            selectInitialSize() {
-                if (!this.measurements.length) {
-                    this.buildSizeOptions();
-                    return;
-                }
-
-                var qw = parseFloat(getQuery('w'));
-                var qh = parseFloat(getQuery('h'));
-                var pick = null;
-
-                if (qw > 0 && qh > 0) {
-                    pick = this.measurements.find(function (m) {
-                        return Math.abs(m.width - qw) < 0.01 && Math.abs(m.height - qh) < 0.01;
-                    }) || null;
-                }
-
-                if (!pick) {
-                    pick = this.measurements.find(function (m) { return m.is_default; }) || this.measurements[0];
-                }
-
-                this.selectedMeasurement = pick;
-                this.buildSizeOptions();
-                this.applyMeasurementSize();
-            },
-
-            changeSize(e) {
-                var id = parseInt(e.target.value);
-                var m = this.measurements.find(function (x) { return x.id === id; });
-                if (!m) return;
-
-                this.selectedMeasurement = m;
-                this.applyMeasurementSize();
-            },
-
-            applyMeasurementSize() {
-                var m = this.selectedMeasurement;
-                if (!m || !canvas) return;
-
-                var newW = Math.max(1, Math.round(m.width * DPI));
-                var newH = Math.max(1, Math.round(m.height * DPI));
-
-                if (newW !== canvas.getWidth() || newH !== canvas.getHeight()) {
-                    canvas.setDimensions({ width: newW, height: newH });
-                    canvas.renderAll();
-                }
-
-                this.fitStage();
-                this.refreshStats();
-            },
-
-            get unitPrice() {
-                return this.selectedMeasurement ? Number(this.selectedMeasurement.price) || 0 : 0;
-            },
-
-            get totalPrice() {
-                return this.unitPrice * (this.qty || 1);
-            },
-
-            get dpiClass() {
-                var d = Number(this.sel.dpi) || 0;
-                return d >= GOOD_DPI ? 'ok' : (d >= LOW_DPI ? 'warn' : 'bad');
-            },
-
-            setupCanvas() {
-                var el = document.getElementById('designCanvas');
-                if (!el || typeof fabric === 'undefined') return;
-
-                var self = this;
-
-                canvas = new fabric.Canvas('designCanvas', {
-                    preserveObjectStacking: true,
-                    selection: true,
-                    enableRetinaScaling: false,
-                    stopContextMenu: true,
-                    fireRightClick: false
-                });
-
-                fabric.Object.prototype.set({
-                    transparentCorners: false,
-                    cornerColor: '#6366f1',
-                    cornerStrokeColor: '#ffffff',
-                    borderColor: '#6366f1',
-                    cornerStyle: 'circle'
-                });
-
-                canvas.on('selection:created', function () { self.syncActive(); });
-                canvas.on('selection:updated', function () { self.syncActive(); });
-                canvas.on('selection:cleared', function () { self.syncActive(); });
-
-                canvas.on('object:added', function () { if (!restoring) self.syncCount(); });
-                canvas.on('object:removed', function () { if (!restoring) self.syncCount(); });
-
-                canvas.on('object:scaling', function () { self.updateSel(); });
-                canvas.on('object:rotating', function () { self.updateSel(); });
-                canvas.on('object:moving', function () { self.refreshStats(); });
-                canvas.on('object:modified', function () { self.commit(); });
-
-                this.applyMeasurementSize();
-                this.pushHistory();
-            },
-
-            bindGlobalEvents() {
-                var self = this;
-                var wrap = this.$refs.wrap;
-
-                if (window.ResizeObserver && wrap) {
-                    resizeObs = new ResizeObserver(function () { self.fitStage(); });
-                    resizeObs.observe(wrap);
-                } else {
-                    window.addEventListener('resize', function () { self.fitStage(); });
-                }
-
-                if (wrap) {
-                    wrap.addEventListener('wheel', function (e) {
-                        if (!(e.ctrlKey || e.metaKey)) return;
-                        e.preventDefault();
-                        self.zoom(e.deltaY < 0 ? 1 : -1);
-                    }, { passive: false });
-                }
-
-                document.addEventListener('keydown', function (e) {
-                    var t = e.target;
-                    if (t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable)) return;
-                    if (!canvas) return;
-
-                    var mod = e.ctrlKey || e.metaKey;
-                    var k = (e.key || '').toLowerCase();
-
-                    if (mod && k === 'z') { e.preventDefault(); e.shiftKey ? self.redo() : self.undo(); return; }
-                    if (mod && k === 'y') { e.preventDefault(); self.redo(); return; }
-                    if (mod && k === 'd') { e.preventDefault(); self.duplicate(); return; }
-
-                    if ((k === 'delete' || k === 'backspace') && self.hasActive) {
-                        e.preventDefault(); self.removeActive(); return;
-                    }
-
-                    var step = e.shiftKey ? 30 : 3;
-                    var dx = 0, dy = 0;
-                    if (k === 'arrowleft') dx = -step;
-                    else if (k === 'arrowright') dx = step;
-                    else if (k === 'arrowup') dy = -step;
-                    else if (k === 'arrowdown') dy = step;
-                    else return;
-
-                    if (!self.hasActive) return;
-                    e.preventDefault();
-                    self.moveBy(dx, dy);
-                    clearTimeout(nudgeTimer);
-                    nudgeTimer = setTimeout(function () { self.commit(); }, 400);
-                });
-
-                window.addEventListener('paste', function (e) {
-                    var items = (e.clipboardData && e.clipboardData.items) || [];
-                    var files = [];
-                    for (var i = 0; i < items.length; i++) {
-                        if (items[i].kind === 'file' && items[i].type.indexOf('image/') === 0) {
-                            var f = items[i].getAsFile();
-                            if (f) files.push(f);
-                        }
-                    }
-                    if (files.length) { e.preventDefault(); self.addFiles(files); }
-                });
-            },
-
-            syncActive() {
-                var o = canvas ? canvas.getActiveObject() : null;
-                this.hasActive = !!o;
-                this.single = !!(o && o.type === 'image');
-                if (this.single) {
-                    this.applyLockToObject(o);
-                    this.updateSel();
-                }
-            },
-
-            syncCount() {
-                if (!canvas) return;
-                this.itemCount = canvas.getObjects().filter(function (o) { return o.type === 'image'; }).length;
-                this.refreshStats();
-            },
-
-            updateSel() {
-                var o = canvas ? canvas.getActiveObject() : null;
-                if (!o || o.type !== 'image') return;
-                var wIn = o.getScaledWidth() / DPI;
-                var hIn = o.getScaledHeight() / DPI;
-                this.sel = {
-                    w: wIn.toFixed(2),
-                    h: hIn.toFixed(2),
-                    angle: Math.round(((o.angle % 360) + 360) % 360),
-                    opacity: Math.round((o.opacity == null ? 1 : o.opacity) * 100),
-                    dpi: wIn > 0 ? Math.round(o.width / wIn) : 0
-                };
-                this.refreshStats();
-            },
-
-            refreshStats() {
-                if (!canvas) return;
-                var cw = canvas.getWidth();
-                var ch = canvas.getHeight();
-                var out = 0, low = 0;
-
-                canvas.getObjects().forEach(function (o) {
-                    if (o.type !== 'image') return;
-                    var r = o.getBoundingRect(true, true);
-                    if (r.left < -1 || r.top < -1 || r.left + r.width > cw + 1 || r.top + r.height > ch + 1) out++;
-                    var inch = o.getScaledWidth() / DPI;
-                    if (inch > 0 && (o.width / inch) < LOW_DPI) low++;
-                });
-
-                this.outCount = out;
-                this.lowDpiCount = low;
-            },
-
-            commit() {
-                this.updateSel();
-                this.refreshStats();
-                this.pushHistory();
-            },
-
-            snapshot() {
-                return canvas.getObjects().map(function (o) {
-                    return {
-                        o: o,
-                        p: {
-                            left: o.left, top: o.top, scaleX: o.scaleX, scaleY: o.scaleY,
-                            angle: o.angle, flipX: o.flipX, flipY: o.flipY, opacity: o.opacity
-                        }
-                    };
-                });
-            },
-
-            pushHistory() {
-                if (!canvas || restoring) return;
-                hist = hist.slice(0, hIndex + 1);
-                hist.push(this.snapshot());
-                if (hist.length > HISTORY_LIMIT) hist.shift();
-                hIndex = hist.length - 1;
-                this.canUndo = hIndex > 0;
-                this.canRedo = false;
-            },
-
-            restore(state) {
-                restoring = true;
-                canvas.discardActiveObject();
-                canvas.getObjects().slice().forEach(function (o) { canvas.remove(o); });
-                state.forEach(function (s) {
-                    s.o.set(s.p);
-                    s.o.setCoords();
-                    canvas.add(s.o);
-                });
-                restoring = false;
-                canvas.renderAll();
-                this.syncActive();
-                this.syncCount();
-            },
-
-            undo() {
-                if (hIndex <= 0) return;
-                hIndex--;
-                this.restore(hist[hIndex]);
-                this.canUndo = hIndex > 0;
-                this.canRedo = true;
-            },
-
-            redo() {
-                if (hIndex >= hist.length - 1) return;
-                hIndex++;
-                this.restore(hist[hIndex]);
-                this.canUndo = true;
-                this.canRedo = hIndex < hist.length - 1;
-            },
-
-            fitStage() {
-                var stage = this.$refs.stage;
-                if (!stage || !canvas) return;
-                var wrap = stage.parentElement;
-                if (!wrap) return;
-
-                var pad = 48;
-                var cw = canvas.getWidth();
-                var ch = canvas.getHeight();
-                if (cw <= 0 || ch <= 0) return;
-
-                var fit = Math.min((wrap.clientWidth - pad) / cw, (wrap.clientHeight - pad) / ch, 2);
-                fit = Math.max(fit, 0.05);
-                this.fitScale = fit;
-
-                var scale = fit * this.zoomLevel;
-                stage.style.width = (cw * scale) + 'px';
-                stage.style.height = (ch * scale) + 'px';
-
-                var container = canvas.wrapperEl;
-                if (container) {
-                    container.style.transformOrigin = '0 0';
-                    container.style.transform = 'scale(' + scale + ')';
-                }
-
-                cornerPx = clamp(14 / scale, 10, 70);
-                var self = this;
-                canvas.getObjects().forEach(function (o) { self.applyHandleSize(o); });
-                canvas.requestRenderAll();
-            },
-
-            applyHandleSize(o) {
-                var scale = this.fitScale * this.zoomLevel || 1;
-                o.set({
-                    cornerSize: cornerPx,
-                    touchCornerSize: cornerPx * 1.8,
-                    borderScaleFactor: Math.max(1, 1.5 / scale)
-                });
-            },
-
-            changeProduct(e) {
-                var id = Number(e.target.value);
-                var p = this.products.find(x => Number(x.id) === id);
-                if (!p) return;
-
-                window.location.href = '/design/' + p.slug;
-            },
-
-            onFiles(e) {
-                this.addFiles(Array.from(e.target.files || []));
-                e.target.value = '';
-            },
-
-            onDrop(e) {
-                this.dragging = false;
-                var files = Array.from((e.dataTransfer && e.dataTransfer.files) || []);
-                this.addFiles(files);
-            },
-
-            async addFiles(files) {
-                var self = this;
-
-                for (var i = 0; i < files.length; i++) {
-                    var f = files[i];
-
-                    var isImage = /^image\/(png|jpe?g|webp)$/i.test(f.type);
-                    var isPdf = f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
-
-                    if (!isImage && !isPdf) {
-                        self.toast('Only PNG, JPG, WEBP or PDF files are supported');
-                        continue;
-                    }
-
-                    if (f.size > MAX_FILE_MB * 1024 * 1024) {
-                        self.toast(f.name + ' is larger than ' + MAX_FILE_MB + 'MB');
-                        continue;
-                    }
-
-                    try {
-                        var uploaded = await self.uploadFile(f);
-
-                        if (uploaded) {
-                            self.originalUploads.push(uploaded);
-                        } else {
-                            self.toast('Upload failed: ' + f.name);
-                            continue;
-                        }
-                    } catch (err) {
-                        self.toast('Upload failed: ' + f.name);
-                        continue;
-                    }
-
-                    if (isImage) {
-                        await new Promise(function (resolve) {
-                            var reader = new FileReader();
-                            reader.onload = function (ev) {
-                                self.addImageFromSrc(ev.target.result);
-                                resolve();
-                            };
-                            reader.onerror = function () { resolve(); };
-                            reader.readAsDataURL(f);
-                        });
-                    }
-                }
-            },
-
-            async uploadFile(file) {
-                var fd = new FormData();
-                fd.append('file', file);
-                fd.append('_token', csrfToken());
-
-                var res = await fetch('/design/temp-upload', {
-                    method: 'POST',
-                    body: fd,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken()
-                    },
-                    credentials: 'same-origin'
-                });
-
-                if (!res.ok) {
-                    return null;
-                }
-
-                var data = await res.json();
-
-                if (!data || !data.success) {
-                    return null;
-                }
-
-                return {
-                    token: data.token,
-                    path: data.path,
-                    name: data.name,
-                    size: data.size,
-                    mime: data.mime
-                };
-            },
-
-            addImageFromSrc(src, replaceObj) {
-                if (!canvas) return;
-                var self = this;
-
-                fabric.Image.fromURL(src, function (img) {
-                    if (!img || !img.width) { self.toast('Could not load image'); return; }
-
-                    var cw = canvas.getWidth();
-                    var ch = canvas.getHeight();
-
-                    var scale = Math.min(DPI / TARGET_DPI, (cw * 0.6) / img.width, (ch * 0.6) / img.height);
-                    var cascade = replaceObj ? 0 : (self.itemCount % 6) * DPI * 0.15;
-
-                    img.set({
-                        originX: 'center',
-                        originY: 'center',
-                        left: cw / 2 + cascade,
-                        top: ch / 2 + cascade,
-                        scaleX: scale,
-                        scaleY: scale
-                    });
-
-                    if (replaceObj) {
-                        var idx = canvas.getObjects().indexOf(replaceObj);
-                        var dispW = replaceObj.getScaledWidth();
-                        var dispH = replaceObj.getScaledHeight();
-                        img.set({
-                            left: replaceObj.left,
-                            top: replaceObj.top,
-                            scaleX: dispW / img.width,
-                            scaleY: dispH / img.height,
-                            angle: replaceObj.angle,
-                            flipX: replaceObj.flipX,
-                            flipY: replaceObj.flipY,
-                            opacity: replaceObj.opacity
-                        });
-                        canvas.remove(replaceObj);
-                        self.applyHandleSize(img);
-                        canvas.add(img);
-                        if (idx > -1) canvas.moveTo(img, idx);
-                    } else {
-                        self.applyHandleSize(img);
-                        canvas.add(img);
-                    }
-
-                    canvas.setActiveObject(img);
-                    canvas.renderAll();
-                    self.syncActive();
-                    self.syncCount();
-                    self.pushHistory();
-                }, { crossOrigin: 'anonymous' });
-            },
-
-            async removeBg() {
-                var active = canvas ? canvas.getActiveObject() : null;
-                if (!active || active.type !== 'image') return;
-
-                this.bgWorking = true;
-
-                try {
-                    var removeFn = await loadRemoveBg();
-                    var blob = await removeFn(active.getSrc());
-                    var url = URL.createObjectURL(blob);
-                    this.addImageFromSrc(url, active);
-                } catch (e) {
-                    this.toast('Background removal failed');
-                }
-
-                this.bgWorking = false;
-            },
-
-            activeObjs() { return canvas ? canvas.getActiveObjects() : []; },
-
-            flipH() {
-                var a = canvas ? canvas.getActiveObject() : null;
-                if (!a) return;
-                a.set('flipX', !a.flipX);
-                canvas.renderAll();
-                this.pushHistory();
-            },
-
-            rotate(deg) {
-                var a = canvas ? canvas.getActiveObject() : null;
-                if (!a) return;
-                a.rotate((((a.angle || 0) + deg) % 360 + 360) % 360);
-                a.setCoords();
-                canvas.renderAll();
-                this.commit();
-            },
-
-            setAngle(v) {
-                var a = canvas ? canvas.getActiveObject() : null;
-                v = parseFloat(v);
-                if (!a || isNaN(v)) { this.updateSel(); return; }
-                a.rotate(((v % 360) + 360) % 360);
-                a.setCoords();
-                canvas.renderAll();
-                this.commit();
-            },
-
-            setOpacity(v) {
-                var a = canvas ? canvas.getActiveObject() : null;
-                v = parseFloat(v);
-                if (!a || isNaN(v)) return;
-                a.set('opacity', clamp(v, 10, 100) / 100);
-                canvas.renderAll();
-                this.commit();
-            },
-
-            setSize(dim, val) {
-                var o = canvas ? canvas.getActiveObject() : null;
-                if (!o || o.type !== 'image') return;
-
-                val = parseFloat(val);
-                if (!(val > 0)) { this.updateSel(); return; }
-                val = clamp(val, 0.1, 200);
-
-                var px = val * DPI;
-                var sx = o.scaleX, sy = o.scaleY;
-
-                if (dim === 'w') {
-                    sx = px / o.width;
-                    sy = this.lockRatio ? sx : o.scaleY;
-                } else {
-                    sy = px / o.height;
-                    sx = this.lockRatio ? sy : o.scaleX;
-                }
-
-                o.set({ scaleX: sx, scaleY: sy });
-                o.setCoords();
-                canvas.renderAll();
-                this.commit();
-            },
-
-            toggleLock() {
-                this.lockRatio = !this.lockRatio;
-                var o = canvas ? canvas.getActiveObject() : null;
-                if (o && o.type === 'image') {
-                    this.applyLockToObject(o);
-                    canvas.renderAll();
-                }
-            },
-
-            applyLockToObject(o) {
-                var free = !this.lockRatio;
-                o.setControlsVisibility({ ml: free, mr: free, mt: free, mb: free });
-            },
-
-            fitToSheet() {
-                var o = canvas ? canvas.getActiveObject() : null;
-                if (!o || o.type !== 'image') return;
-
-                var m = MARGIN_IN * DPI;
-                var cw = canvas.getWidth() - m * 2;
-                var ch = canvas.getHeight() - m * 2;
-
-                var s = Math.min(cw / o.width, ch / o.height);
-                o.set({ scaleX: s, scaleY: s });
-                o.setCoords();
-
-                var r = o.getBoundingRect(true, true);
-                var k = Math.min(cw / r.width, ch / r.height, 1);
-                if (k < 1) { o.set({ scaleX: s * k, scaleY: s * k }); o.setCoords(); }
-
-                o.set({ left: canvas.getWidth() / 2, top: canvas.getHeight() / 2 });
-                o.setCoords();
-                canvas.renderAll();
-                this.commit();
-            },
-
-            moveBy(dx, dy) {
-                var a = canvas ? canvas.getActiveObject() : null;
-                if (!a) return;
-                a.set({ left: a.left + dx, top: a.top + dy });
-                a.setCoords();
-                canvas.renderAll();
-                this.refreshStats();
-            },
-
-            center(axis) {
-                var a = canvas ? canvas.getActiveObject() : null;
-                if (!a) return;
-                var r = a.getBoundingRect(true, true);
-                if (axis === 'h') this.moveBy(canvas.getWidth() / 2 - (r.left + r.width / 2), 0);
-                else this.moveBy(0, canvas.getHeight() / 2 - (r.top + r.height / 2));
-                this.commit();
-            },
-
-            layerUp() {
-                var a = canvas ? canvas.getActiveObject() : null;
-                if (!a) return;
-                canvas.bringForward(a);
-                canvas.renderAll();
-                this.pushHistory();
-            },
-
-            layerDown() {
-                var a = canvas ? canvas.getActiveObject() : null;
-                if (!a) return;
-                canvas.sendBackwards(a);
-                canvas.renderAll();
-                this.pushHistory();
-            },
-
-            duplicate() {
-                if (!canvas) return;
-                var objs = this.activeObjs();
-                if (!objs.length) return;
-
-                var self = this;
-                canvas.discardActiveObject();
-
-                var off = DPI * 0.2;
-                var left = objs.length;
-                var clones = [];
-
-                objs.forEach(function (o) {
-                    o.clone(function (c) {
-                        c.set({ left: o.left + off, top: o.top + off });
-                        self.applyHandleSize(c);
-                        canvas.add(c);
-                        clones.push(c);
-                        left--;
-                        if (left === 0) {
-                            if (clones.length === 1) {
-                                canvas.setActiveObject(clones[0]);
-                            } else {
-                                canvas.setActiveObject(new fabric.ActiveSelection(clones, { canvas: canvas }));
-                            }
-                            canvas.renderAll();
-                            self.syncActive();
-                            self.syncCount();
-                            self.pushHistory();
-                        }
-                    });
-                });
-            },
-
-            removeActive() {
-                if (!canvas) return;
-                var objs = this.activeObjs();
-                if (!objs.length) return;
-
-                canvas.discardActiveObject();
-                objs.forEach(function (o) { canvas.remove(o); });
-                canvas.renderAll();
-                this.syncActive();
-                this.syncCount();
-                this.pushHistory();
-            },
-
-            clearAll() {
-                if (!canvas || !this.itemCount) return;
-                if (!window.confirm('Remove all items from the sheet?')) return;
-                canvas.discardActiveObject();
-                canvas.getObjects().slice().forEach(function (o) { canvas.remove(o); });
-                canvas.renderAll();
-                this.syncActive();
-                this.syncCount();
-                this.pushHistory();
-            },
-
-            autoArrange() {
-                if (!canvas) return;
-                canvas.discardActiveObject();
-
-                var objs = canvas.getObjects().filter(function (o) { return o.type === 'image'; });
-                if (objs.length < 2) return;
-
-                var cw = canvas.getWidth();
-                var m = MARGIN_IN * DPI;
-                var gap = GAP_IN * DPI;
-
-                var sorted = objs.slice().sort(function (a, b) {
-                    return b.getBoundingRect(true, true).height - a.getBoundingRect(true, true).height;
-                });
-
-                var x = m, y = m, rowH = 0;
-                sorted.forEach(function (o) {
-                    var r = o.getBoundingRect(true, true);
-                    if (x + r.width > cw - m && x > m) {
-                        x = m;
-                        y += rowH + gap;
-                        rowH = 0;
-                    }
-                    o.set({ left: o.left + (x - r.left), top: o.top + (y - r.top) });
-                    o.setCoords();
-                    x += r.width + gap;
-                    rowH = Math.max(rowH, r.height);
-                });
-
-                canvas.renderAll();
-                this.syncActive();
-                this.commit();
-
-                if (this.outCount > 0) {
-                    this.toast('Not everything fits — choose a larger size');
-                }
-            },
-
-            zoom(dir) {
-                this.zoomLevel = clamp(this.zoomLevel + dir * 0.15, 0.25, 4);
-                this.fitStage();
-            },
-
-            resetView() {
-                this.zoomLevel = 1;
-                this.fitStage();
-                var wrap = this.$refs.wrap;
-                if (wrap) { wrap.scrollLeft = 0; wrap.scrollTop = 0; }
-            },
-
-            toggleBg() {
-                this.bgMode = this.bgMode === 'white' ? 'checker' : 'white';
-            },
-
-            incQty() { this.qty = Math.min(999, (Number(this.qty) || 1) + 1); },
-            decQty() { this.qty = Math.max(1, (Number(this.qty) || 1) - 1); },
-            normalizeQty() { this.qty = clamp(Math.round(Number(this.qty)) || 1, 1, 999); },
-
-            exportCanvas(multiplier, bg) {
-                canvas.discardActiveObject();
-                var prev = canvas.backgroundColor;
-                canvas.backgroundColor = bg || '';
-                canvas.renderAll();
-                var el = canvas.toCanvasElement(multiplier);
-                canvas.backgroundColor = prev;
-                canvas.renderAll();
-                this.syncActive();
-                return el;
-            },
-
-            downloadPng() {
-                if (!canvas || !this.itemCount) return;
-
-                var cw = canvas.getWidth();
-                var ch = canvas.getHeight();
-                var target = TARGET_DPI / DPI;
-                var cap = Math.sqrt(MAX_EXPORT_PIXELS / (cw * ch));
-                var mult = Math.max(1, Math.min(target, cap));
-
-                var m = this.selectedMeasurement;
-                var name = 'gang-sheet-' + (m ? (m.width + 'x' + m.height + 'in') : 'sheet') + '.png';
-                var self = this;
-
-                try {
-                    var el = this.exportCanvas(mult, '');
-                    el.toBlob(function (blob) {
-                        if (!blob) { self.toast('Export failed'); return; }
-                        var a = document.createElement('a');
-                        a.href = URL.createObjectURL(blob);
-                        a.download = name;
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
-                        setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
-                        self.toast('Downloaded (' + Math.round(mult * DPI) + ' DPI)');
-                    }, 'image/png');
-                } catch (e) {
-                    this.toast('Export failed — try a smaller size');
-                }
-            },
-
-            async addToCart() {
-                if (this.itemCount === 0 || this.adding || !this.selectedMeasurement) return;
-
-                if (this.outCount > 0 || this.lowDpiCount > 0) {
-                    var msg = [];
-                    if (this.outCount > 0) msg.push(this.outCount + ' item(s) extend beyond the sheet and will be cut off');
-                    if (this.lowDpiCount > 0) msg.push(this.lowDpiCount + ' item(s) are below ' + LOW_DPI + ' DPI and may print blurry');
-                    if (!window.confirm(msg.join('\n') + '\n\nAdd to cart anyway?')) return;
-                }
-
-                this.adding = true;
-
-                var m = this.selectedMeasurement;
-                var widthIn = Number(m.width);
-                var heightIn = Number(m.height);
-                var unitPrice = Number(m.price);
-                var sizeLabel = m.label;
-                var snapshot = null;
-
-                try {
-                    var mult = Math.min(1, 1200 / Math.max(canvas.getWidth(), canvas.getHeight()));
-                    snapshot = this.exportCanvas(mult, '#ffffff').toDataURL('image/jpeg', 0.8);
-                } catch (e) {
-                    snapshot = null;
-                }
-
-                var attributes = {
-                    'Size': sizeLabel,
-                    'Width (in)': widthIn,
-                    'Height (in)': heightIn,
-                    'Items': this.itemCount
-                };
-
-                var payload = {
-                    product_id: this.product ? this.product.id : null,
-                    product_name: this.product ? this.product.name : null,
-                    name: this.product ? this.product.name : 'Custom Gang Sheet',
-                    unit_price: unitPrice,
-                    product_price: unitPrice,
-                    sheet_price: 0,
-                    width_inch: widthIn,
-                    height_inch: heightIn,
-                    qty: this.qty,
-                    attributes: attributes,
-                    print_type: 'custom_size',
-                    note: this.itemCount + ' design item(s) · ' + sizeLabel,
-                    image: snapshot,
-                    file_name: 'gang-sheet-' + widthIn + 'x' + heightIn + 'in.jpg',
-                    original_uploads: this.originalUploads.slice()
-                };
-
-                try {
-                    var store = window.Alpine && window.Alpine.store('cart');
-                    if (!store) {
-                        this.toast('Cart not ready');
-                        this.adding = false;
-                        return;
-                    }
-
-                    var res = await store.add(payload);
-
-                    if (res && res.success) {
-                        this.toast('Added to cart ✓');
-                        this.originalUploads = [];
-                    } else {
-                        this.toast('Could not add to cart');
-                    }
-                } catch (e) {
-                    this.toast('Error: ' + (e.message || 'unknown'));
-                }
-
-                this.adding = false;
-            },
-
-            toast(msg) {
-                var el = document.createElement('div');
-                el.textContent = msg;
-                el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0a0715;color:#fff;padding:12px 24px;border-radius:9999px;border:1px solid rgba(99,102,241,0.4);font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.6);max-width:90vw;text-align:center;';
-                document.body.appendChild(el);
-                setTimeout(function () { el.remove(); }, 2400);
-            }
-        };
-    };
-})();
-</script>
+<script src="{{ asset('theme/RJFrame/js/rjframe.js') }}"></script>
 
 @endsection
