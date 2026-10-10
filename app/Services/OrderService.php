@@ -122,6 +122,19 @@ class OrderService
                     $productImage = $rawImage;
                 }
 
+                $breakdown = [
+                    'unit_price' => $row['unit_price'],
+                    'qty' => $row['qty'],
+                    'total' => $row['total'],
+                    'tier_label' => $row['tier_label'] ?? null,
+                    'note' => $row['note'] ?? null,
+                    'file_name' => $row['file_name'] ?? null,
+                ];
+
+                if (!empty($row['canvas_state']) && is_array($row['canvas_state'])) {
+                    $breakdown['canvas_state'] = $row['canvas_state'];
+                }
+
                 $orderItem = OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $row['product_id'] ?? null,
@@ -140,14 +153,7 @@ class OrderService
                     'unit_price' => $row['unit_price'],
                     'total_price' => $row['total'],
 
-                    'price_breakdown' => [
-                        'unit_price' => $row['unit_price'],
-                        'qty' => $row['qty'],
-                        'total' => $row['total'],
-                        'tier_label' => $row['tier_label'] ?? null,
-                        'note' => $row['note'] ?? null,
-                        'file_name' => $row['file_name'] ?? null,
-                    ],
+                    'price_breakdown' => $breakdown,
                 ]);
 
                 if (!empty($row['options']) && is_array($row['options'])) {
@@ -161,7 +167,8 @@ class OrderService
                     }
                 }
 
-                $this->attachDesignIfAny($orderItem, $row);
+                $this->moveCompositeUpload($orderItem, $row);
+                $this->attachDesignFromBase64($orderItem, $row);
                 $this->moveOriginalUploads($orderItem, $row);
             }
 
@@ -211,15 +218,70 @@ class OrderService
         return $order;
     }
 
-    protected function attachDesignIfAny(OrderItem $item, array $row): void
+    protected function moveCompositeUpload(OrderItem $item, array $row): void
     {
-        if (empty($row['image'])) {
+        if (empty($row['composite_upload']) || !is_array($row['composite_upload'])) {
             return;
         }
 
-        $src = $row['image'];
+        $srcPath = isset($row['composite_upload']['path']) ? trim((string) $row['composite_upload']['path']) : '';
 
-        if (!is_string($src) || !Str::startsWith($src, 'data:')) {
+        if ($srcPath === '' || !str_starts_with($srcPath, 'tmp/uploads/')) {
+            return;
+        }
+
+        if (!Storage::disk('public')->exists($srcPath)) {
+            logger()->warning('Composite upload not found: ' . $srcPath);
+            return;
+        }
+
+        try {
+            $ext = strtolower(pathinfo($srcPath, PATHINFO_EXTENSION));
+            $ext = preg_replace('/[^a-z0-9]/', '', $ext) ?: 'png';
+
+            $destPath = 'orders/designs/' . $item->order_id . '-' . $item->id . '-' . Str::random(8) . '.' . $ext;
+
+            Storage::disk('public')->copy($srcPath, $destPath);
+
+            $size = (int) Storage::disk('public')->size($destPath);
+
+            $mime = 'image/png';
+
+            if (!empty($row['composite_upload']['mime']) && is_string($row['composite_upload']['mime'])) {
+                $mime = substr($row['composite_upload']['mime'], 0, 100);
+            }
+
+            $originalName = null;
+
+            if (!empty($row['file_name']) && is_string($row['file_name'])) {
+                $originalName = substr($row['file_name'], 0, 255);
+            } elseif (!empty($row['composite_upload']['name']) && is_string($row['composite_upload']['name'])) {
+                $originalName = substr($row['composite_upload']['name'], 0, 255);
+            }
+
+            OrderDesign::create([
+                'order_item_id' => $item->id,
+                'file_path' => $destPath,
+                'original_name' => $originalName,
+                'mime_type' => $mime,
+                'file_size' => $size,
+                'width' => $row['width_inch'] ?? null,
+                'height' => $row['height_inch'] ?? null,
+            ]);
+        } catch (\Throwable $e) {
+            logger()->warning('Failed to move composite upload: ' . $e->getMessage());
+        }
+    }
+
+    protected function attachDesignFromBase64(OrderItem $item, array $row): void
+    {
+        if ($item->designs()->exists()) {
+            return;
+        }
+
+        $src = $row['composite_image'] ?? $row['image'] ?? null;
+
+        if (empty($src) || !is_string($src) || !Str::startsWith($src, 'data:')) {
             return;
         }
 
@@ -277,7 +339,7 @@ class OrderService
                 'height' => $row['height_inch'] ?? null,
             ]);
         } catch (\Throwable $e) {
-            logger()->warning('Failed to attach design: ' . $e->getMessage());
+            logger()->warning('Failed to attach composite from base64: ' . $e->getMessage());
         }
     }
 
