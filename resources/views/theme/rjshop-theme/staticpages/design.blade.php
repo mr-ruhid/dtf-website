@@ -10,11 +10,39 @@
 
 @section('content')
 
+@if($adminMode ?? false)
+    <div class="rjf-admin-banner">
+        <div class="rjf-admin-banner-inner">
+            <div class="rjf-admin-banner-icon">
+                <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <div class="rjf-admin-banner-body">
+                <p class="rjf-admin-banner-title">Admin mode — editing order artwork</p>
+                <p class="rjf-admin-banner-sub">
+                    Order item <strong class="rjf-admin-mono">#{{ $canvasState['order_item_id'] ?? '—' }}</strong>
+                    · {{ $canvasState['product_name'] ?? '' }}
+                    @if(!empty($canvasState['width_inch']) && !empty($canvasState['height_inch']))
+                        · {{ $canvasState['width_inch'] }} × {{ $canvasState['height_inch'] }} in
+                    @endif
+                </p>
+            </div>
+            <div class="rjf-admin-banner-actions">
+                <a href="{{ url('admin/orders/' . ($canvasState['order_id'] ?? '')) }}" class="rjf-admin-link">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Back to order
+                </a>
+            </div>
+        </div>
+    </div>
+@endif
+
 <section id="rjHero"
          class="rj-dz"
          x-data="designStudio({
             product: {{ \Illuminate\Support\Js::from($product) }},
-            allProducts: {{ \Illuminate\Support\Js::from($allProducts) }}
+            allProducts: {{ \Illuminate\Support\Js::from($allProducts) }},
+            canvasState: {{ \Illuminate\Support\Js::from($canvasState) }},
+            adminMode: {{ ($adminMode ?? false) ? 'true' : 'false' }}
          })">
 
     {{-- ===================== TOOLBAR ===================== --}}
@@ -578,14 +606,16 @@
                 </div>
             </div>
 
-            <div class="rj-dz-side-block">
-                <label class="rj-dz-label">Quantity</label>
-                <div class="rj-dz-qty">
-                    <button type="button" @click="decQty()">−</button>
-                    <input type="number" x-model.number="qty" min="1" max="999" @blur="normalizeQty()">
-                    <button type="button" @click="incQty()">+</button>
+            @if(!($adminMode ?? false))
+                <div class="rj-dz-side-block">
+                    <label class="rj-dz-label">Quantity</label>
+                    <div class="rj-dz-qty">
+                        <button type="button" @click="decQty()">−</button>
+                        <input type="number" x-model.number="qty" min="1" max="999" @blur="normalizeQty()">
+                        <button type="button" @click="incQty()">+</button>
+                    </div>
                 </div>
-            </div>
+            @endif
 
             <div class="rj-dz-side-spacer"></div>
 
@@ -598,28 +628,38 @@
                 <span x-text="lowDpiCount + ' item(s) below 100 DPI may print blurry.'"></span>
             </div>
 
-            <div class="rj-dz-side-total">
-                <div class="rj-dz-total-row">
-                    <span>Unit price</span>
-                    <span x-text="'$' + unitPrice.toFixed(2)"></span>
+            @if(!($adminMode ?? false))
+                <div class="rj-dz-side-total">
+                    <div class="rj-dz-total-row">
+                        <span>Unit price</span>
+                        <span x-text="'$' + unitPrice.toFixed(2)"></span>
+                    </div>
+                    <div class="rj-dz-total-row">
+                        <span x-text="'Quantity × ' + (qty || 1)"></span>
+                        <span x-text="'$' + (unitPrice * (qty || 1)).toFixed(2)"></span>
+                    </div>
+                    <div class="rj-dz-total-row rj-dz-total-grand">
+                        <span>Total</span>
+                        <span x-text="'$' + totalPrice.toFixed(2)"></span>
+                    </div>
                 </div>
-                <div class="rj-dz-total-row">
-                    <span x-text="'Quantity × ' + (qty || 1)"></span>
-                    <span x-text="'$' + (unitPrice * (qty || 1)).toFixed(2)"></span>
-                </div>
-                <div class="rj-dz-total-row rj-dz-total-grand">
-                    <span>Total</span>
-                    <span x-text="'$' + totalPrice.toFixed(2)"></span>
-                </div>
-            </div>
 
-            <button type="button"
-                    class="rj-dz-add"
-                    :disabled="itemCount === 0 || adding || !selectedMeasurement"
-                    @click="addToCart()">
-                <i class="fa-solid" :class="adding ? 'fa-spinner fa-spin' : 'fa-cart-plus'"></i>
-                <span x-text="adding ? 'Adding...' : (itemCount === 0 ? 'Add something to start' : 'Add to Cart')"></span>
-            </button>
+                <button type="button"
+                        class="rj-dz-add"
+                        :disabled="itemCount === 0 || adding || !selectedMeasurement"
+                        @click="addToCart()">
+                    <i class="fa-solid" :class="adding ? 'fa-spinner fa-spin' : 'fa-cart-plus'"></i>
+                    <span x-text="adding ? 'Adding...' : (itemCount === 0 ? 'Add something to start' : 'Add to Cart')"></span>
+                </button>
+            @else
+                <button type="button"
+                        class="rj-dz-add rj-dz-add-admin"
+                        :disabled="itemCount === 0 || adminSaving"
+                        @click="saveToOrder()">
+                    <i class="fa-solid" :class="adminSaving ? 'fa-spinner fa-spin' : 'fa-floppy-disk'"></i>
+                    <span x-text="adminSaving ? 'Saving...' : 'Save changes to order'"></span>
+                </button>
+            @endif
         </aside>
 
     </div>
@@ -676,6 +716,79 @@
         </div>
     </div>
 </section>
+
+<style>
+    .rjf-admin-banner {
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(99, 102, 241, 0.12));
+        border-bottom: 1px solid rgba(168, 85, 247, 0.3);
+        padding: 0.875rem 1.5rem;
+    }
+    .rjf-admin-banner-inner {
+        max-width: 88rem;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .rjf-admin-banner-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #a855f7, #6366f1);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+    .rjf-admin-banner-body { flex: 1; min-width: 0; }
+    .rjf-admin-banner-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #fff;
+        margin: 0 0 2px;
+    }
+    .rjf-admin-banner-sub {
+        font-size: 12px;
+        color: #c7d2fe;
+        margin: 0;
+    }
+    .rjf-admin-mono { font-family: ui-monospace, monospace; color: #fff; }
+    .rjf-admin-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        color: #e5e7eb;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    .rjf-admin-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+    .rjf-admin-link i { font-size: 10px; }
+
+    .rj-dz-add-admin {
+        background: linear-gradient(135deg, #a855f7, #6366f1) !important;
+        color: #fff !important;
+    }
+    .rj-dz-add-admin:hover:not(:disabled) {
+        filter: brightness(1.1);
+        box-shadow: 0 0 40px rgba(168, 85, 247, 0.5);
+    }
+
+    @media (max-width: 640px) {
+        .rjf-admin-banner-inner { flex-wrap: wrap; }
+        .rjf-admin-banner-actions { width: 100%; }
+    }
+</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 <script src="{{ asset('theme/RJFrame/js/rjframe.js') }}"></script>
