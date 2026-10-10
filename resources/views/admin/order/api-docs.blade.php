@@ -131,8 +131,9 @@ Content-Type: application/json</pre>
                         </div>
 
                         <div class="border border-gray-200 rounded-lg overflow-hidden">
-                            <div class="bg-gray-50 px-4 py-2 text-xs font-medium text-gray-700 border-b border-gray-200">
-                                Items (Array)
+                            <div class="bg-gray-50 px-4 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 flex items-center justify-between">
+                                <span>Items (Array)</span>
+                                <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-bold">Updated</span>
                             </div>
                             <div class="p-4 space-y-2 text-xs">
                                 <div class="grid grid-cols-3 gap-3">
@@ -145,19 +146,35 @@ Content-Type: application/json</pre>
                                 </div>
                                 <div class="grid grid-cols-3 gap-3">
                                     <code class="font-mono text-indigo-600">items[].attributes</code>
-                                    <span class="text-gray-500 col-span-2">object, optional</span>
+                                    <span class="text-gray-500 col-span-2">object, optional — Size, Color, Material</span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-3">
+                                    <code class="font-mono text-indigo-600">items[].print_type</code>
+                                    <span class="text-gray-500 col-span-2">string, optional — apparel, custom_size, fixed_area, none</span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-3">
+                                    <code class="font-mono text-indigo-600">items[].print_width</code>
+                                    <span class="text-gray-500 col-span-2">number, optional — in inches</span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-3">
+                                    <code class="font-mono text-indigo-600">items[].print_height</code>
+                                    <span class="text-gray-500 col-span-2">number, optional — in inches</span>
                                 </div>
                                 <div class="grid grid-cols-3 gap-3">
                                     <code class="font-mono text-indigo-600">items[].print_zone_id</code>
                                     <span class="text-gray-500 col-span-2">integer, optional</span>
                                 </div>
                                 <div class="grid grid-cols-3 gap-3">
-                                    <code class="font-mono text-indigo-600">items[].print_width</code>
-                                    <span class="text-gray-500 col-span-2">number, optional</span>
+                                    <code class="font-mono text-indigo-600">items[].image</code>
+                                    <span class="text-gray-500 col-span-2">string, optional — base64 dataURL (artwork)</span>
                                 </div>
                                 <div class="grid grid-cols-3 gap-3">
-                                    <code class="font-mono text-indigo-600">items[].print_height</code>
-                                    <span class="text-gray-500 col-span-2">number, optional</span>
+                                    <code class="font-mono text-indigo-600">items[].file_name</code>
+                                    <span class="text-gray-500 col-span-2">string, optional — Original artwork filename</span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-3">
+                                    <code class="font-mono text-indigo-600">items[].note</code>
+                                    <span class="text-gray-500 col-span-2">string, optional — Customer note per item</span>
                                 </div>
                             </div>
                         </div>
@@ -183,6 +200,20 @@ Content-Type: application/json</pre>
         <span class="text-sky-400">"Size"</span>: <span class="text-emerald-400">"XL"</span>,
         <span class="text-sky-400">"Color"</span>: <span class="text-emerald-400">"Black"</span>
       }
+    },
+    {
+      <span class="text-sky-400">"product_id"</span>: <span class="text-amber-400">25</span>,
+      <span class="text-sky-400">"quantity"</span>: <span class="text-amber-400">1</span>,
+      <span class="text-sky-400">"print_type"</span>: <span class="text-emerald-400">"custom_size"</span>,
+      <span class="text-sky-400">"print_width"</span>: <span class="text-amber-400">24</span>,
+      <span class="text-sky-400">"print_height"</span>: <span class="text-amber-400">36</span>,
+      <span class="text-sky-400">"attributes"</span>: {
+        <span class="text-sky-400">"Size"</span>: <span class="text-emerald-400">"24 × 36 in"</span>,
+        <span class="text-sky-400">"Material"</span>: <span class="text-emerald-400">"Vinyl Adhesive"</span>
+      },
+      <span class="text-sky-400">"file_name"</span>: <span class="text-emerald-400">"shop-logo-final-v3.png"</span>,
+      <span class="text-sky-400">"note"</span>: <span class="text-emerald-400">"Please match the blue to PMS 286 C"</span>,
+      <span class="text-sky-400">"image"</span>: <span class="text-emerald-400">"data:image/png;base64,iVBORw0KGgoAAAANSU..."</span>
     }
   ]
 }</pre>
@@ -200,6 +231,20 @@ Content-Type: application/json</pre>
     <span class="text-sky-400">"total"</span>: <span class="text-amber-400">130.00</span>
   }
 }</pre>
+                    </div>
+                </div>
+
+                <div class="px-4 py-3 bg-indigo-50 border border-indigo-200 rounded-lg flex gap-3">
+                    <i class="fa-solid fa-circle-info text-indigo-600 mt-0.5"></i>
+                    <div class="text-xs text-indigo-800">
+                        <p class="font-medium mb-1">Artwork Upload Notes</p>
+                        <ul class="list-disc list-inside space-y-0.5">
+                            <li><code class="bg-white px-1 rounded">items[].image</code> must be a <strong>base64 data URL</strong> (e.g. <code class="bg-white px-1 rounded">data:image/png;base64,...</code>)</li>
+                            <li>Supported: PNG, JPG, WEBP, PDF</li>
+                            <li>Max size: 30 MB per file</li>
+                            <li>Server stores it as an <code class="bg-white px-1 rounded">order_design</code> record and returns a public URL</li>
+                            <li>Use <code class="bg-white px-1 rounded">file_name</code> to preserve the customer's original filename</li>
+                        </ul>
                     </div>
                 </div>
 
@@ -233,7 +278,28 @@ Content-Type: application/json</pre>
       {
         <span class="text-sky-400">"product_name"</span>: <span class="text-emerald-400">"Gildan T-Shirt"</span>,
         <span class="text-sky-400">"quantity"</span>: <span class="text-amber-400">5</span>,
-        <span class="text-sky-400">"unit_price"</span>: <span class="text-amber-400">25.00</span>
+        <span class="text-sky-400">"unit_price"</span>: <span class="text-amber-400">25.00</span>,
+        <span class="text-sky-400">"attributes"</span>: {
+          <span class="text-sky-400">"Size"</span>: <span class="text-emerald-400">"XL"</span>,
+          <span class="text-sky-400">"Color"</span>: <span class="text-emerald-400">"Black"</span>
+        },
+        <span class="text-sky-400">"print_type"</span>: <span class="text-emerald-400">"apparel"</span>
+      },
+      {
+        <span class="text-sky-400">"product_name"</span>: <span class="text-emerald-400">"Vinyl Adhesive (High-Tac)"</span>,
+        <span class="text-sky-400">"quantity"</span>: <span class="text-amber-400">1</span>,
+        <span class="text-sky-400">"unit_price"</span>: <span class="text-amber-400">45.00</span>,
+        <span class="text-sky-400">"print_width"</span>: <span class="text-amber-400">24</span>,
+        <span class="text-sky-400">"print_height"</span>: <span class="text-amber-400">36</span>,
+        <span class="text-sky-400">"attributes"</span>: {
+          <span class="text-sky-400">"Size"</span>: <span class="text-emerald-400">"24 × 36 in"</span>,
+          <span class="text-sky-400">"Material"</span>: <span class="text-emerald-400">"Vinyl Adhesive"</span>
+        },
+        <span class="text-sky-400">"design"</span>: {
+          <span class="text-sky-400">"file_url"</span>: <span class="text-emerald-400">"https://cdn.example.com/orders/designs/abc123.png"</span>,
+          <span class="text-sky-400">"file_name"</span>: <span class="text-emerald-400">"shop-logo-final-v3.png"</span>,
+          <span class="text-sky-400">"mime_type"</span>: <span class="text-emerald-400">"image/png"</span>
+        }
       }
     ],
     <span class="text-sky-400">"status_history"</span>: [
@@ -471,6 +537,7 @@ Content-Type: application/json</pre>
       <span class="text-sky-400">"payment_status"</span>: <span class="text-emerald-400">"unpaid"</span>,
       <span class="text-sky-400">"total"</span>: <span class="text-amber-400">130.00</span>,
       <span class="text-sky-400">"items_count"</span>: <span class="text-amber-400">2</span>,
+      <span class="text-sky-400">"has_artwork"</span>: <span class="text-amber-400">true</span>,
       <span class="text-sky-400">"created_at"</span>: <span class="text-emerald-400">"2026-10-06T14:30:00Z"</span>
     }
   ],
@@ -611,11 +678,72 @@ Content-Type: application/json</pre>
                     <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700">GET</span>
                     <code class="text-sm font-mono text-gray-800">/api/admin/orders/{id}</code>
                 </div>
-                <span class="text-xs text-gray-500">Order detail with items and designs</span>
+                <span class="text-xs text-gray-500">Full order detail</span>
             </div>
 
-            <div class="p-6">
-                <p class="text-sm text-gray-600">Returns full order info: items, attributes, options, design file URLs, status history, customer info.</p>
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-gray-600">Returns full order info: customer, shipping, items with attributes, options, print sizes, tier discounts, per-item notes, artwork file URLs (with original filename), payment transactions, and status history.</p>
+
+                <div>
+                    <h4 class="font-medium text-gray-800 mb-3 text-sm">Response — 200 (item shape)</h4>
+                    <div class="bg-slate-900 rounded-lg p-4 overflow-x-auto">
+                        <pre class="text-xs text-slate-100 font-mono leading-relaxed">{
+  <span class="text-sky-400">"success"</span>: <span class="text-amber-400">true</span>,
+  <span class="text-sky-400">"data"</span>: {
+    <span class="text-sky-400">"order_number"</span>: <span class="text-emerald-400">"RJ-2026-0001"</span>,
+    <span class="text-sky-400">"customer"</span>: {
+      <span class="text-sky-400">"name"</span>: <span class="text-emerald-400">"John Doe"</span>,
+      <span class="text-sky-400">"email"</span>: <span class="text-emerald-400">"john@example.com"</span>,
+      <span class="text-sky-400">"phone"</span>: <span class="text-emerald-400">"+1 555 123 4567"</span>
+    },
+    <span class="text-sky-400">"shipping"</span>: {
+      <span class="text-sky-400">"address"</span>: <span class="text-emerald-400">"123 Main Street"</span>,
+      <span class="text-sky-400">"city"</span>: <span class="text-emerald-400">"Los Angeles"</span>,
+      <span class="text-sky-400">"state"</span>: <span class="text-emerald-400">"CA"</span>,
+      <span class="text-sky-400">"zip"</span>: <span class="text-emerald-400">"90001"</span>
+    },
+    <span class="text-sky-400">"items"</span>: [
+      {
+        <span class="text-sky-400">"product_name"</span>: <span class="text-emerald-400">"Vinyl Adhesive (High-Tac)"</span>,
+        <span class="text-sky-400">"quantity"</span>: <span class="text-amber-400">1</span>,
+        <span class="text-sky-400">"unit_price"</span>: <span class="text-amber-400">45.00</span>,
+        <span class="text-sky-400">"total_price"</span>: <span class="text-amber-400">45.00</span>,
+        <span class="text-sky-400">"print_type"</span>: <span class="text-emerald-400">"custom_size"</span>,
+        <span class="text-sky-400">"print_width"</span>: <span class="text-amber-400">24</span>,
+        <span class="text-sky-400">"print_height"</span>: <span class="text-amber-400">36</span>,
+        <span class="text-sky-400">"attributes"</span>: {
+          <span class="text-sky-400">"Size"</span>: <span class="text-emerald-400">"24 × 36 in"</span>,
+          <span class="text-sky-400">"Material"</span>: <span class="text-emerald-400">"Vinyl Adhesive"</span>
+        },
+        <span class="text-sky-400">"options"</span>: [],
+        <span class="text-sky-400">"tier_label"</span>: <span class="text-emerald-400">"21–50 qty · 10% off"</span>,
+        <span class="text-sky-400">"note"</span>: <span class="text-emerald-400">"Please match the blue to PMS 286 C"</span>,
+        <span class="text-sky-400">"designs"</span>: [
+          {
+            <span class="text-sky-400">"file_url"</span>: <span class="text-emerald-400">"https://cdn.example.com/orders/designs/abc123.png"</span>,
+            <span class="text-sky-400">"file_name"</span>: <span class="text-emerald-400">"shop-logo-final-v3.png"</span>,
+            <span class="text-sky-400">"mime_type"</span>: <span class="text-emerald-400">"image/png"</span>,
+            <span class="text-sky-400">"file_size"</span>: <span class="text-amber-400">284520</span>,
+            <span class="text-sky-400">"width"</span>: <span class="text-amber-400">24</span>,
+            <span class="text-sky-400">"height"</span>: <span class="text-amber-400">36</span>
+          }
+        ]
+      }
+    ],
+    <span class="text-sky-400">"status_history"</span>: [...],
+    <span class="text-sky-400">"transactions"</span>: [...]
+  }
+}</pre>
+                    </div>
+                </div>
+
+                <div class="px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-lg flex gap-3">
+                    <i class="fa-solid fa-file-image text-emerald-600 mt-0.5"></i>
+                    <div class="text-xs text-emerald-800">
+                        <p class="font-medium mb-1">Artwork Access</p>
+                        <p>Each item may have one or more design files. Use <code class="bg-white px-1 rounded">designs[].file_url</code> to view/download. Filenames are preserved from the customer's original upload.</p>
+                    </div>
+                </div>
             </div>
         </div>
 
