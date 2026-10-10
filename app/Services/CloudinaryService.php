@@ -32,13 +32,13 @@ class CloudinaryService
             'folder' => $folder,
         ]);
 
+        $videoUrl = $result['secure_url'];
+        $publicId = $result['public_id'];
+
         return [
-            'public_id' => $result['public_id'],
-            'url' => $result['secure_url'],
-            'thumbnail' => $this->cloudinary->imageTag($result['public_id'], [
-                'resource_type' => 'video',
-                'format' => 'jpg',
-            ]) ? $this->thumbnailUrl($result['public_id']) : null,
+            'public_id' => $publicId,
+            'url' => $videoUrl,
+            'thumbnail' => $this->buildThumbnailFromVideoUrl($videoUrl),
             'duration' => $result['duration'] ?? null,
             'format' => $result['format'] ?? null,
         ];
@@ -56,17 +56,12 @@ class CloudinaryService
         }
     }
 
-    public function thumbnailUrl(string $publicId): string
+    protected function buildThumbnailFromVideoUrl(string $videoUrl): string
     {
-        return $this->cloudinary->image($publicId, [
-            'resource_type' => 'video',
-            'format' => 'jpg',
-            'transformation' => [
-                'width' => 600,
-                'height' => 400,
-                'crop' => 'fill',
-                'quality' => 'auto',
-            ],
-        ]);
+        $url = str_replace('/video/upload/', '/video/upload/so_0,w_600,h_400,c_fill,q_auto/', $videoUrl);
+
+        $url = preg_replace('/\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i', '.jpg', $url);
+
+        return $url;
     }
 }

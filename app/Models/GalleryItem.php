@@ -41,15 +41,22 @@ class GalleryItem extends Model
             return null;
         }
 
+        if (!empty($this->video_url)) {
+            return $this->buildThumbnailFromVideoUrl($this->video_url);
+        }
+
         if (!empty($this->video_thumbnail)) {
             return $this->video_thumbnail;
         }
 
-        if (empty($this->video_url)) {
-            return null;
-        }
+        return null;
+    }
 
-        $url = $this->video_url;
+    protected function buildThumbnailFromVideoUrl(string $videoUrl): string
+    {
+        $url = $videoUrl;
+
+        $url = str_replace('/video/upload/', '/video/upload/so_0/', $url);
 
         $url = preg_replace('/\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i', '.jpg', $url);
 
