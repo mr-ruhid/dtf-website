@@ -21,7 +21,7 @@
             <label class="rj-dz-tb-btn rj-dz-tb-primary" title="Upload images (or drag & drop / paste)">
                 <i class="fa-solid fa-cloud-arrow-up"></i>
                 <span>Upload</span>
-                <input type="file" accept="image/png,image/jpeg,image/webp" multiple class="hidden" @change="onFiles($event)">
+                <input type="file" accept="image/png,image/jpeg,image/webp,application/pdf" multiple class="hidden" @change="onFiles($event)">
             </label>
 
             <button type="button" class="rj-dz-tb-btn" @click="removeBg()" :disabled="!single || bgWorking">
@@ -304,6 +304,11 @@
 
     function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
+    function csrfToken() {
+        var m = document.querySelector('meta[name="csrf-token"]');
+        return m ? m.content : '';
+    }
+
     window.designStudio = function (config) {
         var products = config.allProducts || [];
         var initialProduct = config.product || null;
@@ -324,6 +329,7 @@
             selectedMeasurement: null,
 
             qty: 1,
+            originalUploads: [],
 
             itemCount: 0,
             outCount: 0,
@@ -725,21 +731,86 @@
                 this.addFiles(files);
             },
 
-            addFiles(files) {
+            async addFiles(files) {
                 var self = this;
-                files.forEach(function (f) {
-                    if (!/^image\/(png|jpe?g|webp)$/i.test(f.type)) {
-                        self.toast('Only PNG, JPG or WEBP images are supported');
-                        return;
+
+                for (var i = 0; i < files.length; i++) {
+                    var f = files[i];
+
+                    var isImage = /^image\/(png|jpe?g|webp)$/i.test(f.type);
+                    var isPdf = f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+
+                    if (!isImage && !isPdf) {
+                        self.toast('Only PNG, JPG, WEBP or PDF files are supported');
+                        continue;
                     }
+
                     if (f.size > MAX_FILE_MB * 1024 * 1024) {
                         self.toast(f.name + ' is larger than ' + MAX_FILE_MB + 'MB');
-                        return;
+                        continue;
                     }
-                    var reader = new FileReader();
-                    reader.onload = function (ev) { self.addImageFromSrc(ev.target.result); };
-                    reader.readAsDataURL(f);
+
+                    try {
+                        var uploaded = await self.uploadFile(f);
+
+                        if (uploaded) {
+                            self.originalUploads.push(uploaded);
+                        } else {
+                            self.toast('Upload failed: ' + f.name);
+                            continue;
+                        }
+                    } catch (err) {
+                        self.toast('Upload failed: ' + f.name);
+                        continue;
+                    }
+
+                    if (isImage) {
+                        await new Promise(function (resolve) {
+                            var reader = new FileReader();
+                            reader.onload = function (ev) {
+                                self.addImageFromSrc(ev.target.result);
+                                resolve();
+                            };
+                            reader.onerror = function () { resolve(); };
+                            reader.readAsDataURL(f);
+                        });
+                    }
+                }
+            },
+
+            async uploadFile(file) {
+                var fd = new FormData();
+                fd.append('file', file);
+                fd.append('_token', csrfToken());
+
+                var res = await fetch('/design/temp-upload', {
+                    method: 'POST',
+                    body: fd,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken()
+                    },
+                    credentials: 'same-origin'
                 });
+
+                if (!res.ok) {
+                    return null;
+                }
+
+                var data = await res.json();
+
+                if (!data || !data.success) {
+                    return null;
+                }
+
+                return {
+                    token: data.token,
+                    path: data.path,
+                    name: data.name,
+                    size: data.size,
+                    mime: data.mime
+                };
             },
 
             addImageFromSrc(src, replaceObj) {
@@ -1151,7 +1222,9 @@
                     attributes: attributes,
                     print_type: 'custom_size',
                     note: this.itemCount + ' design item(s) · ' + sizeLabel,
-                    image: snapshot
+                    image: snapshot,
+                    file_name: 'gang-sheet-' + widthIn + 'x' + heightIn + 'in.jpg',
+                    original_uploads: this.originalUploads.slice()
                 };
 
                 try {
@@ -1166,6 +1239,7 @@
 
                     if (res && res.success) {
                         this.toast('Added to cart ✓');
+                        this.originalUploads = [];
                     } else {
                         this.toast('Could not add to cart');
                     }
