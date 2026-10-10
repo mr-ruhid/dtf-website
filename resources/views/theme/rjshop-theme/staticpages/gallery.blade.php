@@ -18,7 +18,7 @@
             'title' => $item->title,
             'image_url' => $item->image_url,
             'video_url' => $item->video_url,
-            'video_thumbnail' => $item->video_thumbnail,
+            'video_thumbnail' => $item->video_thumbnail_url,
         ];
     })->values()->all();
 @endphp
@@ -49,7 +49,7 @@
                 @foreach($items as $index => $item)
                     @php
                         $isVideo = $item->type === 'video';
-                        $thumb = $isVideo ? $item->video_thumbnail : $item->image_url;
+                        $thumb = $isVideo ? $item->video_thumbnail_url : $item->image_url;
                     @endphp
 
                     <div class="rj-gl-item {{ $isVideo ? 'is-video' : '' }}"

@@ -27,17 +27,41 @@ class GalleryItem extends Model
         if (!$this->image) {
             return '';
         }
+
         if (str_starts_with($this->image, 'http')) {
             return $this->image;
         }
+
         return asset('storage/' . $this->image);
+    }
+
+    public function getVideoThumbnailUrlAttribute(): ?string
+    {
+        if ($this->type !== 'video') {
+            return null;
+        }
+
+        if (!empty($this->video_thumbnail)) {
+            return $this->video_thumbnail;
+        }
+
+        if (empty($this->video_url)) {
+            return null;
+        }
+
+        $url = $this->video_url;
+
+        $url = preg_replace('/\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i', '.jpg', $url);
+
+        return $url;
     }
 
     public function getThumbnailUrlAttribute(): string
     {
         if ($this->type === 'video') {
-            return $this->video_thumbnail ?? '';
+            return $this->video_thumbnail_url ?? '';
         }
+
         return $this->image_url;
     }
 }
