@@ -296,11 +296,25 @@
                                                     {{ $item->print_type }}
                                                 </span>
                                             @endif
-                                            @if ($hasCanvasState)
-                                                <span class="text-[9px] uppercase tracking-wider bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded font-semibold">
-                                                    <i class="fa-solid fa-pen-ruler text-[8px] mr-0.5"></i> Editable
-                                                </span>
-                                            @endif
+@if ($hasCanvasState)
+    <span class="text-[9px] uppercase tracking-wider bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded font-semibold">
+        <i class="fa-solid fa-pen-ruler text-[8px] mr-0.5"></i> Editable
+    </span>
+
+    @php
+        $studioSlug = $item->product?->slug;
+        $studioUrl = $studioSlug ? url('design/' . $studioSlug) . '?state=' . $item->id : null;
+    @endphp
+
+    @if ($studioUrl)
+        <a href="{{ $studioUrl }}"
+           target="_blank"
+           class="text-[9px] uppercase tracking-wider bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-0.5 rounded font-semibold transition inline-flex items-center gap-1">
+            <i class="fa-solid fa-pen-to-square text-[8px]"></i>
+            Open in Studio
+        </a>
+    @endif
+@endif
                                         </div>
                                     </div>
                                     <div class="text-right shrink-0">
