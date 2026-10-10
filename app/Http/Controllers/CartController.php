@@ -27,6 +27,7 @@ class CartController extends Controller
             'name' => 'nullable|string|max:255',
             'slug' => 'nullable|string|max:255',
             'image' => 'nullable|string',
+            'file_name' => 'nullable|string|max:255',
             'unit_price' => 'nullable|numeric|min:0',
             'product_price' => 'nullable|numeric|min:0',
             'sheet_price' => 'nullable|numeric|min:0',
