@@ -478,17 +478,12 @@
 @endif
 
 <style>
-    .rj-sp-info > .rj-sp-btn-outline,
-    .rj-sp-info > .rj-sp-actions .rj-sp-btn {
-        min-height: 56px;
-    }
-
     .rj-sp-info > .rj-sp-btn-outline {
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 0.625rem;
-        padding: 1rem 1.75rem;
+        padding: 0.875rem 1.5rem;
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 9999px;
@@ -497,8 +492,7 @@
         font-size: 14px;
         font-weight: 600;
         transition: all 0.25s;
-        width: 100%;
-        box-sizing: border-box;
+        align-self: flex-start;
     }
 
     .rj-sp-info > .rj-sp-btn-outline:hover {
