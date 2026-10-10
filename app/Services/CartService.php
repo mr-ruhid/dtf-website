@@ -129,6 +129,10 @@ class CartService
             $productPrice = round((float) ($product->sale_price ?: $product->base_price), 2);
         }
 
+        $fileName = isset($data['file_name']) && is_string($data['file_name']) && $data['file_name'] !== ''
+            ? substr($data['file_name'], 0, 255)
+            : null;
+
         return [
             'key' => $key,
             'product_id' => $data['product_id'] ?? null,
@@ -149,6 +153,7 @@ class CartService
             'height_inch' => $heightInch,
             'sheet_price' => $sheetPrice,
             'product_price' => $productPrice,
+            'file_name' => $fileName,
         ];
     }
 
