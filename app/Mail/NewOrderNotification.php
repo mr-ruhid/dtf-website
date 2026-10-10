@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use App\Models\Order;
-use App\Services\OrderArtworkZipper;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
@@ -17,9 +16,9 @@ class NewOrderNotification extends Mailable
 
     public Order $order;
 
-    protected ?string $artworkZipPath = null;
+    protected ?string $artworkZipPath;
 
-    public function __construct(Order $order)
+    public function __construct(Order $order, ?string $artworkZipPath = null)
     {
         $this->order = $order->loadMissing([
             'items.options',
@@ -28,6 +27,8 @@ class NewOrderNotification extends Mailable
             'zone',
             'branch',
         ]);
+
+        $this->artworkZipPath = $artworkZipPath;
     }
 
     public function envelope(): Envelope
@@ -46,9 +47,7 @@ class NewOrderNotification extends Mailable
 
     public function attachments(): array
     {
-        $this->artworkZipPath = app(OrderArtworkZipper::class)->build($this->order);
-
-        if (!$this->artworkZipPath) {
+        if (!$this->artworkZipPath || !is_file($this->artworkZipPath)) {
             return [];
         }
 
@@ -57,12 +56,5 @@ class NewOrderNotification extends Mailable
                 ->as($this->order->order_number . '-artwork.zip')
                 ->withMime('application/zip'),
         ];
-    }
-
-    public function __destruct()
-    {
-        if ($this->artworkZipPath) {
-            app(OrderArtworkZipper::class)->cleanup($this->artworkZipPath);
-        }
     }
 }
