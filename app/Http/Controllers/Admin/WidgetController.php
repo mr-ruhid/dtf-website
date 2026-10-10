@@ -283,6 +283,35 @@ class WidgetController extends Controller
                 'offline_message' => ['nullable', 'string', 'max:300'],
             ]),
 
+            'special_films_story' => $request->validate([
+                'stats' => ['nullable', 'array', 'max:8'],
+                'stats.*.value' => ['nullable', 'string', 'max:30'],
+                'stats.*.sub' => ['nullable', 'string', 'max:30'],
+                'stats.*.label' => ['nullable', 'string', 'max:60'],
+                'story_eyebrow' => ['nullable', 'string', 'max:100'],
+                'story_title' => ['nullable', 'string', 'max:200'],
+                'steps' => ['nullable', 'array', 'max:10'],
+                'steps.*.title' => ['nullable', 'string', 'max:150'],
+                'steps.*.description' => ['nullable', 'string', 'max:2000'],
+            ]),
+
+            'special_films_faq' => $request->validate([
+                'eyebrow' => ['nullable', 'string', 'max:150'],
+                'title' => ['nullable', 'string', 'max:200'],
+                'items' => ['nullable', 'array', 'max:20'],
+                'items.*.question' => ['nullable', 'string', 'max:250'],
+                'items.*.answer' => ['nullable', 'string', 'max:2000'],
+            ]),
+
+            'admin_ai_chat' => $request->validate([
+                'enabled' => ['nullable', 'boolean'],
+                'ai_url' => ['nullable', 'string', 'max:500'],
+                'button_label' => ['nullable', 'string', 'max:60'],
+                'popup_width' => ['nullable', 'integer', 'min:300', 'max:1200'],
+                'popup_height' => ['nullable', 'integer', 'min:400', 'max:1400'],
+                'position' => ['nullable', 'in:bottom-right,bottom-left'],
+            ]),
+
             default => $request->validate([
                 'title' => ['nullable', 'string', 'max:200'],
             ]),
