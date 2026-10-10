@@ -589,7 +589,8 @@
     @if($aiChatWidget && $aiChatEnabled && !request()->routeIs('admin.widgets*'))
         <div x-data="adminAiChatPanel({
                 url: @js($aiChatUrl),
-                panelWidth: {{ $aiChatWidth }}
+                panelWidth: {{ $aiChatWidth }},
+                proxyBase: @js(route('admin.ai-proxy'))
              })"
              x-cloak>
 
@@ -622,7 +623,7 @@
                         </div>
                         <div class="leading-tight">
                             <p class="text-white text-sm font-bold">Chat</p>
-                            <p class="text-[10px] text-slate-500 font-mono">iframe preview</p>
+                            <p class="text-[10px] text-slate-500 font-mono">proxy view</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-1">
@@ -687,33 +688,40 @@
             Alpine.data('adminAiChatPanel', (config) => ({
                 url: config.url || 'https://chat.openai.com',
                 panelWidth: config.panelWidth || 460,
+                proxyBase: config.proxyBase || '/admin/ai-proxy',
                 open: false,
                 blocked: false,
-                iframeUrl: config.url || 'https://chat.openai.com',
+                iframeUrl: '',
 
                 get currentHost() {
                     try {
-                        return new URL(this.iframeUrl).hostname;
+                        return new URL(this.url).hostname;
                     } catch (e) {
-                        return this.iframeUrl;
+                        return this.url;
                     }
                 },
 
+                buildProxyUrl(target) {
+                    return this.proxyBase + '?url=' + encodeURIComponent(target);
+                },
+
                 init() {
+                    this.iframeUrl = this.buildProxyUrl(this.url);
                     this.$watch('open', (v) => {
                         if (v) {
                             this.blocked = false;
-                            setTimeout(() => this.detectBlocked(), 2500);
+                            setTimeout(() => this.detectBlocked(), 3000);
                         }
                     });
                 },
 
                 reload() {
                     this.blocked = false;
-                    var base = this.url;
-                    var sep = base.indexOf('?') > -1 ? '&' : '?';
-                    this.iframeUrl = base + sep + '_r=' + Date.now();
-                    setTimeout(() => this.detectBlocked(), 2500);
+                    const base = this.url;
+                    const sep = base.indexOf('?') > -1 ? '&' : '?';
+                    const target = base + sep + '_r=' + Date.now();
+                    this.iframeUrl = this.buildProxyUrl(target);
+                    setTimeout(() => this.detectBlocked(), 3000);
                 },
 
                 detectBlocked() {
@@ -722,17 +730,14 @@
 
                     try {
                         const doc = frame.contentDocument || frame.contentWindow.document;
-
                         if (!doc || doc.body === null) {
                             this.blocked = true;
                             return;
                         }
-
                         if (doc.body.innerHTML.trim() === '' || doc.body.children.length === 0) {
                             this.blocked = true;
                             return;
                         }
-
                         this.blocked = false;
                     } catch (e) {
                         this.blocked = false;
