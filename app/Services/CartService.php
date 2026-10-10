@@ -135,6 +135,20 @@ class CartService
 
         $originalUploads = $this->sanitizeUploads($data['original_uploads'] ?? []);
 
+        $compositeUpload = $this->sanitizeCompositeUpload($data['composite_upload'] ?? null);
+
+        $compositeImage = null;
+
+        if (!empty($data['composite_image']) && is_string($data['composite_image'])) {
+            $raw = $data['composite_image'];
+
+            if (strlen($raw) <= 52428800 && str_starts_with($raw, 'data:image/')) {
+                $compositeImage = $raw;
+            }
+        }
+
+        $canvasState = $this->sanitizeCanvasState($data['canvas_state'] ?? null);
+
         return [
             'key' => $key,
             'product_id' => $data['product_id'] ?? null,
@@ -157,6 +171,9 @@ class CartService
             'product_price' => $productPrice,
             'file_name' => $fileName,
             'original_uploads' => $originalUploads,
+            'composite_upload' => $compositeUpload,
+            'composite_image' => $compositeImage,
+            'canvas_state' => $canvasState,
         ];
     }
 
@@ -193,6 +210,50 @@ class CartService
         }
 
         return $clean;
+    }
+
+    protected function sanitizeCompositeUpload($upload): ?array
+    {
+        if (!is_array($upload) || empty($upload)) {
+            return null;
+        }
+
+        $path = isset($upload['path']) && is_string($upload['path']) ? trim($upload['path']) : '';
+
+        if ($path === '') {
+            return null;
+        }
+
+        if (str_contains($path, '..') || !str_starts_with($path, 'tmp/uploads/')) {
+            return null;
+        }
+
+        return [
+            'token' => isset($upload['token']) ? substr((string) $upload['token'], 0, 64) : null,
+            'path' => substr($path, 0, 500),
+            'name' => isset($upload['name']) ? substr((string) $upload['name'], 0, 255) : null,
+            'size' => isset($upload['size']) ? max(0, (int) $upload['size']) : 0,
+            'mime' => isset($upload['mime']) ? substr((string) $upload['mime'], 0, 100) : null,
+        ];
+    }
+
+    protected function sanitizeCanvasState($state): ?array
+    {
+        if (!is_array($state) || empty($state)) {
+            return null;
+        }
+
+        $encoded = json_encode($state);
+
+        if ($encoded === false) {
+            return null;
+        }
+
+        if (strlen($encoded) > 2097152) {
+            return null;
+        }
+
+        return $state;
     }
 
     protected function recalculateItem(array &$item): void
