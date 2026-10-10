@@ -18,7 +18,7 @@
     var GRID_IN = 0.5;
     var MAX_FILE_MB = 30;
     var HISTORY_LIMIT = 40;
-    var MAX_EXPORT_PIXELS = 16000000;
+    var MAX_EXPORT_PIXELS = 25000000;
     var MAX_FILL = 300;
 
     // Properties tracked by undo / redo
@@ -2169,20 +2169,68 @@
                 var heightIn = Number(m.height);
                 var unitPrice = Number(m.price);
                 var sizeLabel = m.label;
-                var snapshot = null;
+
+                var compositeUpload = null;
+                var compositeImage = null;
+                var effectiveDpi = DPI;
 
                 try {
-                    var mult = Math.min(1, 1200 / Math.max(canvas.getWidth(), canvas.getHeight()));
-                    snapshot = this.exportCanvas(mult, '#ffffff').toDataURL('image/jpeg', 0.8);
+                    var cw = canvas.getWidth();
+                    var ch = canvas.getHeight();
+
+                    var targetMult = TARGET_DPI / DPI;
+                    var capMult = Math.sqrt(MAX_EXPORT_PIXELS / Math.max(1, cw * ch));
+                    var mult = Math.max(1, Math.min(targetMult, capMult));
+
+                    effectiveDpi = Math.round(mult * DPI);
+
+                    var el = this.exportCanvas(mult, '');
+
+                    var blob = await new Promise(function (resolve) {
+                        try { el.toBlob(resolve, 'image/png'); }
+                        catch (err) { resolve(null); }
+                    });
+
+                    if (blob) {
+                        var fileName = BRAND + '-gang-sheet-' + widthIn + 'x' + heightIn + 'in.png';
+                        var file = new File([blob], fileName, { type: 'image/png' });
+                        compositeUpload = await this.uploadFile(file);
+                    }
+
+                    if (!compositeUpload) {
+                        compositeImage = el.toDataURL('image/png');
+                    }
                 } catch (e) {
-                    snapshot = null;
+                    console.error('Composite export failed', e);
+                }
+
+                if (!compositeUpload && !compositeImage) {
+                    this.toast('Could not prepare print file — try again');
+                    this.adding = false;
+                    return;
+                }
+
+                var canvasState = null;
+                try {
+                    var state = canvas.toJSON(CUSTOM_PROPS);
+                    if (state && Array.isArray(state.objects)) {
+                        state.objects.forEach(function (o) {
+                            if (o && o.type === 'image' && typeof o.src === 'string') {
+                                if (o.src.indexOf('data:') === 0) o.src = '';
+                            }
+                        });
+                    }
+                    canvasState = state;
+                } catch (e) {
+                    canvasState = null;
                 }
 
                 var attributes = {
                     'Size': sizeLabel,
                     'Width (in)': widthIn,
                     'Height (in)': heightIn,
-                    'Items': this.itemCount
+                    'Items': this.itemCount,
+                    'DPI': effectiveDpi
                 };
 
                 var payload = {
@@ -2198,9 +2246,11 @@
                     attributes: attributes,
                     print_type: 'custom_size',
                     note: BRAND + ' · ' + this.itemCount + ' design item(s) · ' + sizeLabel,
-                    image: snapshot,
-                    file_name: BRAND + '-gang-sheet-' + widthIn + 'x' + heightIn + 'in.jpg',
-                    original_uploads: this.originalUploads.slice()
+                    file_name: BRAND + '-gang-sheet-' + widthIn + 'x' + heightIn + 'in.png',
+                    original_uploads: this.originalUploads.slice(),
+                    composite_upload: compositeUpload,
+                    composite_image: compositeImage,
+                    canvas_state: canvasState
                 };
 
                 try {
@@ -2214,7 +2264,7 @@
                     var res = await store.add(payload);
 
                     if (res && res.success) {
-                        this.toast('Added to cart ✓');
+                        this.toast('Added to cart ✓ (' + effectiveDpi + ' DPI)');
                         this.originalUploads = [];
                     } else {
                         this.toast('Could not add to cart');
