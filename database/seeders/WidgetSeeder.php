@@ -268,6 +268,19 @@ class WidgetSeeder extends Seeder
                     ],
                 ],
             ],
+            [
+                'key' => 'admin_ai_chat',
+                'name' => 'Admin AI Chat',
+                'sort_order' => 19,
+                'settings' => [
+                    'enabled' => true,
+                    'ai_url' => 'https://chat.openai.com',
+                    'button_label' => 'AI Assistant',
+                    'popup_width' => 460,
+                    'popup_height' => 780,
+                    'position' => 'bottom-right',
+                ],
+            ],
         ];
 
         foreach ($widgets as $widget) {
