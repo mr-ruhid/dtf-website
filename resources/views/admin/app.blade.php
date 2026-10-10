@@ -583,27 +583,33 @@
         $aiChatEnabled = $aiChatEnabledRaw === true || $aiChatEnabledRaw === 1 || $aiChatEnabledRaw === '1';
         $aiChatUrl = $aiChatSettings['ai_url'] ?? 'https://chat.openai.com';
         $aiChatWidth = (int) ($aiChatSettings['popup_width'] ?? 460);
+        $aiChatHeight = (int) ($aiChatSettings['popup_height'] ?? 780);
         $aiChatPosition = $aiChatSettings['position'] ?? 'bottom-right';
+        $aiChatMode = $aiChatSettings['mode'] ?? 'iframe';
+        $aiChatLabel = $aiChatSettings['button_label'] ?? 'Chat';
     @endphp
 
     @if($aiChatWidget && $aiChatEnabled && !request()->routeIs('admin.widgets*'))
         <div x-data="adminAiChatPanel({
                 url: @js($aiChatUrl),
                 panelWidth: {{ $aiChatWidth }},
+                popupHeight: {{ $aiChatHeight }},
+                mode: @js($aiChatMode),
+                label: @js($aiChatLabel),
                 proxyBase: @js(route('admin.ai-proxy'))
              })"
              x-cloak>
 
             <button type="button"
-                    @click="open = !open"
-                    title="Chat"
+                    @click="handleButtonClick()"
+                    :title="label"
                     class="fixed z-[9999] {{ $aiChatPosition === 'bottom-left' ? 'bottom-6 left-6' : 'bottom-6 right-6' }} group flex items-center gap-1.5 h-11 pl-2 pr-3.5 rounded-full bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-600 text-white shadow-[0_6px_24px_-4px_rgba(99,102,241,0.7)] hover:shadow-[0_10px_32px_-4px_rgba(99,102,241,0.9)] transition-all duration-300 border border-white/20 rj-chat-btn"
                     x-show="!open">
                 <span class="relative flex items-center justify-center w-7 h-7 rounded-full bg-white/15 backdrop-blur-sm">
                     <i class="fa-solid fa-comment-dots text-xs rj-chat-icon"></i>
                     <span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 rj-chat-dot"></span>
                 </span>
-                <span class="text-xs font-bold whitespace-nowrap">Chat</span>
+                <span class="text-xs font-bold whitespace-nowrap" x-text="label"></span>
             </button>
 
             <div x-show="open"
@@ -622,8 +628,8 @@
                             <i class="fa-solid fa-comment-dots text-white text-xs"></i>
                         </div>
                         <div class="leading-tight">
-                            <p class="text-white text-sm font-bold">Chat</p>
-                            <p class="text-[10px] text-slate-500 font-mono">proxy view</p>
+                            <p class="text-white text-sm font-bold" x-text="label"></p>
+                            <p class="text-[10px] text-slate-500 font-mono" x-text="mode === 'iframe' ? 'iframe view' : 'popup mode'"></p>
                         </div>
                     </div>
                     <div class="flex items-center gap-1">
@@ -652,7 +658,7 @@
                     <iframe :src="iframeUrl"
                             class="w-full h-full border-0"
                             referrerpolicy="no-referrer-when-downgrade"
-                            allow="clipboard-write; clipboard-read"
+                            allow="clipboard-write; clipboard-read; microphone; camera"
                             x-ref="frame"></iframe>
 
                     <div x-show="blocked"
@@ -688,6 +694,9 @@
             Alpine.data('adminAiChatPanel', (config) => ({
                 url: config.url || 'https://chat.openai.com',
                 panelWidth: config.panelWidth || 460,
+                popupHeight: config.popupHeight || 780,
+                mode: config.mode || 'iframe',
+                label: config.label || 'Chat',
                 proxyBase: config.proxyBase || '/admin/ai-proxy',
                 open: false,
                 blocked: false,
@@ -713,6 +722,14 @@
                             setTimeout(() => this.detectBlocked(), 3000);
                         }
                     });
+                },
+
+                handleButtonClick() {
+                    if (this.mode === 'popup') {
+                        this.openPopup();
+                    } else {
+                        this.open = true;
+                    }
                 },
 
                 reload() {
@@ -746,7 +763,7 @@
 
                 openPopup() {
                     const w = this.panelWidth;
-                    const h = Math.min(900, window.screen.height - 80);
+                    const h = Math.min(this.popupHeight, window.screen.height - 80);
                     const left = (window.screen.width - w) / 2;
                     const top = (window.screen.height - h) / 2;
 
