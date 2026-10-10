@@ -13,7 +13,6 @@
 
             <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,0.06);">
 
-                {{-- HEADER --}}
                 <tr>
                     <td style="background:linear-gradient(135deg,#10b981,#059669);padding:32px 32px 28px;">
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -34,14 +33,13 @@
                     </td>
                 </tr>
 
-                {{-- INFO BANNER --}}
                 <tr>
                     <td style="padding:0;">
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ecfdf5;border-bottom:1px solid #a7f3d0;">
                             <tr>
                                 <td style="padding:16px 32px;">
                                     <p style="margin:0;font-size:13px;color:#065f46;line-height:1.5;">
-                                        <strong>Payment has been received.</strong> The order is now confirmed and ready for production. Prepare the artwork files below and proceed with printing.
+                                        <strong>Payment has been received.</strong> The order is now confirmed and ready for production.
                                     </p>
                                 </td>
                             </tr>
@@ -49,7 +47,30 @@
                     </td>
                 </tr>
 
-                {{-- KEY INFO --}}
+                @if($isDownloadActive && $downloadUrl)
+                    <tr>
+                        <td style="padding:24px 32px 0;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #a7f3d0;border-radius:12px;">
+                                <tr>
+                                    <td style="padding:20px 22px;">
+                                        <p style="margin:0 0 6px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#10b981;font-weight:800;">Artwork files</p>
+                                        <p style="margin:0 0 14px;font-size:14px;color:#1e293b;line-height:1.6;">
+                                            All artwork files for this order are available to download.
+                                            @if($expiresAt)
+                                                <br><span style="font-size:12px;color:#64748b;">Link expires on <strong>{{ $expiresAt->format('d M Y') }}</strong> (5 days).</span>
+                                            @endif
+                                        </p>
+                                        <a href="{{ $downloadUrl }}"
+                                           style="display:inline-block;padding:12px 26px;background:#10b981;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;border-radius:8px;">
+                                            Download artwork files →
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                @endif
+
                 <tr>
                     <td style="padding:28px 32px 0;">
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -93,7 +114,6 @@
                     </td>
                 </tr>
 
-                {{-- ITEMS --}}
                 <tr>
                     <td style="padding:32px 32px 8px;">
                         <p style="margin:0 0 16px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#10b981;font-weight:800;border-bottom:2px solid #ecfdf5;padding-bottom:8px;">
@@ -105,13 +125,14 @@
                                 $breakdown = $item->price_breakdown ?? [];
                                 $itemNote = $breakdown['note'] ?? null;
                                 $tierLabel = $breakdown['tier_label'] ?? null;
+
+                                $designs = $item->designs;
                             @endphp
 
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
                                 <tr>
                                     <td style="padding:16px;background:#fafbfc;">
 
-                                        {{-- Title --}}
                                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                                             <tr>
                                                 <td valign="top">
@@ -127,7 +148,6 @@
                                             </tr>
                                         </table>
 
-                                        {{-- Print size + tier --}}
                                         @if(($item->print_width && $item->print_height) || $tierLabel)
                                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px;">
                                                 <tr>
@@ -151,7 +171,6 @@
                                             </table>
                                         @endif
 
-                                        {{-- Attributes --}}
                                         @if($item->attributes && count($item->attributes))
                                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px;">
                                                 <tr>
@@ -166,7 +185,6 @@
                                             </table>
                                         @endif
 
-                                        {{-- Customer note --}}
                                         @if($itemNote)
                                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
                                                 <tr>
@@ -178,15 +196,14 @@
                                             </table>
                                         @endif
 
-                                        {{-- Artwork --}}
-                                        @if($item->designs->count())
+                                        @if($designs->count())
                                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px;border-top:1px solid #e2e8f0;padding-top:12px;">
                                                 <tr>
                                                     <td>
                                                         <p style="margin:0 0 8px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#10b981;font-weight:800;">
-                                                            Artwork ({{ $item->designs->count() }})
+                                                            Artwork ({{ $designs->count() }})
                                                         </p>
-                                                        @foreach($item->designs as $design)
+                                                        @foreach($designs as $design)
                                                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:6px;background:#f8fafc;border-radius:8px;">
                                                                 <tr>
                                                                     <td style="padding:8px 12px;">
@@ -199,11 +216,6 @@
                                                                                 · {{ rtrim(rtrim(number_format((float) $design->width, 2, '.', ''), '0'), '.') }}×{{ rtrim(rtrim(number_format((float) $design->height, 2, '.', ''), '0'), '.') }} in
                                                                             @endif
                                                                         </p>
-                                                                    </td>
-                                                                    <td align="right" style="padding:8px 12px;">
-                                                                        <a href="{{ $design->file_url }}" style="display:inline-block;padding:6px 14px;background:#10b981;color:#ffffff;font-size:11px;font-weight:700;text-decoration:none;border-radius:6px;">
-                                                                            Download
-                                                                        </a>
                                                                     </td>
                                                                 </tr>
                                                             </table>
@@ -220,7 +232,6 @@
                     </td>
                 </tr>
 
-                {{-- SHIPPING --}}
                 <tr>
                     <td style="padding:0 32px 24px;">
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border-radius:10px;">
@@ -240,7 +251,6 @@
                     </td>
                 </tr>
 
-                {{-- CTA --}}
                 <tr>
                     <td style="padding:0 32px 32px;">
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -256,7 +266,6 @@
                     </td>
                 </tr>
 
-                {{-- FOOTER --}}
                 <tr>
                     <td style="background:#0f172a;padding:20px 32px;">
                         <p style="margin:0;font-size:11px;color:#94a3b8;text-align:center;line-height:1.6;">
