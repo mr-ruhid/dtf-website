@@ -13,7 +13,6 @@
 
             <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,0.06);">
 
-                {{-- HEADER --}}
                 <tr>
                     <td style="background:linear-gradient(135deg,#6366f1,#a855f7);padding:32px 32px 28px;">
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -34,7 +33,6 @@
                     </td>
                 </tr>
 
-                {{-- QUICK STATS --}}
                 <tr>
                     <td style="padding:0;">
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
@@ -62,7 +60,30 @@
                     </td>
                 </tr>
 
-                {{-- CUSTOMER & SHIPPING --}}
+                @if($isDownloadActive && $downloadUrl)
+                    <tr>
+                        <td style="padding:24px 32px 0;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,#eef2ff,#f5f3ff);border:1px solid #c7d2fe;border-radius:12px;">
+                                <tr>
+                                    <td style="padding:20px 22px;">
+                                        <p style="margin:0 0 6px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#6366f1;font-weight:800;">Artwork files</p>
+                                        <p style="margin:0 0 14px;font-size:14px;color:#1e293b;line-height:1.6;">
+                                            All artwork files for this order are available to download.
+                                            @if($expiresAt)
+                                                <br><span style="font-size:12px;color:#64748b;">Link expires on <strong>{{ $expiresAt->format('d M Y') }}</strong> (5 days).</span>
+                                            @endif
+                                        </p>
+                                        <a href="{{ $downloadUrl }}"
+                                           style="display:inline-block;padding:12px 26px;background:#6366f1;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;border-radius:8px;">
+                                            Download artwork files →
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                @endif
+
                 <tr>
                     <td style="padding:28px 32px 0;">
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -99,7 +120,6 @@
                     </td>
                 </tr>
 
-                {{-- ITEMS --}}
                 <tr>
                     <td style="padding:32px 32px 8px;">
                         <p style="margin:0 0 16px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#6366f1;font-weight:800;border-bottom:2px solid #eef2ff;padding-bottom:8px;">
@@ -111,13 +131,16 @@
                                 $breakdown = $item->price_breakdown ?? [];
                                 $itemNote = $breakdown['note'] ?? null;
                                 $tierLabel = $breakdown['tier_label'] ?? null;
+
+                                $designs = $item->designs;
+                                $composite = $designs->first();
+                                $sources = $designs->slice(1)->values();
                             @endphp
 
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
                                 <tr>
                                     <td style="padding:16px;background:#fafbfc;">
 
-                                        {{-- Title row --}}
                                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                                             <tr>
                                                 <td valign="top">
@@ -133,7 +156,6 @@
                                             </tr>
                                         </table>
 
-                                        {{-- Print size + tier --}}
                                         @if(($item->print_width && $item->print_height) || $tierLabel)
                                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px;">
                                                 <tr>
@@ -157,7 +179,6 @@
                                             </table>
                                         @endif
 
-                                        {{-- Attributes --}}
                                         @if($item->attributes && count($item->attributes))
                                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px;">
                                                 <tr>
@@ -172,7 +193,6 @@
                                             </table>
                                         @endif
 
-                                        {{-- Options --}}
                                         @if($item->options->count())
                                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px;border-top:1px solid #e2e8f0;padding-top:10px;">
                                                 @foreach($item->options as $opt)
@@ -188,7 +208,6 @@
                                             </table>
                                         @endif
 
-                                        {{-- Customer note --}}
                                         @if($itemNote)
                                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
                                                 <tr>
@@ -200,15 +219,14 @@
                                             </table>
                                         @endif
 
-                                        {{-- Artwork --}}
-                                        @if($item->designs->count())
+                                        @if($designs->count())
                                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px;border-top:1px solid #e2e8f0;padding-top:12px;">
                                                 <tr>
                                                     <td>
                                                         <p style="margin:0 0 8px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6366f1;font-weight:800;">
-                                                            Artwork ({{ $item->designs->count() }})
+                                                            Artwork ({{ $designs->count() }})
                                                         </p>
-                                                        @foreach($item->designs as $design)
+                                                        @foreach($designs as $design)
                                                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:6px;background:#f8fafc;border-radius:8px;">
                                                                 <tr>
                                                                     <td style="padding:8px 12px;">
@@ -222,14 +240,15 @@
                                                                             @endif
                                                                         </p>
                                                                     </td>
-                                                                    <td align="right" style="padding:8px 12px;">
-                                                                        <a href="{{ $design->file_url }}" style="display:inline-block;padding:6px 14px;background:#6366f1;color:#ffffff;font-size:11px;font-weight:700;text-decoration:none;border-radius:6px;">
-                                                                            Download
-                                                                        </a>
-                                                                    </td>
                                                                 </tr>
                                                             </table>
                                                         @endforeach
+
+                                                        @if($isDownloadActive && $downloadUrl)
+                                                            <p style="margin:8px 0 0;font-size:12px;color:#64748b;">
+                                                                Download all files from the order page above.
+                                                            </p>
+                                                        @endif
                                                     </td>
                                                 </tr>
                                             </table>
@@ -242,7 +261,6 @@
                     </td>
                 </tr>
 
-                {{-- TOTALS --}}
                 <tr>
                     <td style="padding:8px 32px 32px;">
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border-radius:10px;">
@@ -270,7 +288,6 @@
                     </td>
                 </tr>
 
-                {{-- CUSTOMER NOTE (Order-level) --}}
                 @if($order->customer_note)
                     <tr>
                         <td style="padding:0 32px 24px;">
@@ -286,7 +303,6 @@
                     </tr>
                 @endif
 
-                {{-- ADMIN CTA --}}
                 <tr>
                     <td style="padding:0 32px 32px;">
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -302,12 +318,11 @@
                     </td>
                 </tr>
 
-                {{-- FOOTER --}}
                 <tr>
                     <td style="background:#0f172a;padding:20px 32px;">
                         <p style="margin:0;font-size:11px;color:#94a3b8;text-align:center;line-height:1.6;">
-                            This is an automated notification from {{ \App\Models\Setting::get('site_name', 'Print All Studio') }}.<br>
-                            Sent to your notification email list. Manage recipients in Admin → Orders.
+                            Automated notification from {{ \App\Models\Setting::get('site_name', 'Print All Studio') }}.<br>
+                            Manage recipients in Admin → Orders → Notification Emails.
                         </p>
                     </td>
                 </tr>
