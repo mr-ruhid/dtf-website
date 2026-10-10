@@ -349,13 +349,50 @@
                     <span>Ask a question</span>
                 </a>
 
-                <div class="rj-sp-upload-hint">
-                    <i class="fa-solid fa-circle-info"></i>
-                    @if($isDesignable)
-                        <span>Already have a print-ready file? <a href="{{ url('contact-us') }}">Upload it instead →</a></span>
-                    @else
-                        <span>Need help with this product? <a href="{{ url('contact-us') }}">Contact support →</a></span>
-                    @endif
+                {{-- ============ UPLOAD OWN DESIGN (toggle) ============ --}}
+                <div class="rj-sp-upload-section">
+                    <button type="button"
+                            @click="uploadOpen = !uploadOpen"
+                            class="rj-sp-upload-toggle">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>
+                            Already have a print-ready file?
+                            <strong x-text="uploadOpen ? 'Hide upload' : 'Upload it instead'"></strong>
+                            <i class="fa-solid fa-arrow-down" :class="uploadOpen ? 'rj-sp-rot' : ''"></i>
+                        </span>
+                    </button>
+
+                    <div x-show="uploadOpen" x-collapse x-cloak class="rj-sp-upload-panel">
+                        <label class="rj-sp-drop"
+                               :class="{ 'is-drag': dragging, 'has-file': fileName }"
+                               @dragover.prevent="dragging = true"
+                               @dragleave.prevent="dragging = false"
+                               @drop.prevent="onDrop($event)">
+                            <input type="file" accept="image/png,image/jpeg,image/webp,application/pdf" @change="onFile($event)">
+
+                            <template x-if="!fileName">
+                                <div class="rj-sp-drop-inner">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    <p class="rj-sp-drop-title">Drop artwork here or click to upload</p>
+                                    <p class="rj-sp-drop-sub">PNG · JPG · WEBP · PDF · Max 30MB</p>
+                                </div>
+                            </template>
+
+                            <template x-if="fileName">
+                                <div class="rj-sp-drop-inner">
+                                    <i class="fa-solid fa-circle-check rj-sp-drop-ok"></i>
+                                    <p class="rj-sp-drop-title" x-text="fileName"></p>
+                                    <p class="rj-sp-drop-sub">Click to replace</p>
+                                </div>
+                            </template>
+                        </label>
+
+                        <p class="rj-sp-upload-note">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span x-show="!fileName">Your file will be attached to the cart item</span>
+                            <span x-show="fileName" x-cloak>File ready — add to cart to send it with the order</span>
+                        </p>
+                    </div>
                 </div>
 
             </div>
@@ -440,6 +477,174 @@
 </section>
 @endif
 
+<style>
+    .rj-sp-info > .rj-sp-btn-outline,
+    .rj-sp-info > .rj-sp-actions .rj-sp-btn {
+        min-height: 56px;
+    }
+
+    .rj-sp-info > .rj-sp-btn-outline {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.625rem;
+        padding: 1rem 1.75rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 9999px;
+        color: #fff;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.25s;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .rj-sp-info > .rj-sp-btn-outline:hover {
+        background: rgba(99, 102, 241, 0.1);
+        border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    .rj-sp-upload-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .rj-sp-upload-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        width: 100%;
+        padding: 0.875rem 1.125rem;
+        background: rgba(99, 102, 241, 0.06);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        border-radius: 12px;
+        color: #c7d2fe;
+        font-family: inherit;
+        font-size: 13px;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.25s;
+    }
+
+    .rj-sp-upload-toggle:hover {
+        background: rgba(99, 102, 241, 0.1);
+        border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    .rj-sp-upload-toggle > i {
+        color: #818cf8;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .rj-sp-upload-toggle strong {
+        color: #a5b4fc;
+        font-weight: 700;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+
+    .rj-sp-upload-toggle > span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        flex: 1;
+        flex-wrap: wrap;
+    }
+
+    .rj-sp-upload-toggle .fa-arrow-down {
+        font-size: 9px;
+        transition: transform 0.3s;
+        opacity: 0.6;
+    }
+
+    .rj-sp-rot {
+        transform: rotate(180deg);
+    }
+
+    .rj-sp-upload-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0.25rem 0 0;
+    }
+
+    .rj-sp-drop {
+        display: block;
+        padding: 1.75rem 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1.5px dashed rgba(255, 255, 255, 0.15);
+        border-radius: 14px;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.25s;
+    }
+
+    .rj-sp-drop:hover,
+    .rj-sp-drop.is-drag {
+        border-color: #6366f1;
+        background: rgba(99, 102, 241, 0.06);
+    }
+
+    .rj-sp-drop.has-file {
+        border-style: solid;
+        border-color: rgba(52, 211, 153, 0.5);
+        background: rgba(52, 211, 153, 0.05);
+    }
+
+    .rj-sp-drop input {
+        display: none;
+    }
+
+    .rj-sp-drop-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .rj-sp-drop-inner > i {
+        font-size: 26px;
+        color: #6b7280;
+    }
+
+    .rj-sp-drop-ok {
+        color: #34d399 !important;
+    }
+
+    .rj-sp-drop-title {
+        font-size: 13px;
+        color: #e5e7eb;
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .rj-sp-drop-sub {
+        font-size: 11px;
+        color: #6b7280;
+        margin: 0;
+        font-family: ui-monospace, monospace;
+    }
+
+    .rj-sp-upload-note {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        font-size: 12px;
+        color: #9ca3af;
+        margin: 0;
+        font-family: ui-monospace, monospace;
+    }
+
+    .rj-sp-upload-note i {
+        color: #34d399;
+        font-size: 11px;
+    }
+</style>
+
 <script>
 function singleProduct(config) {
     return {
@@ -453,6 +658,11 @@ function singleProduct(config) {
         selectedWidths: {},
         selectedHeights: {},
         adding: false,
+
+        uploadOpen: false,
+        dragging: false,
+        fileName: '',
+        fileData: null,
 
         finalPrice: 0,
         canAdd: false,
@@ -643,6 +853,38 @@ function singleProduct(config) {
             this.recalc();
         },
 
+        onFile(e) {
+            const f = e.target.files[0];
+            if (!f) return;
+            this.readFile(f);
+        },
+
+        onDrop(e) {
+            this.dragging = false;
+            const f = e.dataTransfer.files[0];
+            if (!f) return;
+            this.readFile(f);
+        },
+
+        readFile(f) {
+            if (f.size > 30 * 1024 * 1024) {
+                this.flash('File is larger than 30MB');
+                return;
+            }
+
+            const allowed = /^(image\/(png|jpe?g|webp)|application\/pdf)$/i.test(f.type);
+
+            if (!allowed) {
+                this.flash('Only PNG, JPG, WEBP, PDF files are supported');
+                return;
+            }
+
+            this.fileName = f.name;
+            const reader = new FileReader();
+            reader.onload = (ev) => { this.fileData = ev.target.result; };
+            reader.readAsDataURL(f);
+        },
+
         goToDesign() {
             if (!this.canAdd) {
                 this.flash('Please select all required options');
@@ -700,10 +942,17 @@ function singleProduct(config) {
                 print_type: '{{ $product->print_type ?: "none" }}',
                 width_inch: w,
                 height_inch: h,
+                image: this.fileData || null,
+                file_name: this.fileName || null,
             };
 
             try {
-                await Alpine.store('cart').add(payload);
+                const res = await Alpine.store('cart').add(payload);
+
+                if (res && res.success) {
+                    this.fileName = '';
+                    this.fileData = null;
+                }
             } catch (e) {
                 this.flash('Could not add to cart');
             }
