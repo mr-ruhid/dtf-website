@@ -65,7 +65,7 @@
                     </div>
 
                     <div>
-                        <p class="text-xs font-semibold text-gray-700 mb-2">Quick presets</p>
+                        <p class="text-xs font-semibold text-gray-700 mb-2">Quick presets — test one by one</p>
                         <div class="flex flex-wrap gap-2">
                             <button type="button" @click="ai_url = 'https://chat.openai.com'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">ChatGPT</button>
                             <button type="button" @click="ai_url = 'https://claude.ai'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Claude</button>
@@ -73,7 +73,24 @@
                             <button type="button" @click="ai_url = 'https://chat.deepseek.com'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">DeepSeek</button>
                             <button type="button" @click="ai_url = 'https://copilot.microsoft.com'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Copilot</button>
                             <button type="button" @click="ai_url = 'https://www.perplexity.ai'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Perplexity</button>
+                            <button type="button" @click="ai_url = 'https://quillbot.com/ai-chat/'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">QuillBot</button>
+                            <button type="button" @click="ai_url = 'https://grok.com'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Grok</button>
+                            <button type="button" @click="ai_url = 'https://chat.mistral.ai'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Mistral</button>
+                            <button type="button" @click="ai_url = 'https://poe.com'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Poe</button>
+                            <button type="button" @click="ai_url = 'https://you.com'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">You.com</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/chat'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">HF Chat</button>
+                            <button type="button" @click="ai_url = 'https://chat.qwen.ai'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Qwen</button>
+                            <button type="button" @click="ai_url = 'https://chatglm.cn'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">ChatGLM</button>
+                            <button type="button" @click="ai_url = 'https://kimi.moonshot.cn'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Kimi</button>
+                            <button type="button" @click="ai_url = 'https://www.blackbox.ai'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Blackbox</button>
+                            <button type="button" @click="ai_url = 'https://pi.ai'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Pi</button>
+                            <button type="button" @click="ai_url = 'https://character.ai'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Character.AI</button>
+                            <button type="button" @click="ai_url = 'https://chatgpt.com'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">ChatGPT.com</button>
+                            <button type="button" @click="ai_url = 'https://example.com'" class="px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-xs font-medium text-amber-800 transition">example.com (test)</button>
                         </div>
+                        <p class="text-[10px] text-gray-400 mt-2">
+                            Add <code class="font-mono">?url=</code> in iframe src through proxy. Test each one and keep the working ones.
+                        </p>
                     </div>
                 </div>
 
