@@ -1,58 +1,43 @@
 <?php
 
-namespace App\Mail;
+namespace App\Services;
 
 use App\Models\Order;
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Attachment;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
-class NewOrderNotification extends Mailable
+class OrderArtworkZipper
 {
-    use Queueable, SerializesModels;
-
-    public Order $order;
-
-    public function __construct(Order $order)
+    public function build(Order $order): ?string
     {
-        $this->order = $order->loadMissing([
-            'items.options',
-            'items.designs',
-            'items.product',
-            'zone',
-            'branch',
-        ]);
-    }
+        if (!class_exists('\ZipArchive')) {
+            logger()->warning('ZIP extension not available');
+            return null;
+        }
 
-    public function envelope(): Envelope
-    {
-        return new Envelope(
-            subject: 'New Order · ' . $this->order->order_number . ' · $' . number_format($this->order->total, 2),
-        );
-    }
+        $order->loadMissing(['items.designs']);
 
-    public function content(): Content
-    {
-        return new Content(
-            view: 'emails.new-order',
-        );
-    }
+        $tmpDir = storage_path('app/tmp-zips');
 
-    public function attachments(): array
-    {
-        return $this->collectAttachments();
-    }
+        if (!is_dir($tmpDir)) {
+            @mkdir($tmpDir, 0755, true);
+        }
 
-    protected function collectAttachments(): array
-    {
-        $attachments = [];
-        $seen = [];
+        $zipPath = $tmpDir . '/order-' . $order->order_number . '-' . Str::random(6) . '.zip';
 
-        foreach ($this->order->items as $item) {
+        $zip = new \ZipArchive();
+
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            logger()->warning('Could not create zip at ' . $zipPath);
+            return null;
+        }
+
+        $added = 0;
+        $usedNames = [];
+
+        foreach ($order->items as $index => $item) {
+            $folder = 'Item-' . ($index + 1);
+
             foreach ($item->designs as $design) {
                 if (!$design->file_path) {
                     continue;
@@ -66,45 +51,77 @@ class NewOrderNotification extends Mailable
                     continue;
                 }
 
-                $absolutePath = Storage::disk('public')->path($design->file_path);
+                $absPath = Storage::disk('public')->path($design->file_path);
 
-                if (!is_file($absolutePath) || !is_readable($absolutePath)) {
+                if (!is_file($absPath) || !is_readable($absPath)) {
                     continue;
                 }
 
-                $displayName = $this->buildDisplayName($design, $item);
-                $key = $design->file_path . '|' . $displayName;
+                $fileName = $this->uniqueName(
+                    $usedNames,
+                    $folder,
+                    $design->original_name ?: basename($design->file_path)
+                );
 
-                if (isset($seen[$key])) {
-                    continue;
+                if ($zip->addFile($absPath, $folder . '/' . $fileName)) {
+                    $added++;
                 }
-
-                $seen[$key] = true;
-
-                $attachments[] = Attachment::fromPath($absolutePath)
-                    ->as($displayName)
-                    ->withMime($design->mime_type ?: 'application/octet-stream');
             }
         }
 
-        return $attachments;
+        $zip->close();
+
+        if ($added === 0) {
+            @unlink($zipPath);
+            return null;
+        }
+
+        return $zipPath;
     }
 
-    protected function buildDisplayName($design, $item): string
+    public function cleanup(?string $zipPath): void
     {
-        $rawName = $design->original_name ?: basename($design->file_path);
+        if (!$zipPath) {
+            return;
+        }
+
+        if (is_file($zipPath)) {
+            @unlink($zipPath);
+        }
+    }
+
+    protected function uniqueName(array &$usedNames, string $folder, string $rawName): string
+    {
         $rawName = str_replace(['/', '\\', "\0"], '_', (string) $rawName);
 
         if ($rawName === '' || $rawName === '.') {
-            $rawName = 'artwork.' . pathinfo($design->file_path, PATHINFO_EXTENSION);
+            $rawName = 'artwork.png';
         }
 
-        if (strlen($rawName) > 100) {
-            $ext = pathinfo($rawName, PATHINFO_EXTENSION);
-            $base = pathinfo($rawName, PATHINFO_FILENAME);
-            $rawName = substr($base, 0, 80) . '.' . $ext;
+        $ext = pathinfo($rawName, PATHINFO_EXTENSION);
+        $base = pathinfo($rawName, PATHINFO_FILENAME);
+
+        if ($base === '') {
+            $base = 'artwork';
         }
 
-        return $rawName;
+        if (strlen($base) > 80) {
+            $base = substr($base, 0, 80);
+        }
+
+        $candidate = $base . ($ext !== '' ? '.' . $ext : '');
+
+        $key = $folder . '/' . $candidate;
+        $i = 1;
+
+        while (isset($usedNames[$key])) {
+            $candidate = $base . '-' . $i . ($ext !== '' ? '.' . $ext : '');
+            $key = $folder . '/' . $candidate;
+            $i++;
+        }
+
+        $usedNames[$key] = true;
+
+        return $candidate;
     }
 }
