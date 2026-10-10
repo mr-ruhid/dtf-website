@@ -60,44 +60,46 @@
                                placeholder="https://huggingface.co/spaces/Qwen/Qwen3-VL-Demo"
                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         <p class="text-[10px] text-gray-400 mt-1">
-                            Full URL. HF Spaces open in iframe; some load a WebGPU model on first use.
+                            Full URL of the AI chat.
                         </p>
                     </div>
 
                     <div>
                         <div class="flex items-center gap-2 mb-2">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <p class="text-xs font-semibold text-gray-700">Instant (server-side, no download)</p>
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                            <p class="text-xs font-semibold text-gray-700">Runs on provider's server</p>
                         </div>
+                        <p class="text-[11px] text-gray-500 mb-2 -mt-1">Model yüklənir öz serverlərində, sənin brauzerinə heç nə endirilmir. Sadəcə səhifə açılır.</p>
                         <div class="flex flex-wrap gap-2 mb-4">
-                            <button type="button" @click="ai_url = 'https://deepai.org/chat'" class="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-xs font-medium text-emerald-800 transition">DeepAI Chat</button>
-                            <button type="button" @click="ai_url = 'https://kimi.moonshot.cn'" class="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-xs font-medium text-emerald-800 transition">Kimi</button>
+                            <button type="button" @click="ai_url = 'https://deepai.org/chat'" class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 text-xs font-medium text-blue-800 transition">DeepAI Chat</button>
+                            <button type="button" @click="ai_url = 'https://kimi.moonshot.cn'" class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 text-xs font-medium text-blue-800 transition">Kimi</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/Qwen/Qwen3-VL-Demo'" class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 text-xs font-medium text-blue-800 transition">Qwen3-VL Demo</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/LessThanThreeAI/Qwen3.8-27B-Humanlike-Chat'" class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 text-xs font-medium text-blue-800 transition">Qwen3.8 27B Humanlike</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/apathy-exe/Qwen3.8-Flash-Next'" class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 text-xs font-medium text-blue-800 transition">Qwen3.8 Flash Next</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/mxderncultxre/Gemma4-31b-uncensored-assistant'" class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 text-xs font-medium text-blue-800 transition">Gemma4 31B Uncensored</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/dx8152/Ai-Studio'" class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 text-xs font-medium text-blue-800 transition">AI Studio</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/smolagents/hf-realtime-voice'" class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 text-xs font-medium text-blue-800 transition">HF Realtime Voice</button>
                         </div>
 
                         <div class="flex items-center gap-2 mb-2">
                             <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                            <p class="text-xs font-semibold text-gray-700">Loads WebGPU model in browser (~100 MB – 2 GB first time, cached after)</p>
+                            <p class="text-xs font-semibold text-gray-700">Runs in your browser (WebGPU)</p>
                         </div>
+                        <p class="text-[11px] text-gray-500 mb-2 -mt-1">Model sənin brauzerinə endirilir. İlk açılışda ölçüsü qədər endirmə olur, sonra cache saxlanır. Chrome/Edge 113+ lazımdır.</p>
                         <div class="flex flex-wrap gap-2">
-                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/Qwen/Qwen3-VL-Demo'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">Qwen3-VL Demo</button>
-                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/LessThanThreeAI/Qwen3.8-27B-Humanlike-Chat'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">Qwen3.8 27B Humanlike</button>
-                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/apathy-exe/Qwen3.8-Flash-Next'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">Qwen3.8 Flash Next</button>
-                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/MinimaLabs/KeyLM-75m-Instruct-Demo'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">KeyLM 75M Instruct</button>
-                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/webml-community/deepseek-r1-webgpu'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">DeepSeek R1 WebGPU</button>
-                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/mxderncultxre/Gemma4-31b-uncensored-assistant'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">Gemma4 31B Uncensored</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/MinimaLabs/KeyLM-75m-Instruct-Demo'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">KeyLM 75M (kiçik)</button>
                             <button type="button" @click="ai_url = 'https://huggingface.co/spaces/LiquidAI/LFM2-VL-WebGPU'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">LFM2-VL WebGPU</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/webml-community/deepseek-r1-webgpu'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">DeepSeek R1 WebGPU</button>
                             <button type="button" @click="ai_url = 'https://huggingface.co/spaces/Xenova/experimental-phi3-webgpu'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">Phi-3 WebGPU</button>
-                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/dx8152/Ai-Studio'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">AI Studio</button>
                             <button type="button" @click="ai_url = 'https://huggingface.co/spaces/webml-community/semantic-image-field'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">Semantic Image Field</button>
-                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/smolagents/hf-realtime-voice'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">HF Realtime Voice</button>
                         </div>
                     </div>
 
                     <div class="mt-2 p-3 rounded-lg bg-blue-50 border border-blue-200 flex gap-2">
                         <i class="fa-solid fa-circle-info text-blue-500 text-xs mt-0.5"></i>
                         <div class="text-[11px] text-blue-800 leading-relaxed">
-                            <p><strong>Instant</strong> buttons work immediately — the AI runs on their server.</p>
-                            <p><strong>WebGPU</strong> buttons load a model into your browser on first click. Expect 100 MB – 2 GB download; Chrome/Edge 113+ recommended. Cached after the first load.</p>
+                            <p><strong>Server tərəfi:</strong> HF ZeroGPU bəzən giriş (login) tələb edə bilər və ya növbə gözlədə bilər.</p>
+                            <p><strong>Brauzer tərəfi:</strong> WebGPU model 100 MB – 2 GB arası endirir, ilk açılış yavaş olur, sonra cache-dən açılır.</p>
                         </div>
                     </div>
                 </div>
