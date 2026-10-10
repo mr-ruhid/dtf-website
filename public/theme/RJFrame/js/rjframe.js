@@ -302,6 +302,8 @@
     window.designStudio = function (config) {
         var products = config.allProducts || [];
         var initialProduct = config.product || null;
+        var initialCanvasState = config.canvasState || null;
+        var adminMode = config.adminMode === true;
 
         var canvas = null;
         var hist = [];
@@ -323,6 +325,10 @@
 
             qty: 1,
             originalUploads: [],
+
+            adminMode: adminMode,
+            adminSaving: false,
+            canvasState: initialCanvasState,
 
             // counters
             itemCount: 0,
@@ -401,7 +407,12 @@
                     self.bindGlobalEvents();
                     self.$nextTick(function () {
                         self.selectInitialSize();
-                        self.ready = true;
+                        self.$nextTick(function () {
+                            if (self.adminMode && self.canvasState && self.canvasState.canvas) {
+                                self.loadAdminCanvasState();
+                            }
+                            self.ready = true;
+                        });
                     });
                 });
 
