@@ -344,12 +344,7 @@
                     </div>
                 @endif
 
-                <a href="{{ url('contact-us') }}" class="rj-sp-btn rj-sp-btn-outline">
-                    <i class="fa-solid fa-comments"></i>
-                    <span>Ask a question</span>
-                </a>
-
-                {{-- ============ UPLOAD OWN DESIGN (toggle) ============ --}}
+                {{-- ============ UPLOAD OWN DESIGN (wide toggle) ============ --}}
                 <div class="rj-sp-upload-section">
                     <button type="button"
                             @click="uploadOpen = !uploadOpen"
@@ -394,6 +389,12 @@
                         </p>
                     </div>
                 </div>
+
+                {{-- ============ ASK A QUESTION (small pill) ============ --}}
+                <a href="{{ url('contact-us') }}" class="rj-sp-btn-outline">
+                    <i class="fa-solid fa-comments"></i>
+                    <span>Ask a question</span>
+                </a>
 
             </div>
 
@@ -478,28 +479,6 @@
 @endif
 
 <style>
-    .rj-sp-info > .rj-sp-btn-outline {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.625rem;
-        padding: 0.875rem 1.5rem;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 9999px;
-        color: #fff;
-        text-decoration: none;
-        font-size: 14px;
-        font-weight: 600;
-        transition: all 0.25s;
-        align-self: flex-start;
-    }
-
-    .rj-sp-info > .rj-sp-btn-outline:hover {
-        background: rgba(99, 102, 241, 0.1);
-        border-color: rgba(99, 102, 241, 0.4);
-    }
-
     .rj-sp-upload-section {
         display: flex;
         flex-direction: column;
@@ -511,7 +490,7 @@
         align-items: center;
         gap: 0.75rem;
         width: 100%;
-        padding: 0.875rem 1.125rem;
+        padding: 1rem 1.25rem;
         background: rgba(99, 102, 241, 0.06);
         border: 1px solid rgba(99, 102, 241, 0.2);
         border-radius: 12px;
@@ -521,6 +500,7 @@
         text-align: left;
         cursor: pointer;
         transition: all 0.25s;
+        box-sizing: border-box;
     }
 
     .rj-sp-upload-toggle:hover {
@@ -528,7 +508,7 @@
         border-color: rgba(99, 102, 241, 0.4);
     }
 
-    .rj-sp-upload-toggle > i {
+    .rj-sp-upload-toggle > i:first-child {
         color: #818cf8;
         font-size: 14px;
         flex-shrink: 0;
@@ -636,6 +616,28 @@
     .rj-sp-upload-note i {
         color: #34d399;
         font-size: 11px;
+    }
+
+    .rj-sp-info > .rj-sp-btn-outline {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.625rem;
+        padding: 0.875rem 1.5rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 9999px;
+        color: #fff;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.25s;
+        align-self: flex-start;
+    }
+
+    .rj-sp-info > .rj-sp-btn-outline:hover {
+        background: rgba(99, 102, 241, 0.1);
+        border-color: rgba(99, 102, 241, 0.4);
     }
 </style>
 
