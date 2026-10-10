@@ -133,6 +133,8 @@ class CartService
             ? substr($data['file_name'], 0, 255)
             : null;
 
+        $originalUploads = $this->sanitizeUploads($data['original_uploads'] ?? []);
+
         return [
             'key' => $key,
             'product_id' => $data['product_id'] ?? null,
@@ -154,7 +156,43 @@ class CartService
             'sheet_price' => $sheetPrice,
             'product_price' => $productPrice,
             'file_name' => $fileName,
+            'original_uploads' => $originalUploads,
         ];
+    }
+
+    protected function sanitizeUploads($uploads): array
+    {
+        if (!is_array($uploads) || empty($uploads)) {
+            return [];
+        }
+
+        $clean = [];
+
+        foreach ($uploads as $u) {
+            if (!is_array($u)) {
+                continue;
+            }
+
+            $path = isset($u['path']) && is_string($u['path']) ? trim($u['path']) : '';
+
+            if ($path === '') {
+                continue;
+            }
+
+            if (str_contains($path, '..') || !str_starts_with($path, 'tmp/uploads/')) {
+                continue;
+            }
+
+            $clean[] = [
+                'token' => isset($u['token']) ? substr((string) $u['token'], 0, 64) : null,
+                'path' => substr($path, 0, 500),
+                'name' => isset($u['name']) ? substr((string) $u['name'], 0, 255) : null,
+                'size' => isset($u['size']) ? max(0, (int) $u['size']) : 0,
+                'mime' => isset($u['mime']) ? substr((string) $u['mime'], 0, 100) : null,
+            ];
+        }
+
+        return $clean;
     }
 
     protected function recalculateItem(array &$item): void
@@ -262,6 +300,7 @@ class CartService
             'height_inch' => $data['height_inch'] ?? null,
             'attributes' => $data['attributes'] ?? [],
             'options' => $data['options'] ?? [],
+            'original_uploads' => $data['original_uploads'] ?? [],
         ];
 
         return md5(json_encode($payload));
