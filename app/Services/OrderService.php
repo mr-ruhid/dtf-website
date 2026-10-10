@@ -146,6 +146,7 @@ class OrderService
                         'total' => $row['total'],
                         'tier_label' => $row['tier_label'] ?? null,
                         'note' => $row['note'] ?? null,
+                        'file_name' => $row['file_name'] ?? null,
                     ],
                 ]);
 
@@ -209,7 +210,7 @@ class OrderService
 
         $src = $row['image'];
 
-        if (!is_string($src) || !Str::startsWith($src, 'data:image')) {
+        if (!is_string($src) || !Str::startsWith($src, 'data:')) {
             return;
         }
 
@@ -229,19 +230,38 @@ class OrderService
             $mime = 'image/jpeg';
             $ext = 'jpg';
 
-            if (preg_match('/^data:image\/(\w+);/', $src, $m)) {
-                $mime = 'image/' . strtolower($m[1]);
-                $ext = $m[1] === 'jpeg' ? 'jpg' : strtolower($m[1]);
+            if (preg_match('/^data:([^;]+);/', $src, $m)) {
+                $detectedMime = strtolower($m[1]);
+                $mime = $detectedMime;
+
+                $map = [
+                    'image/jpeg' => 'jpg',
+                    'image/jpg' => 'jpg',
+                    'image/png' => 'png',
+                    'image/webp' => 'webp',
+                    'image/gif' => 'gif',
+                    'application/pdf' => 'pdf',
+                ];
+
+                if (isset($map[$detectedMime])) {
+                    $ext = $map[$detectedMime];
+                }
             }
 
             $filename = 'orders/designs/' . $item->order_id . '-' . $item->id . '-' . Str::random(8) . '.' . $ext;
 
             Storage::disk('public')->put($filename, $decoded);
 
+            $originalName = null;
+
+            if (!empty($row['file_name']) && is_string($row['file_name'])) {
+                $originalName = substr($row['file_name'], 0, 255);
+            }
+
             OrderDesign::create([
                 'order_item_id' => $item->id,
                 'file_path' => $filename,
-                'original_name' => null,
+                'original_name' => $originalName,
                 'mime_type' => $mime,
                 'file_size' => strlen($decoded),
                 'width' => $row['width_inch'] ?? null,
