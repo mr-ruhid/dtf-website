@@ -930,7 +930,7 @@ function singleProduct(config) {
                 print_type: 'custom_size',
                 width_inch: w,
                 height_inch: h,
-                image: this.fileData,
+                composite_image: this.fileData || null,
                 file_name: this.fileName,
                 note: 'Uploaded artwork: ' + this.fileName,
             };
