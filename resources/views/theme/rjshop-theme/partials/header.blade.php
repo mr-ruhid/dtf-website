@@ -131,21 +131,23 @@
             </a>
 
             <nav class="hidden md:flex items-center gap-2">
-                @foreach($navItems as $item)
+                @php
+                    $navLinks = [
+                        ['label' => 'Home', 'url' => url('/'), 'route' => 'page.home'],
+                        ['label' => 'Gallery', 'url' => route('gallery.index'), 'route' => 'gallery.index'],
+                        ['label' => 'Blog', 'url' => route('blog.index'), 'route' => 'blog.index'],
+                        ['label' => 'About', 'url' => url('about-us'), 'route' => 'page.about'],
+                        ['label' => 'Contact', 'url' => url('contact-us'), 'route' => 'page.contact'],
+                    ];
+                @endphp
+
+                @foreach($navLinks as $link)
                     @php
-                        $isActive = request()->is(ltrim($item->url, '/')) || ($item->url === '/' && request()->is('/'));
+                        $isActive = request()->routeIs($link['route']) || request()->is(ltrim(parse_url($link['url'], PHP_URL_PATH), '/'));
                     @endphp
-                    <a href="{{ $item->url }}" target="{{ $item->target ?? '_self' }}"
+                    <a href="{{ $link['url'] }}"
                        class="relative px-4 py-2 text-sm font-semibold {{ $isActive ? 'text-white' : 'text-gray-300' }} hover:text-white transition">
-                        <span class="relative z-10 inline-flex items-center gap-1.5">
-                            @if(!empty($item->icon))
-                                <i class="fa-solid {{ $item->icon }} text-xs"></i>
-                            @endif
-                            {{ $item->label }}
-                            @if(isset($item->children) && $item->children->count())
-                                <i class="fa-solid fa-chevron-down text-[8px] opacity-60"></i>
-                            @endif
-                        </span>
+                        <span class="relative z-10">{{ $link['label'] }}</span>
                         @if($isActive)
                             <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-gradient-to-r from-indigo-400 to-pink-400 rounded-full"></span>
                         @endif
@@ -203,11 +205,24 @@
          class="md:hidden border-t border-indigo-500/20 bg-[#05030f]">
 
         <nav class="px-4 py-4 space-y-1">
-            @foreach($navItems as $item)
-                <a href="{{ $item->url }}" target="{{ $item->target ?? '_self' }}"
-                   class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-white hover:bg-white/5 transition">
-                    <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full"></span>
-                    <span>{{ $item->label }}</span>
+            @php
+                $mobileLinks = [
+                    ['label' => 'Home', 'url' => url('/'), 'route' => 'page.home'],
+                    ['label' => 'Gallery', 'url' => route('gallery.index'), 'route' => 'gallery.index'],
+                    ['label' => 'Blog', 'url' => route('blog.index'), 'route' => 'blog.index'],
+                    ['label' => 'About', 'url' => url('about-us'), 'route' => 'page.about'],
+                    ['label' => 'Contact', 'url' => url('contact-us'), 'route' => 'page.contact'],
+                ];
+            @endphp
+
+            @foreach($mobileLinks as $link)
+                @php
+                    $isActive = request()->routeIs($link['route']) || request()->is(ltrim(parse_url($link['url'], PHP_URL_PATH), '/'));
+                @endphp
+                <a href="{{ $link['url'] }}"
+                   class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold {{ $isActive ? 'bg-indigo-500/10 text-white' : 'text-white' }} hover:bg-white/5 transition">
+                    <span class="w-1.5 h-1.5 {{ $isActive ? 'bg-indigo-400' : 'bg-gray-500' }} rounded-full"></span>
+                    <span>{{ $link['label'] }}</span>
                 </a>
             @endforeach
 
