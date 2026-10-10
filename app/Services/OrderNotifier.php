@@ -19,7 +19,12 @@ class OrderNotifier
             return;
         }
 
-        $this->send(new NewOrderNotification($order), $emails, 'new order', $order);
+        $this->dispatch(
+            $order,
+            $emails,
+            fn () => new NewOrderNotification($order),
+            'new order'
+        );
     }
 
     public function notifyPaymentConfirmed(Order $order): void
@@ -30,13 +35,18 @@ class OrderNotifier
             return;
         }
 
-        $this->send(new PaymentConfirmedNotification($order), $emails, 'payment confirmed', $order);
+        $this->dispatch(
+            $order,
+            $emails,
+            fn () => new PaymentConfirmedNotification($order),
+            'payment confirmed'
+        );
     }
 
-    protected function send($mailable, array $emails, string $context, Order $order): void
+    protected function dispatch(Order $order, array $emails, callable $buildMailable, string $context): void
     {
         try {
-            Mail::to($emails)->send($mailable);
+            Mail::to($emails)->send($buildMailable());
         } catch (\Throwable $e) {
             Log::error('Order notification failed (' . $context . '): ' . $e->getMessage(), [
                 'order' => $order->order_number,
