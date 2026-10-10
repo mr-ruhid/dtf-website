@@ -230,17 +230,22 @@
 
             <div class="divide-y divide-gray-100">
                 @foreach ($order->items as $item)
+                    @php
+                        $breakdown = $item->price_breakdown ?? [];
+                        $itemNote = $breakdown['note'] ?? null;
+                        $tierLabel = $breakdown['tier_label'] ?? null;
+                        $itemFileName = $breakdown['file_name'] ?? null;
+                    @endphp
+
                     <div class="p-5">
                         <div class="flex gap-4">
 
                             <div class="w-20 h-20 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
-                                @if ($item->product_image)
+                                @if ($item->product_image && !str_starts_with($item->product_image, 'data:'))
                                     @php
-                                        $imgSrc = str_starts_with($item->product_image, 'data:image')
+                                        $imgSrc = str_starts_with($item->product_image, 'http')
                                             ? $item->product_image
-                                            : (str_starts_with($item->product_image, 'http')
-                                                ? $item->product_image
-                                                : asset('storage/' . $item->product_image));
+                                            : asset('storage/' . $item->product_image);
                                     @endphp
                                     <img src="{{ $imgSrc }}" class="w-full h-full object-cover">
                                 @elseif ($item->product && $item->product->primary_image)
@@ -256,9 +261,16 @@
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="flex-1 min-w-0">
                                         <h4 class="font-semibold text-gray-800">{{ $item->product_name }}</h4>
-                                        @if ($item->product_sku)
-                                            <p class="text-[10px] font-mono text-gray-400 mt-0.5">{{ $item->product_sku }}</p>
-                                        @endif
+                                        <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                            @if ($item->product_sku)
+                                                <span class="text-[10px] font-mono text-gray-400">{{ $item->product_sku }}</span>
+                                            @endif
+                                            @if ($item->print_type && $item->print_type !== 'none')
+                                                <span class="text-[9px] uppercase tracking-wider bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-semibold">
+                                                    {{ $item->print_type }}
+                                                </span>
+                                            @endif
+                                        </div>
                                     </div>
                                     <div class="text-right shrink-0">
                                         <p class="font-bold text-gray-800">${{ number_format($item->total_price, 2) }}</p>
@@ -266,7 +278,29 @@
                                     </div>
                                 </div>
 
-                                @if ($item->attributes)
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+                                    @if ($item->print_width && $item->print_height)
+                                        <div class="flex items-center gap-2 text-xs bg-purple-50 border border-purple-100 rounded-lg px-3 py-2">
+                                            <i class="fa-solid fa-ruler-combined text-purple-500 text-[11px]"></i>
+                                            <span class="text-purple-800">
+                                                <span class="font-semibold">Print size:</span>
+                                                {{ rtrim(rtrim(number_format((float) $item->print_width, 2, '.', ''), '0'), '.') }}
+                                                ×
+                                                {{ rtrim(rtrim(number_format((float) $item->print_height, 2, '.', ''), '0'), '.') }}
+                                                in
+                                            </span>
+                                        </div>
+                                    @endif
+
+                                    @if ($tierLabel)
+                                        <div class="flex items-center gap-2 text-xs bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
+                                            <i class="fa-solid fa-percent text-emerald-500 text-[11px]"></i>
+                                            <span class="text-emerald-800 font-medium">{{ $tierLabel }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                @if ($item->attributes && count($item->attributes))
                                     <div class="flex flex-wrap gap-1.5 mt-3">
                                         @foreach ($item->attributes as $key => $value)
                                             <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-medium">
@@ -292,32 +326,81 @@
                                     </div>
                                 @endif
 
+                                @if ($itemNote)
+                                    <div class="mt-3 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                                        <i class="fa-solid fa-comment-dots text-amber-600 text-[11px] mt-0.5"></i>
+                                        <div>
+                                            <p class="text-[9px] uppercase tracking-wider text-amber-700 font-bold">Item note</p>
+                                            <p class="text-xs text-amber-900">{{ $itemNote }}</p>
+                                        </div>
+                                    </div>
+                                @endif
+
                                 @if ($item->designs->count())
-                                    <div class="mt-3 pt-3 border-t border-gray-100">
-                                        <p class="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-2">
-                                            <i class="fa-solid fa-file-image text-indigo-500 mr-1"></i>
-                                            Design Files ({{ $item->designs->count() }})
-                                        </p>
-                                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                    <div class="mt-4 pt-4 border-t border-gray-100">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <p class="text-[10px] uppercase tracking-wider text-indigo-600 font-bold flex items-center gap-1.5">
+                                                <i class="fa-solid fa-file-image"></i>
+                                                Artwork ({{ $item->designs->count() }})
+                                            </p>
+                                            @if ($itemFileName)
+                                                <span class="text-[10px] text-gray-500 font-mono truncate max-w-[200px]" title="{{ $itemFileName }}">
+                                                    <i class="fa-solid fa-paperclip text-[9px]"></i> {{ $itemFileName }}
+                                                </span>
+                                            @endif
+                                        </div>
+
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                             @foreach ($item->designs as $design)
+                                                @php
+                                                    $isPdf = !empty($design->mime_type) && str_contains($design->mime_type, 'pdf');
+                                                    $designUrl = $design->file_url;
+                                                    $displayName = $design->original_name ?: basename($design->file_path);
+                                                @endphp
+
                                                 <div class="group relative rounded-lg border border-gray-200 overflow-hidden bg-slate-50">
                                                     @if ($design->exists && !$design->is_expired)
-                                                        <a href="{{ $design->file_url }}" target="_blank" class="block aspect-square">
-                                                            <img src="{{ $design->file_url }}" class="w-full h-full object-contain p-1">
+                                                        <a href="{{ $designUrl }}" target="_blank" class="block aspect-square bg-white">
+                                                            @if ($isPdf)
+                                                                <div class="w-full h-full flex flex-col items-center justify-center bg-red-50">
+                                                                    <i class="fa-solid fa-file-pdf text-4xl text-red-500 mb-2"></i>
+                                                                    <span class="text-[10px] text-gray-600 font-semibold">PDF Document</span>
+                                                                </div>
+                                                            @else
+                                                                <img src="{{ $designUrl }}" class="w-full h-full object-contain p-2">
+                                                            @endif
                                                         </a>
-                                                        <div class="p-1.5 bg-white border-t border-gray-100">
-                                                            <p class="text-[9px] text-gray-500 truncate">{{ $design->original_name }}</p>
-                                                            <p class="text-[9px] text-gray-400">{{ $design->file_size_human }}</p>
+
+                                                        <div class="p-2 bg-white border-t border-gray-100 space-y-1">
+                                                            <p class="text-[10px] text-gray-700 font-medium truncate" title="{{ $displayName }}">
+                                                                {{ $displayName }}
+                                                            </p>
+                                                            <div class="flex items-center justify-between text-[9px] text-gray-400">
+                                                                <span>{{ $design->file_size_human }}</span>
+                                                                @if ($design->width && $design->height)
+                                                                    <span>
+                                                                        {{ rtrim(rtrim(number_format((float) $design->width, 2, '.', ''), '0'), '.') }}×{{ rtrim(rtrim(number_format((float) $design->height, 2, '.', ''), '0'), '.') }}
+                                                                    </span>
+                                                                @endif
+                                                            </div>
                                                         </div>
-                                                        <form method="POST" action="{{ route('admin.orders.designs.destroy', [$order, $design]) }}"
-                                                              onsubmit="return confirm('Delete this design file?')"
-                                                              class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button class="w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700">
-                                                                <i class="fa-solid fa-trash text-[9px]"></i>
-                                                            </button>
-                                                        </form>
+
+                                                        <div class="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                                                            <a href="{{ $designUrl }}" download
+                                                               class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-700"
+                                                               title="Download">
+                                                                <i class="fa-solid fa-download text-[9px]"></i>
+                                                            </a>
+                                                            <form method="POST" action="{{ route('admin.orders.designs.destroy', [$order, $design]) }}"
+                                                                  onsubmit="return confirm('Delete this design file?')">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button class="w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700"
+                                                                        title="Delete">
+                                                                    <i class="fa-solid fa-trash text-[9px]"></i>
+                                                                </button>
+                                                            </form>
+                                                        </div>
                                                     @elseif ($design->is_expired)
                                                         <div class="aspect-square flex flex-col items-center justify-center text-gray-400 p-2 text-center">
                                                             <i class="fa-solid fa-clock-rotate-left text-lg mb-1"></i>
@@ -331,6 +414,13 @@
                                                     @endif
                                                 </div>
                                             @endforeach
+                                        </div>
+                                    </div>
+                                @elseif (in_array($item->print_type, ['custom_size', 'fixed_area']))
+                                    <div class="mt-3 pt-3 border-t border-gray-100">
+                                        <div class="flex items-center gap-2 text-xs bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
+                                            <i class="fa-solid fa-triangle-exclamation text-rose-500 text-[11px]"></i>
+                                            <span class="text-rose-700 font-medium">No artwork uploaded for this item yet.</span>
                                         </div>
                                     </div>
                                 @endif
