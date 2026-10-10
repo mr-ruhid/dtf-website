@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Order;
 use App\Models\OrderDesign;
+use App\Models\Setting;
 use App\Payment\Registry\PaymentGatewayRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -56,7 +57,9 @@ class OrderController extends Controller
 
         $branches = Branch::where('status', 1)->orderBy('name')->get();
 
-        return view('admin.order.index', compact('orders', 'stats', 'branches'));
+        $notificationEmails = $this->getNotificationEmails();
+
+        return view('admin.order.index', compact('orders', 'stats', 'branches', 'notificationEmails'));
     }
 
     public function show(Order $order)
@@ -141,7 +144,7 @@ class OrderController extends Controller
         return back()->with('status', $statusMsg);
     }
 
-        public function markAsPaid(Request $request, Order $order)
+    public function markAsPaid(Request $request, Order $order)
     {
         if (!$order->payment_gateway_id) {
             return back()->withErrors(['error' => 'This order has no payment gateway assigned.']);
@@ -193,7 +196,53 @@ class OrderController extends Controller
             true
         );
 
+        app(\App\Services\OrderNotifier::class)->notifyPaymentConfirmed($order);
+
         return back()->with('status', 'Order marked as paid. Status confirmed.');
+    }
+
+    public function notificationEmails()
+    {
+        return response()->json([
+            'success' => true,
+            'emails' => $this->getNotificationEmails(),
+        ]);
+    }
+
+    public function updateNotificationEmails(Request $request)
+    {
+        $validated = $request->validate([
+            'emails' => ['nullable', 'array', 'max:50'],
+            'emails.*' => ['nullable', 'email', 'max:150'],
+        ]);
+
+        $emails = collect($validated['emails'] ?? [])
+            ->filter(fn($e) => is_string($e) && trim($e) !== '')
+            ->map(fn($e) => strtolower(trim($e)))
+            ->unique()
+            ->values()
+            ->all();
+
+        Setting::set('order_notification_emails', json_encode($emails));
+
+        return back()->with('status', 'Notification emails updated.');
+    }
+
+    protected function getNotificationEmails(): array
+    {
+        $raw = Setting::get('order_notification_emails');
+
+        if (!$raw) {
+            return [];
+        }
+
+        if (is_array($raw)) {
+            return $raw;
+        }
+
+        $decoded = json_decode($raw, true);
+
+        return is_array($decoded) ? $decoded : [];
     }
 
     public function destroy(Order $order)
