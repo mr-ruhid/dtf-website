@@ -10,6 +10,19 @@
 
 @section('content')
 
+@php
+    $galleryItemsForJs = $items->map(function ($item) {
+        return [
+            'id' => $item->id,
+            'type' => $item->type,
+            'title' => $item->title,
+            'image_url' => $item->image_url,
+            'video_url' => $item->video_url,
+            'video_thumbnail' => $item->video_thumbnail,
+        ];
+    })->values()->all();
+@endphp
+
 <section class="rj-gl" x-data="galleryPage()">
 
     <div class="rj-gl-hero">
@@ -46,8 +59,7 @@
                             @if($thumb)
                                 <img src="{{ $thumb }}"
                                      alt="{{ $item->title ?: 'Gallery item' }}"
-                                     loading="lazy"
-                                     @load="onImageLoad($event)">
+                                     loading="lazy">
                             @else
                                 <div class="rj-gl-item-empty">
                                     <i class="fa-regular fa-image"></i>
@@ -140,7 +152,6 @@
             </p>
         </div>
 
-        {{-- Thumbnails strip --}}
         @if($items->count() > 1)
             <div class="rj-gl-modal-thumbs">
                 <template x-for="(item, idx) in items" :key="idx">
@@ -166,16 +177,7 @@
 <script>
 function galleryPage() {
     return {
-        items: @json($items->map(function ($item) {
-            return [
-                'id' => $item->id,
-                'type' => $item->type,
-                'title' => $item->title,
-                'image_url' => $item->image_url,
-                'video_url' => $item->video_url,
-                'video_thumbnail' => $item->video_thumbnail,
-            ];
-        })->values()),
+        items: @json($galleryItemsForJs),
 
         isOpen: false,
         currentIndex: 0,
@@ -196,18 +198,6 @@ function galleryPage() {
                     this.next();
                 }
             });
-        },
-
-        onImageLoad(event) {
-            const img = event.target;
-            if (!img || !img.naturalWidth) return;
-
-            const ratio = img.naturalWidth / img.naturalHeight;
-            const wrapper = img.closest('.rj-gl-item');
-
-            if (wrapper) {
-                wrapper.style.setProperty('--ratio', String(ratio));
-            }
         },
 
         open(index) {
