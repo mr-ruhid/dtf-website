@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AiProxyController;
 use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BackupController;
@@ -56,6 +57,8 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
         Route::put('profile/two-factor', [ProfileController::class, 'toggleTwoFactor'])->name('profile.two-factor');
+
+        Route::get('ai-proxy', [AiProxyController::class, 'show'])->name('ai-proxy');
 
         Route::get('widgets', [WidgetController::class, 'index'])->name('widgets.index');
         Route::get('widgets/{widget}/edit', [WidgetController::class, 'edit'])->name('widgets.edit');
