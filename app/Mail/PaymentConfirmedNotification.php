@@ -3,19 +3,21 @@
 namespace App\Mail;
 
 use App\Models\Order;
+use App\Services\OrderArtworkZipper;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
 
 class PaymentConfirmedNotification extends Mailable
 {
     use Queueable, SerializesModels;
 
     public Order $order;
+
+    protected ?string $artworkZipPath = null;
 
     public function __construct(Order $order)
     {
@@ -44,67 +46,23 @@ class PaymentConfirmedNotification extends Mailable
 
     public function attachments(): array
     {
-        return $this->collectAttachments();
+        $this->artworkZipPath = app(OrderArtworkZipper::class)->build($this->order);
+
+        if (!$this->artworkZipPath) {
+            return [];
+        }
+
+        return [
+            Attachment::fromPath($this->artworkZipPath)
+                ->as($this->order->order_number . '-artwork.zip')
+                ->withMime('application/zip'),
+        ];
     }
 
-    protected function collectAttachments(): array
+    public function __destruct()
     {
-        $attachments = [];
-        $seen = [];
-
-        foreach ($this->order->items as $item) {
-            foreach ($item->designs as $design) {
-                if (!$design->file_path) {
-                    continue;
-                }
-
-                if (str_starts_with($design->file_path, 'http')) {
-                    continue;
-                }
-
-                if (!Storage::disk('public')->exists($design->file_path)) {
-                    continue;
-                }
-
-                $absolutePath = Storage::disk('public')->path($design->file_path);
-
-                if (!is_file($absolutePath) || !is_readable($absolutePath)) {
-                    continue;
-                }
-
-                $displayName = $this->buildDisplayName($design, $item);
-                $key = $design->file_path . '|' . $displayName;
-
-                if (isset($seen[$key])) {
-                    continue;
-                }
-
-                $seen[$key] = true;
-
-                $attachments[] = Attachment::fromPath($absolutePath)
-                    ->as($displayName)
-                    ->withMime($design->mime_type ?: 'application/octet-stream');
-            }
+        if ($this->artworkZipPath) {
+            app(OrderArtworkZipper::class)->cleanup($this->artworkZipPath);
         }
-
-        return $attachments;
-    }
-
-    protected function buildDisplayName($design, $item): string
-    {
-        $rawName = $design->original_name ?: basename($design->file_path);
-        $rawName = str_replace(['/', '\\', "\0"], '_', (string) $rawName);
-
-        if ($rawName === '' || $rawName === '.') {
-            $rawName = 'artwork.' . pathinfo($design->file_path, PATHINFO_EXTENSION);
-        }
-
-        if (strlen($rawName) > 100) {
-            $ext = pathinfo($rawName, PATHINFO_EXTENSION);
-            $base = pathinfo($rawName, PATHINFO_FILENAME);
-            $rawName = substr($base, 0, 80) . '.' . $ext;
-        }
-
-        return $rawName;
     }
 }
