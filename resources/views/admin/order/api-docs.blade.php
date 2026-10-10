@@ -302,6 +302,9 @@ Content-Type: application/json</pre>
         }
       }
     ],
+    <span class="text-sky-400">"download_url"</span>: <span class="text-emerald-400">"https://yoursite.com/order/{token}/download"</span>,
+    <span class="text-sky-400">"download_expires_at"</span>: <span class="text-emerald-400">"2026-10-15T14:30:00Z"</span>,
+    <span class="text-sky-400">"is_download_active"</span>: <span class="text-amber-400">true</span>,
     <span class="text-sky-400">"status_history"</span>: [
       { <span class="text-sky-400">"status"</span>: <span class="text-emerald-400">"pending"</span>, <span class="text-sky-400">"at"</span>: <span class="text-emerald-400">"2026-10-06T14:30:00Z"</span> },
       { <span class="text-sky-400">"status"</span>: <span class="text-emerald-400">"confirmed"</span>, <span class="text-sky-400">"at"</span>: <span class="text-emerald-400">"2026-10-06T15:00:00Z"</span> },
@@ -391,6 +394,76 @@ Content-Type: application/json</pre>
     <span class="text-sky-400">"cod_available"</span>: <span class="text-amber-400">true</span>
   }
 }</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700">GET</span>
+                    <code class="text-sm font-mono text-gray-800">/order/{token}/download</code>
+                </div>
+                <span class="text-xs text-gray-500">Order files download page</span>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-gray-600">
+                    Public download page for the customer's artwork files. No login required — the token is generated automatically when the order is placed.
+                </p>
+
+                <div class="px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg flex gap-3">
+                    <i class="fa-solid fa-clock text-amber-600 mt-0.5"></i>
+                    <div class="text-xs text-amber-800">
+                        <p class="font-medium mb-1">5-Day Link Expiry</p>
+                        <p>Links are valid for <strong>5 days</strong> from order creation. After that, files are removed from the download page. The admin panel always retains access.</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="font-medium text-gray-800 mb-3 text-sm">Available Endpoints</h4>
+                    <div class="space-y-2 text-xs">
+                        <div class="grid grid-cols-3 gap-3">
+                            <code class="font-mono text-indigo-600">/order/{token}/download</code>
+                            <span class="text-gray-500 col-span-2">Download page (HTML, lists all files)</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <code class="font-mono text-indigo-600">/order/{token}/download/file/{id}</code>
+                            <span class="text-gray-500 col-span-2">Download single file</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <code class="font-mono text-indigo-600">/order/{token}/download/zip</code>
+                            <span class="text-gray-500 col-span-2">Download all files as ZIP</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="font-medium text-gray-800 mb-3 text-sm">Email Integration</h4>
+                    <p class="text-sm text-gray-600 mb-3">
+                        New order and payment confirmed emails include a <code class="bg-gray-100 px-1 rounded">Download artwork files</code> button linking to this page — no file attachments.
+                    </p>
+                    <div class="bg-slate-900 rounded-lg p-4 overflow-x-auto">
+                        <pre class="text-xs text-slate-100 font-mono leading-relaxed"><span class="text-slate-500"># Email includes</span>
+<span class="text-emerald-400">Download artwork files →</span>
+https://yoursite.com/order/<span class="text-sky-400">{token}</span>/download
+
+<span class="text-slate-500"># Link expires after 5 days</span>
+<span class="text-slate-500"># No attachments — keeps emails small and reliable</span></pre>
+                    </div>
+                </div>
+
+                <div class="px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-lg flex gap-3">
+                    <i class="fa-solid fa-circle-check text-emerald-600 mt-0.5"></i>
+                    <div class="text-xs text-emerald-800">
+                        <p class="font-medium mb-1">Why links instead of attachments?</p>
+                        <ul class="list-disc list-inside space-y-0.5">
+                            <li>Gmail/Outlook block attachments over 25 MB</li>
+                            <li>Large print files (up to 50 MB) never reach the inbox as attachments</li>
+                            <li>Email delivery is reliable and fast</li>
+                            <li>Files remain downloadable for 5 days regardless of email client</li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -730,6 +803,9 @@ Content-Type: application/json</pre>
         ]
       }
     ],
+    <span class="text-sky-400">"download_url"</span>: <span class="text-emerald-400">"https://yoursite.com/order/{token}/download"</span>,
+    <span class="text-sky-400">"download_expires_at"</span>: <span class="text-emerald-400">"2026-10-15T14:30:00Z"</span>,
+    <span class="text-sky-400">"is_download_active"</span>: <span class="text-amber-400">true</span>,
     <span class="text-sky-400">"status_history"</span>: [...],
     <span class="text-sky-400">"transactions"</span>: [...]
   }
@@ -821,6 +897,10 @@ Content-Type: application/json</pre>
             <div class="flex items-start gap-3 p-3 rounded-lg bg-rose-50 border border-rose-100">
                 <span class="font-mono font-bold text-rose-700">404</span>
                 <span class="text-rose-800">Not Found</span>
+            </div>
+            <div class="flex items-start gap-3 p-3 rounded-lg bg-rose-50 border border-rose-100">
+                <span class="font-mono font-bold text-rose-700">410</span>
+                <span class="text-rose-800">Gone — download link expired</span>
             </div>
             <div class="flex items-start gap-3 p-3 rounded-lg bg-rose-50 border border-rose-100">
                 <span class="font-mono font-bold text-rose-700">422</span>
