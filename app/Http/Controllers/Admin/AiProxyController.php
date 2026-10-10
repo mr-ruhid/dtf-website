@@ -40,6 +40,18 @@ class AiProxyController extends Controller
         $html = preg_replace('/<meta[^>]*http-equiv=["\']?Content-Security-Policy["\']?[^>]*>/i', '', $html);
         $html = preg_replace('/<meta[^>]*http-equiv=["\']?X-Frame-Options["\']?[^>]*>/i', '', $html);
 
+        $html = preg_replace('/<base[^>]*target=["\']?(_top|_parent)["\']?[^>]*>/i', '<base>', $html);
+        $html = preg_replace('/target=["\']?(_top|_parent)["\']?/i', 'target="_self"', $html);
+
+        $html = preg_replace('/top\.location\.replace\s*\(/i', 'self.location.replace(', $html);
+        $html = preg_replace('/top\.location\.href\s*=/i', 'self.location.href=', $html);
+        $html = preg_replace('/top\.location\s*=/i', 'self.location=', $html);
+        $html = preg_replace('/parent\.location\.href\s*=/i', 'self.location.href=', $html);
+        $html = preg_replace('/parent\.location\s*=/i', 'self.location=', $html);
+        $html = preg_replace('/window\.top\.location\.href\s*=/i', 'window.self.location.href=', $html);
+        $html = preg_replace('/window\.top\.location\s*=/i', 'window.self.location=', $html);
+        $html = preg_replace('/window\.parent\.location\s*=/i', 'window.self.location=', $html);
+
         if (stripos($html, '<head') !== false) {
             $html = preg_replace('/<head([^>]*)>/i', '<head$1><base href="' . e($url) . '">', $html, 1);
         }
