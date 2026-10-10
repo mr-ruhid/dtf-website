@@ -32,6 +32,19 @@
 
     <div class="flex items-center gap-2 flex-wrap">
         @if ($order->tracking_token)
+            @php
+                $hasFiles = $order->items->flatMap(fn($i) => $i->designs)->isNotEmpty();
+            @endphp
+
+            @if ($hasFiles && $order->is_download_active)
+                <a href="{{ route('order.download.zip', ['token' => $order->tracking_token]) }}"
+                   class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-sm font-medium px-4 py-2.5 rounded-lg transition flex items-center gap-2"
+                   title="Download all artwork files as ZIP">
+                    <i class="fa-solid fa-file-zipper text-xs"></i>
+                    <span>Download all (ZIP)</span>
+                </a>
+            @endif
+
             <button type="button"
                     onclick="copyTrackLink(this)"
                     data-link="{{ route('track.show', ['token' => $order->tracking_token]) }}"
@@ -39,7 +52,16 @@
                 <i class="fa-solid fa-link text-xs"></i>
                 <span>Copy Tracking Link</span>
             </button>
+
+            <a href="{{ route('order.download.page', ['token' => $order->tracking_token]) }}"
+               target="_blank"
+               class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium px-4 py-2.5 rounded-lg transition flex items-center gap-2"
+               title="Open customer download page">
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                <span>Download page</span>
+            </a>
         @endif
+
         <form method="POST" action="{{ route('admin.orders.destroy', $order) }}"
               onsubmit="return confirm('Delete this order permanently?')">
             @csrf
@@ -234,7 +256,7 @@
                         $breakdown = $item->price_breakdown ?? [];
                         $itemNote = $breakdown['note'] ?? null;
                         $tierLabel = $breakdown['tier_label'] ?? null;
-                        $itemFileName = $breakdown['file_name'] ?? null;
+                        $hasCanvasState = !empty($breakdown['canvas_state']);
 
                         $designs = $item->designs;
                         $composite = $designs->first();
@@ -272,6 +294,11 @@
                                             @if ($item->print_type && $item->print_type !== 'none')
                                                 <span class="text-[9px] uppercase tracking-wider bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-semibold">
                                                     {{ $item->print_type }}
+                                                </span>
+                                            @endif
+                                            @if ($hasCanvasState)
+                                                <span class="text-[9px] uppercase tracking-wider bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded font-semibold">
+                                                    <i class="fa-solid fa-pen-ruler text-[8px] mr-0.5"></i> Editable
                                                 </span>
                                             @endif
                                         </div>
@@ -340,7 +367,6 @@
                                     </div>
                                 @endif
 
-                                {{-- COMPOSITE ARTWORK --}}
                                 @if ($composite)
                                     @php
                                         $isPdf = !empty($composite->mime_type) && str_contains($composite->mime_type, 'pdf');
@@ -416,7 +442,6 @@
                                     </div>
                                 @endif
 
-                                {{-- SOURCE FILES --}}
                                 @if ($sources->count())
                                     <div class="mt-4 pt-4 border-t border-gray-100">
                                         <div class="flex items-center justify-between mb-2">
@@ -681,6 +706,42 @@
             </div>
         @endif
 
+        @if ($order->tracking_token && $order->is_download_active)
+            @php
+                $fileCount = $order->items->flatMap(fn($i) => $i->designs)->count();
+            @endphp
+
+            @if ($fileCount > 0)
+                <div class="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-5">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center">
+                            <i class="fa-solid fa-file-zipper text-xs"></i>
+                        </div>
+                        <h3 class="font-semibold text-emerald-900 text-sm">Artwork Files</h3>
+                    </div>
+
+                    <p class="text-xs text-emerald-800 mb-3 leading-relaxed">
+                        {{ $fileCount }} {{ $fileCount === 1 ? 'file' : 'files' }} attached to this order.
+                        Customer download page expires {{ $order->download_expires_at->format('d M Y') }}.
+                    </p>
+
+                    <div class="flex gap-2">
+                        <a href="{{ route('order.download.zip', ['token' => $order->tracking_token]) }}"
+                           class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-download text-[10px]"></i>
+                            <span>Download ZIP</span>
+                        </a>
+                        <a href="{{ route('order.download.page', ['token' => $order->tracking_token]) }}"
+                           target="_blank"
+                           class="flex-1 bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-700 text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            <span>View page</span>
+                        </a>
+                    </div>
+                </div>
+            @endif
+        @endif
+
         <div class="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
             <h3 class="font-semibold text-gray-800 text-sm flex items-center gap-2">
                 <i class="fa-solid fa-arrow-progress text-indigo-500"></i> Update Status
@@ -866,6 +927,14 @@
                     <span class="text-gray-500">Created</span>
                     <span class="font-medium text-gray-800">{{ $order->created_at->format('d M Y, H:i') }}</span>
                 </div>
+                @if ($order->download_expires_at)
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500">Download expires</span>
+                        <span class="font-medium {{ $order->is_download_active ? 'text-amber-600' : 'text-rose-600' }}">
+                            {{ $order->download_expires_at->format('d M Y, H:i') }}
+                        </span>
+                    </div>
+                @endif
                 @if ($order->confirmed_at)
                     <div class="flex items-center justify-between">
                         <span class="text-gray-500">Confirmed</span>
