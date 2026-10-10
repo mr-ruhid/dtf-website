@@ -27,6 +27,7 @@ Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 
 Route::get('/design', [DesignController::class, 'index'])->name('design.index');
 Route::post('/design/temp-upload', [DesignController::class, 'tempUpload'])->name('design.temp-upload');
+Route::post('/design/admin-save', [DesignController::class, 'adminSave'])->name('design.admin-save');
 Route::get('/design/{slug}', [DesignController::class, 'index'])->name('design.product');
 
 Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.show');
