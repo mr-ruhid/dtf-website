@@ -235,6 +235,10 @@
                         $itemNote = $breakdown['note'] ?? null;
                         $tierLabel = $breakdown['tier_label'] ?? null;
                         $itemFileName = $breakdown['file_name'] ?? null;
+
+                        $designs = $item->designs;
+                        $composite = $designs->first();
+                        $sources = $designs->slice(1)->values();
                     @endphp
 
                     <div class="p-5">
@@ -336,22 +340,95 @@
                                     </div>
                                 @endif
 
-                                @if ($item->designs->count())
+                                {{-- COMPOSITE ARTWORK --}}
+                                @if ($composite)
+                                    @php
+                                        $isPdf = !empty($composite->mime_type) && str_contains($composite->mime_type, 'pdf');
+                                        $compositeUrl = $composite->file_url;
+                                        $compositeName = $composite->original_name ?: basename($composite->file_path);
+                                    @endphp
+
                                     <div class="mt-4 pt-4 border-t border-gray-100">
                                         <div class="flex items-center justify-between mb-2">
                                             <p class="text-[10px] uppercase tracking-wider text-indigo-600 font-bold flex items-center gap-1.5">
                                                 <i class="fa-solid fa-file-image"></i>
-                                                Artwork ({{ $item->designs->count() }})
+                                                Print File (Composite)
                                             </p>
-                                            @if ($itemFileName)
-                                                <span class="text-[10px] text-gray-500 font-mono truncate max-w-[200px]" title="{{ $itemFileName }}">
-                                                    <i class="fa-solid fa-paperclip text-[9px]"></i> {{ $itemFileName }}
+                                            @if ($compositeName)
+                                                <span class="text-[10px] text-gray-500 font-mono truncate max-w-[240px]" title="{{ $compositeName }}">
+                                                    <i class="fa-solid fa-paperclip text-[9px]"></i> {{ $compositeName }}
                                                 </span>
                                             @endif
                                         </div>
 
                                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                            @foreach ($item->designs as $design)
+                                            <div class="group relative rounded-lg border-2 border-indigo-200 overflow-hidden bg-slate-50">
+                                                @if ($composite->exists && !$composite->is_expired)
+                                                    <a href="{{ $compositeUrl }}" target="_blank" class="block aspect-square bg-white">
+                                                        @if ($isPdf)
+                                                            <div class="w-full h-full flex flex-col items-center justify-center bg-red-50">
+                                                                <i class="fa-solid fa-file-pdf text-4xl text-red-500 mb-2"></i>
+                                                                <span class="text-[10px] text-gray-600 font-semibold">PDF Document</span>
+                                                            </div>
+                                                        @else
+                                                            <img src="{{ $compositeUrl }}" class="w-full h-full object-contain p-2">
+                                                        @endif
+                                                    </a>
+
+                                                    <div class="p-2 bg-indigo-50 border-t border-indigo-100 space-y-1">
+                                                        <p class="text-[10px] text-indigo-700 font-medium truncate" title="{{ $compositeName }}">
+                                                            {{ $compositeName }}
+                                                        </p>
+                                                        <div class="flex items-center justify-between text-[9px] text-indigo-500">
+                                                            <span>{{ $composite->file_size_human }}</span>
+                                                            @if ($composite->width && $composite->height)
+                                                                <span>
+                                                                    {{ rtrim(rtrim(number_format((float) $composite->width, 2, '.', ''), '0'), '.') }}×{{ rtrim(rtrim(number_format((float) $composite->height, 2, '.', ''), '0'), '.') }} in
+                                                                </span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                                                        <a href="{{ $compositeUrl }}" download
+                                                           class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-700"
+                                                           title="Download">
+                                                            <i class="fa-solid fa-download text-[9px]"></i>
+                                                        </a>
+                                                        <form method="POST" action="{{ route('admin.orders.designs.destroy', [$order, $composite]) }}"
+                                                              onsubmit="return confirm('Delete this file?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button class="w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700"
+                                                                    title="Delete">
+                                                                <i class="fa-solid fa-trash text-[9px]"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                @else
+                                                    <div class="aspect-square flex flex-col items-center justify-center text-gray-400 p-2 text-center">
+                                                        <i class="fa-solid fa-triangle-exclamation text-lg mb-1"></i>
+                                                        <p class="text-[9px]">{{ $composite->is_expired ? 'Expired' : 'Missing' }}</p>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- SOURCE FILES --}}
+                                @if ($sources->count())
+                                    <div class="mt-4 pt-4 border-t border-gray-100">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold flex items-center gap-1.5">
+                                                <i class="fa-solid fa-layer-group"></i>
+                                                Source Files ({{ $sources->count() }})
+                                            </p>
+                                            <span class="text-[9px] text-slate-400">Customer original uploads</span>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                                            @foreach ($sources as $design)
                                                 @php
                                                     $isPdf = !empty($design->mime_type) && str_contains($design->mime_type, 'pdf');
                                                     $designUrl = $design->file_url;
@@ -363,60 +440,50 @@
                                                         <a href="{{ $designUrl }}" target="_blank" class="block aspect-square bg-white">
                                                             @if ($isPdf)
                                                                 <div class="w-full h-full flex flex-col items-center justify-center bg-red-50">
-                                                                    <i class="fa-solid fa-file-pdf text-4xl text-red-500 mb-2"></i>
-                                                                    <span class="text-[10px] text-gray-600 font-semibold">PDF Document</span>
+                                                                    <i class="fa-solid fa-file-pdf text-2xl text-red-500 mb-1"></i>
+                                                                    <span class="text-[9px] text-gray-600 font-semibold">PDF</span>
                                                                 </div>
                                                             @else
-                                                                <img src="{{ $designUrl }}" class="w-full h-full object-contain p-2">
+                                                                <img src="{{ $designUrl }}" class="w-full h-full object-contain p-1.5">
                                                             @endif
                                                         </a>
 
-                                                        <div class="p-2 bg-white border-t border-gray-100 space-y-1">
-                                                            <p class="text-[10px] text-gray-700 font-medium truncate" title="{{ $displayName }}">
+                                                        <div class="p-1.5 bg-white border-t border-gray-100">
+                                                            <p class="text-[9px] text-gray-600 truncate" title="{{ $displayName }}">
                                                                 {{ $displayName }}
                                                             </p>
-                                                            <div class="flex items-center justify-between text-[9px] text-gray-400">
-                                                                <span>{{ $design->file_size_human }}</span>
-                                                                @if ($design->width && $design->height)
-                                                                    <span>
-                                                                        {{ rtrim(rtrim(number_format((float) $design->width, 2, '.', ''), '0'), '.') }}×{{ rtrim(rtrim(number_format((float) $design->height, 2, '.', ''), '0'), '.') }}
-                                                                    </span>
-                                                                @endif
-                                                            </div>
+                                                            <p class="text-[8px] text-gray-400">{{ $design->file_size_human }}</p>
                                                         </div>
 
                                                         <div class="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition">
                                                             <a href="{{ $designUrl }}" download
-                                                               class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-700"
+                                                               class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-700"
                                                                title="Download">
-                                                                <i class="fa-solid fa-download text-[9px]"></i>
+                                                                <i class="fa-solid fa-download text-[8px]"></i>
                                                             </a>
                                                             <form method="POST" action="{{ route('admin.orders.designs.destroy', [$order, $design]) }}"
-                                                                  onsubmit="return confirm('Delete this design file?')">
+                                                                  onsubmit="return confirm('Delete this source file?')">
                                                                 @csrf
                                                                 @method('DELETE')
-                                                                <button class="w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700"
+                                                                <button class="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700"
                                                                         title="Delete">
-                                                                    <i class="fa-solid fa-trash text-[9px]"></i>
+                                                                    <i class="fa-solid fa-trash text-[8px]"></i>
                                                                 </button>
                                                             </form>
-                                                        </div>
-                                                    @elseif ($design->is_expired)
-                                                        <div class="aspect-square flex flex-col items-center justify-center text-gray-400 p-2 text-center">
-                                                            <i class="fa-solid fa-clock-rotate-left text-lg mb-1"></i>
-                                                            <p class="text-[9px]">Expired</p>
                                                         </div>
                                                     @else
                                                         <div class="aspect-square flex flex-col items-center justify-center text-gray-400 p-2 text-center">
                                                             <i class="fa-solid fa-triangle-exclamation text-lg mb-1"></i>
-                                                            <p class="text-[9px]">Missing</p>
+                                                            <p class="text-[9px]">{{ $design->is_expired ? 'Expired' : 'Missing' }}</p>
                                                         </div>
                                                     @endif
                                                 </div>
                                             @endforeach
                                         </div>
                                     </div>
-                                @elseif (in_array($item->print_type, ['custom_size', 'fixed_area']))
+                                @endif
+
+                                @if (!$composite && !$sources->count() && in_array($item->print_type, ['custom_size', 'fixed_area']))
                                     <div class="mt-3 pt-3 border-t border-gray-100">
                                         <div class="flex items-center gap-2 text-xs bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
                                             <i class="fa-solid fa-triangle-exclamation text-rose-500 text-[11px]"></i>
