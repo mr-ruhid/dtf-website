@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\PrintZone;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ class DesignController extends Controller
         'Special Films',
     ];
 
-    public function index(?string $slug = null)
+    public function index(Request $request, ?string $slug = null)
     {
         $zones = PrintZone::where('status', 1)
             ->orderBy('sort_order')
@@ -99,10 +100,14 @@ class DesignController extends Controller
             ];
         }
 
+        $canvasState = $this->resolveCanvasState($request);
+
         return view('theme.rjshop-theme.staticpages.design', [
             'zones' => $zonesPayload,
             'product' => $productPayload,
             'allProducts' => $allProducts,
+            'canvasState' => $canvasState,
+            'adminMode' => $canvasState !== null,
         ]);
     }
 
@@ -146,6 +151,47 @@ class DesignController extends Controller
             'size' => $file->getSize(),
             'mime' => $file->getMimeType() ?: 'application/octet-stream',
         ]);
+    }
+
+    protected function resolveCanvasState(Request $request): ?array
+    {
+        if (!auth()->check()) {
+            return null;
+        }
+
+        $user = auth()->user();
+
+        if (!isset($user->role) || $user->role !== 'admin') {
+            return null;
+        }
+
+        $orderItemId = (int) $request->query('state');
+
+        if ($orderItemId <= 0) {
+            return null;
+        }
+
+        $item = OrderItem::find($orderItemId);
+
+        if (!$item) {
+            return null;
+        }
+
+        $breakdown = $item->price_breakdown ?? [];
+        $state = $breakdown['canvas_state'] ?? null;
+
+        if (!is_array($state) || empty($state)) {
+            return null;
+        }
+
+        return [
+            'order_item_id' => $item->id,
+            'order_id' => $item->order_id,
+            'product_name' => $item->product_name,
+            'width_inch' => (float) $item->print_width,
+            'height_inch' => (float) $item->print_height,
+            'canvas' => $state,
+        ];
     }
 
     protected function measurementPayload(Product $product): array
