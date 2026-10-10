@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SliderController;
+use App\Http\Controllers\Admin\StorageController;
 use App\Http\Controllers\Admin\SupportController;
 use App\Http\Controllers\Admin\TwoFactorController;
 use App\Http\Controllers\Admin\UpdateController;
@@ -243,7 +244,12 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
         Route::get('settings/cache', [SettingController::class, 'cache'])->name('settings.cache');
         Route::post('settings/cache/clear/{type}', [SettingController::class, 'clearCache'])->name('settings.cache.clear');
 
-        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('storage', [StorageController::class, 'index'])->name('storage.index');
+        Route::post('storage/clean-tmp', [StorageController::class, 'cleanTmp'])->name('storage.clean-tmp');
+        Route::post('storage/clean-orders', [StorageController::class, 'cleanOrders'])->name('storage.clean-orders');
+        Route::post('storage/delete-orphans', [StorageController::class, 'deleteOrphans'])->name('storage.delete-orphans');
+        Route::post('storage/delete-file', [StorageController::class, 'deleteFile'])->name('storage.delete-file');
+
         Route::view('services', 'admin.services.index')->name('services.index');
     });
 
