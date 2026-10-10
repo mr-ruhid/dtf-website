@@ -57,36 +57,47 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">AI URL</label>
                         <input type="text" name="ai_url" x-model="ai_url" maxlength="500"
-                               placeholder="https://chat.openai.com"
+                               placeholder="https://huggingface.co/spaces/Qwen/Qwen3-VL-Demo"
                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         <p class="text-[10px] text-gray-400 mt-1">
-                            Full URL of the AI chat. Opens in a small popup window.
+                            Full URL. HF Spaces open in iframe; some load a WebGPU model on first use.
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-xs font-semibold text-gray-700 mb-2">Quick presets — test one by one</p>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <p class="text-xs font-semibold text-gray-700">Instant (server-side, no download)</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <button type="button" @click="ai_url = 'https://deepai.org/chat'" class="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-xs font-medium text-emerald-800 transition">DeepAI Chat</button>
+                            <button type="button" @click="ai_url = 'https://kimi.moonshot.cn'" class="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-xs font-medium text-emerald-800 transition">Kimi</button>
+                        </div>
+
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                            <p class="text-xs font-semibold text-gray-700">Loads WebGPU model in browser (~100 MB – 2 GB first time, cached after)</p>
+                        </div>
                         <div class="flex flex-wrap gap-2">
-                            <button type="button" @click="ai_url = 'https://chat.openai.com'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">ChatGPT</button>
-                            <button type="button" @click="ai_url = 'https://claude.ai'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Claude</button>
-                            <button type="button" @click="ai_url = 'https://gemini.google.com'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Gemini</button>
-                            <button type="button" @click="ai_url = 'https://chat.deepseek.com'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">DeepSeek</button>
-                            <button type="button" @click="ai_url = 'https://copilot.microsoft.com'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Copilot</button>
-                            <button type="button" @click="ai_url = 'https://www.perplexity.ai'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Perplexity</button>
-                            <button type="button" @click="ai_url = 'https://quillbot.com/ai-chat/'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">QuillBot</button>
-                            <button type="button" @click="ai_url = 'https://grok.com'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Grok</button>
-                            <button type="button" @click="ai_url = 'https://chat.mistral.ai'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Mistral</button>
-                            <button type="button" @click="ai_url = 'https://poe.com'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Poe</button>
-                            <button type="button" @click="ai_url = 'https://you.com'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">You.com</button>
-                            <button type="button" @click="ai_url = 'https://huggingface.co/chat'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">HF Chat</button>
-                            <button type="button" @click="ai_url = 'https://chat.qwen.ai'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Qwen</button>
-                            <button type="button" @click="ai_url = 'https://chatglm.cn'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">ChatGLM</button>
-                            <button type="button" @click="ai_url = 'https://kimi.moonshot.cn'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Kimi</button>
-                            <button type="button" @click="ai_url = 'https://www.blackbox.ai'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Blackbox</button>
-                            <button type="button" @click="ai_url = 'https://pi.ai'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Pi</button>
-                            <button type="button" @click="ai_url = 'https://character.ai'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">Character.AI</button>
-                            <button type="button" @click="ai_url = 'https://chatgpt.com'" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">ChatGPT.com</button>
-                            <button type="button" @click="ai_url = 'https://example.com'" class="px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-xs font-medium text-amber-800 transition">example.com (test)</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/Qwen/Qwen3-VL-Demo'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">Qwen3-VL Demo</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/LessThanThreeAI/Qwen3.8-27B-Humanlike-Chat'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">Qwen3.8 27B Humanlike</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/apathy-exe/Qwen3.8-Flash-Next'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">Qwen3.8 Flash Next</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/MinimaLabs/KeyLM-75m-Instruct-Demo'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">KeyLM 75M Instruct</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/webml-community/deepseek-r1-webgpu'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">DeepSeek R1 WebGPU</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/mxderncultxre/Gemma4-31b-uncensored-assistant'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">Gemma4 31B Uncensored</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/LiquidAI/LFM2-VL-WebGPU'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">LFM2-VL WebGPU</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/Xenova/experimental-phi3-webgpu'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">Phi-3 WebGPU</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/dx8152/Ai-Studio'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">AI Studio</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/webml-community/semantic-image-field'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">Semantic Image Field</button>
+                            <button type="button" @click="ai_url = 'https://huggingface.co/spaces/smolagents/hf-realtime-voice'" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-medium text-amber-800 transition">HF Realtime Voice</button>
+                        </div>
+                    </div>
+
+                    <div class="mt-2 p-3 rounded-lg bg-blue-50 border border-blue-200 flex gap-2">
+                        <i class="fa-solid fa-circle-info text-blue-500 text-xs mt-0.5"></i>
+                        <div class="text-[11px] text-blue-800 leading-relaxed">
+                            <p><strong>Instant</strong> buttons work immediately — the AI runs on their server.</p>
+                            <p><strong>WebGPU</strong> buttons load a model into your browser on first click. Expect 100 MB – 2 GB download; Chrome/Edge 113+ recommended. Cached after the first load.</p>
                         </div>
                     </div>
                 </div>
@@ -219,7 +230,7 @@
                     <i class="fa-solid fa-triangle-exclamation text-amber-600 mt-0.5"></i>
                     <div class="text-xs text-amber-800">
                         <p class="font-medium mb-1">Heads up</p>
-                        <p>Some AI providers block embedding in iframes. Use <strong>Popup Window</strong> mode for those — it works with every provider.</p>
+                        <p>ChatGPT, Claude, Gemini block iframes entirely. Use <strong>Popup Window</strong> mode for those — it works with every provider.</p>
                     </div>
                 </div>
 
@@ -237,7 +248,7 @@ function adminAiChatEditor(settings) {
 
     return {
         enabled: s.enabled === true || s.enabled === 1 || s.enabled === '1',
-        ai_url: s.ai_url || 'https://chat.openai.com',
+        ai_url: s.ai_url || 'https://huggingface.co/spaces/Qwen/Qwen3-VL-Demo',
         button_label: s.button_label || 'AI Assistant',
         popup_width: parseInt(s.popup_width) || 460,
         popup_height: parseInt(s.popup_height) || 780,
