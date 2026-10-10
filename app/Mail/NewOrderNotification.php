@@ -1,127 +1,68 @@
 <?php
 
-namespace App\Services;
+namespace App\Mail;
 
 use App\Models\Order;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use App\Services\OrderArtworkZipper;
+use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
 
-class OrderArtworkZipper
+class NewOrderNotification extends Mailable
 {
-    public function build(Order $order): ?string
+    use Queueable, SerializesModels;
+
+    public Order $order;
+
+    protected ?string $artworkZipPath = null;
+
+    public function __construct(Order $order)
     {
-        if (!class_exists('\ZipArchive')) {
-            logger()->warning('ZIP extension not available');
-            return null;
-        }
-
-        $order->loadMissing(['items.designs']);
-
-        $tmpDir = storage_path('app/tmp-zips');
-
-        if (!is_dir($tmpDir)) {
-            @mkdir($tmpDir, 0755, true);
-        }
-
-        $zipPath = $tmpDir . '/order-' . $order->order_number . '-' . Str::random(6) . '.zip';
-
-        $zip = new \ZipArchive();
-
-        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
-            logger()->warning('Could not create zip at ' . $zipPath);
-            return null;
-        }
-
-        $added = 0;
-        $usedNames = [];
-
-        foreach ($order->items as $index => $item) {
-            $folder = 'Item-' . ($index + 1);
-
-            foreach ($item->designs as $design) {
-                if (!$design->file_path) {
-                    continue;
-                }
-
-                if (str_starts_with($design->file_path, 'http')) {
-                    continue;
-                }
-
-                if (!Storage::disk('public')->exists($design->file_path)) {
-                    continue;
-                }
-
-                $absPath = Storage::disk('public')->path($design->file_path);
-
-                if (!is_file($absPath) || !is_readable($absPath)) {
-                    continue;
-                }
-
-                $fileName = $this->uniqueName(
-                    $usedNames,
-                    $folder,
-                    $design->original_name ?: basename($design->file_path)
-                );
-
-                if ($zip->addFile($absPath, $folder . '/' . $fileName)) {
-                    $added++;
-                }
-            }
-        }
-
-        $zip->close();
-
-        if ($added === 0) {
-            @unlink($zipPath);
-            return null;
-        }
-
-        return $zipPath;
+        $this->order = $order->loadMissing([
+            'items.options',
+            'items.designs',
+            'items.product',
+            'zone',
+            'branch',
+        ]);
     }
 
-    public function cleanup(?string $zipPath): void
+    public function envelope(): Envelope
     {
-        if (!$zipPath) {
-            return;
-        }
-
-        if (is_file($zipPath)) {
-            @unlink($zipPath);
-        }
+        return new Envelope(
+            subject: 'New Order · ' . $this->order->order_number . ' · $' . number_format($this->order->total, 2),
+        );
     }
 
-    protected function uniqueName(array &$usedNames, string $folder, string $rawName): string
+    public function content(): Content
     {
-        $rawName = str_replace(['/', '\\', "\0"], '_', (string) $rawName);
+        return new Content(
+            view: 'emails.new-order',
+        );
+    }
 
-        if ($rawName === '' || $rawName === '.') {
-            $rawName = 'artwork.png';
+    public function attachments(): array
+    {
+        $this->artworkZipPath = app(OrderArtworkZipper::class)->build($this->order);
+
+        if (!$this->artworkZipPath) {
+            return [];
         }
 
-        $ext = pathinfo($rawName, PATHINFO_EXTENSION);
-        $base = pathinfo($rawName, PATHINFO_FILENAME);
+        return [
+            Attachment::fromPath($this->artworkZipPath)
+                ->as($this->order->order_number . '-artwork.zip')
+                ->withMime('application/zip'),
+        ];
+    }
 
-        if ($base === '') {
-            $base = 'artwork';
+    public function __destruct()
+    {
+        if ($this->artworkZipPath) {
+            app(OrderArtworkZipper::class)->cleanup($this->artworkZipPath);
         }
-
-        if (strlen($base) > 80) {
-            $base = substr($base, 0, 80);
-        }
-
-        $candidate = $base . ($ext !== '' ? '.' . $ext : '');
-
-        $key = $folder . '/' . $candidate;
-        $i = 1;
-
-        while (isset($usedNames[$key])) {
-            $candidate = $base . '-' . $i . ($ext !== '' ? '.' . $ext : '');
-            $key = $folder . '/' . $candidate;
-            $i++;
-        }
-
-        $usedNames[$key] = true;
-
-        return $candidate;
     }
 }
