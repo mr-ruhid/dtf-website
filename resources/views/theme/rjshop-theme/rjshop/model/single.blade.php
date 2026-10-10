@@ -318,8 +318,11 @@
                     </div>
                 @endif
 
+                {{-- ============ TWO PRIMARY BUTTONS ============ --}}
                 @if($isDesignable)
-                    <div class="rj-sp-actions">
+                    <div class="rj-sp-actions-stack">
+
+                        {{-- Build your gang sheet --}}
                         <button type="button"
                                 @click="goToDesign()"
                                 :disabled="!canAdd"
@@ -328,10 +331,18 @@
                             <span>Build your gang sheet</span>
                             <i class="fa-solid fa-arrow-right"></i>
                         </button>
-                    </div>
-                @endif
 
-                @if(!$isDesignable)
+                        {{-- Upload your own file --}}
+                        <button type="button"
+                                @click="toggleUpload()"
+                                class="rj-sp-btn rj-sp-btn-primary">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <span x-text="uploadOpen ? 'Cancel upload' : 'Upload your own file'"></span>
+                            <i class="fa-solid fa-arrow-down" :class="uploadOpen ? 'rj-sp-rot' : ''"></i>
+                        </button>
+
+                    </div>
+                @else
                     <div class="rj-sp-actions">
                         <button type="button"
                                 @click="addToCart()"
@@ -344,20 +355,10 @@
                     </div>
                 @endif
 
-                {{-- ============ UPLOAD OWN DESIGN (wide toggle) ============ --}}
-                <div class="rj-sp-upload-section">
-                    <button type="button"
-                            @click="uploadOpen = !uploadOpen"
-                            class="rj-sp-upload-toggle">
-                        <i class="fa-solid fa-circle-info"></i>
-                        <span>
-                            Already have a print-ready file?
-                            <strong x-text="uploadOpen ? 'Hide upload' : 'Upload it instead'"></strong>
-                            <i class="fa-solid fa-arrow-down" :class="uploadOpen ? 'rj-sp-rot' : ''"></i>
-                        </span>
-                    </button>
+                {{-- ============ UPLOAD PANEL ============ --}}
+                @if($isDesignable)
+                    <div x-show="uploadOpen" x-collapse x-cloak class="rj-sp-upload-panel-wrap">
 
-                    <div x-show="uploadOpen" x-collapse x-cloak class="rj-sp-upload-panel">
                         <label class="rj-sp-drop"
                                :class="{ 'is-drag': dragging, 'has-file': fileName }"
                                @dragover.prevent="dragging = true"
@@ -368,7 +369,7 @@
                             <template x-if="!fileName">
                                 <div class="rj-sp-drop-inner">
                                     <i class="fa-solid fa-cloud-arrow-up"></i>
-                                    <p class="rj-sp-drop-title">Drop artwork here or click to upload</p>
+                                    <p class="rj-sp-drop-title">Drop your print-ready file here</p>
                                     <p class="rj-sp-drop-sub">PNG · JPG · WEBP · PDF · Max 30MB</p>
                                 </div>
                             </template>
@@ -382,15 +383,23 @@
                             </template>
                         </label>
 
-                        <p class="rj-sp-upload-note">
-                            <i class="fa-solid fa-circle-check"></i>
-                            <span x-show="!fileName">Your file will be attached to the cart item</span>
-                            <span x-show="fileName" x-cloak>File ready — add to cart to send it with the order</span>
+                        <p class="rj-sp-upload-note" x-show="!fileName">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span>Your file will be sent with this order. We'll print it as-is.</span>
                         </p>
-                    </div>
-                </div>
 
-                {{-- ============ ASK A QUESTION (small pill) ============ --}}
+                        <button type="button"
+                                @click="addToCart()"
+                                :disabled="!canAdd || !fileName || adding"
+                                class="rj-sp-btn rj-sp-btn-primary">
+                            <i class="fa-solid" :class="adding ? 'fa-spinner fa-spin' : 'fa-bag-shopping'"></i>
+                            <span x-text="adding ? 'Adding...' : 'Add to Cart'"></span>
+                            <span class="rj-sp-btn-price">$<span x-text="finalPrice.toFixed(2)"></span></span>
+                        </button>
+
+                    </div>
+                @endif
+
                 <a href="{{ url('contact-us') }}" class="rj-sp-btn-outline">
                     <i class="fa-solid fa-comments"></i>
                     <span>Ask a question</span>
@@ -479,70 +488,30 @@
 @endif
 
 <style>
-    .rj-sp-upload-section {
+    .rj-sp-actions-stack {
         display: flex;
         flex-direction: column;
         gap: 0.75rem;
     }
 
-    .rj-sp-upload-toggle {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
+    .rj-sp-actions-stack .rj-sp-btn {
         width: 100%;
-        padding: 1rem 1.25rem;
-        background: rgba(99, 102, 241, 0.06);
-        border: 1px solid rgba(99, 102, 241, 0.2);
-        border-radius: 12px;
-        color: #c7d2fe;
-        font-family: inherit;
-        font-size: 13px;
-        text-align: left;
-        cursor: pointer;
-        transition: all 0.25s;
         box-sizing: border-box;
     }
 
-    .rj-sp-upload-toggle:hover {
-        background: rgba(99, 102, 241, 0.1);
-        border-color: rgba(99, 102, 241, 0.4);
-    }
-
-    .rj-sp-upload-toggle > i:first-child {
-        color: #818cf8;
-        font-size: 14px;
-        flex-shrink: 0;
-    }
-
-    .rj-sp-upload-toggle strong {
-        color: #a5b4fc;
-        font-weight: 700;
-        text-decoration: underline;
-        text-underline-offset: 2px;
-    }
-
-    .rj-sp-upload-toggle > span {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.375rem;
-        flex: 1;
-        flex-wrap: wrap;
-    }
-
-    .rj-sp-upload-toggle .fa-arrow-down {
-        font-size: 9px;
+    .rj-sp-actions-stack .fa-arrow-down {
+        font-size: 11px;
         transition: transform 0.3s;
-        opacity: 0.6;
     }
 
     .rj-sp-rot {
         transform: rotate(180deg);
     }
 
-    .rj-sp-upload-panel {
+    .rj-sp-upload-panel-wrap {
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 0.875rem;
         padding: 0.25rem 0 0;
     }
 
@@ -606,19 +575,21 @@
     .rj-sp-upload-note {
         display: flex;
         gap: 0.5rem;
-        align-items: center;
+        align-items: flex-start;
         font-size: 12px;
         color: #9ca3af;
         margin: 0;
-        font-family: ui-monospace, monospace;
+        line-height: 1.5;
     }
 
     .rj-sp-upload-note i {
-        color: #34d399;
+        color: #818cf8;
         font-size: 11px;
+        margin-top: 2px;
+        flex-shrink: 0;
     }
 
-    .rj-sp-info > .rj-sp-btn-outline {
+    .rj-sp-btn-outline {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -635,7 +606,7 @@
         align-self: flex-start;
     }
 
-    .rj-sp-info > .rj-sp-btn-outline:hover {
+    .rj-sp-btn-outline:hover {
         background: rgba(99, 102, 241, 0.1);
         border-color: rgba(99, 102, 241, 0.4);
     }
@@ -849,6 +820,20 @@ function singleProduct(config) {
             this.recalc();
         },
 
+        toggleUpload() {
+            if (!this.canAdd) {
+                this.flash('Please select all required options first');
+                return;
+            }
+
+            this.uploadOpen = !this.uploadOpen;
+
+            if (!this.uploadOpen) {
+                this.fileName = '';
+                this.fileData = null;
+            }
+        },
+
         onFile(e) {
             const f = e.target.files[0];
             if (!f) return;
@@ -910,6 +895,11 @@ function singleProduct(config) {
                 return;
             }
 
+            if (!this.fileName || !this.fileData) {
+                this.flash('Please upload a file first');
+                return;
+            }
+
             this.adding = true;
 
             const attributes = {};
@@ -929,17 +919,20 @@ function singleProduct(config) {
                 }
             });
 
+            attributes['Design'] = 'Uploaded file';
+
             const payload = {
                 product_id: this.productId,
                 unit_price: this.finalPrice,
                 qty: 1,
                 attributes: attributes,
                 options: optionsPayload,
-                print_type: '{{ $product->print_type ?: "none" }}',
+                print_type: 'custom_size',
                 width_inch: w,
                 height_inch: h,
-                image: this.fileData || null,
-                file_name: this.fileName || null,
+                image: this.fileData,
+                file_name: this.fileName,
+                note: 'Uploaded artwork: ' + this.fileName,
             };
 
             try {
@@ -948,6 +941,10 @@ function singleProduct(config) {
                 if (res && res.success) {
                     this.fileName = '';
                     this.fileData = null;
+                    this.uploadOpen = false;
+                    this.flash('Added to cart ✓');
+                } else {
+                    this.flash('Could not add to cart');
                 }
             } catch (e) {
                 this.flash('Could not add to cart');
