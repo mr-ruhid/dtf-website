@@ -228,6 +228,35 @@ class OrderController extends Controller
         return back()->with('status', 'Notification emails updated.');
     }
 
+        public function testNotification()
+    {
+        $emails = $this->getNotificationEmails();
+
+        if (empty($emails)) {
+            return back()->withErrors(['error' => 'Add at least one notification email first.']);
+        }
+
+        $latest = Order::with(['items.options', 'items.designs', 'items.product', 'zone', 'branch'])
+            ->latest()
+            ->first();
+
+        try {
+            if ($latest) {
+                app(\App\Services\OrderNotifier::class)->notifyNewOrder($latest);
+
+                return back()->with('status', 'Test sent — latest order ' . $latest->order_number . ' notification was triggered to ' . count($emails) . ' recipient(s).');
+            }
+
+            \Illuminate\Support\Facades\Mail::to($emails)->send(
+                new \App\Mail\TestNotification()
+            );
+
+            return back()->with('status', 'Test email sent to ' . count($emails) . ' recipient(s). No orders found yet.');
+        } catch (\Throwable $e) {
+            return back()->withErrors(['error' => 'Test failed: ' . $e->getMessage()]);
+        }
+    }
+
     protected function getNotificationEmails(): array
     {
         $raw = Setting::get('order_notification_emails');
