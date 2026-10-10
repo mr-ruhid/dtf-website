@@ -9,6 +9,7 @@ use App\Http\Controllers\DesignController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\TrackController;
+use App\Http\Controllers\OrderDownloadController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('page.home');
@@ -51,6 +52,12 @@ Route::prefix('track')->name('track.')->group(function () {
     Route::get('/', [TrackController::class, 'form'])->name('form');
     Route::post('/', [TrackController::class, 'lookup'])->name('lookup');
     Route::get('/{token}', [TrackController::class, 'show'])->name('show');
+});
+
+Route::prefix('order/{token}')->name('order.download.')->group(function () {
+    Route::get('/download', [OrderDownloadController::class, 'page'])->name('page');
+    Route::get('/download/file/{designId}', [OrderDownloadController::class, 'file'])->name('file');
+    Route::get('/download/zip', [OrderDownloadController::class, 'zip'])->name('zip');
 });
 
 Route::get('/{slug}', [ModelController::class, 'show'])->name('model.legacy');
