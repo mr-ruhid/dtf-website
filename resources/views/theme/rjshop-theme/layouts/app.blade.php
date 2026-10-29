@@ -28,12 +28,44 @@
     @endif
 
     @php
-        $favicon = \App\Models\Setting::get('site_favicon');
-        $faviconUrl = $favicon ? (str_starts_with($favicon, 'http') ? $favicon : asset('storage/' . $favicon)) : null;
+        // Favicon: Ayarlarda seçilibsə onu götürür; yoxdursa və ya fayl tapılmırsa public/icon/favicon.png
+        $rjFavicon = asset('icon/favicon.png');
+        $rjFaviconPath = public_path('icon/favicon.png');
+
+        try {
+            // Hər iki açar dəstəklənir (site_favicon və admin layout-dakı favicon)
+            $favicon = \App\Models\Setting::get('site_favicon') ?: \App\Models\Setting::get('favicon');
+
+            if ($favicon) {
+                if (preg_match('#^(https?:)?//#i', $favicon)) {
+                    $rjFavicon = $favicon;
+                    $rjFaviconPath = null;
+                } else {
+                    $clean = preg_replace('#^(public/|storage/)#', '', ltrim($favicon, '/'));
+                    if (\Illuminate\Support\Facades\Storage::disk('public')->exists($clean)) {
+                        $rjFavicon = asset('storage/' . $clean);
+                        $rjFaviconPath = \Illuminate\Support\Facades\Storage::disk('public')->path($clean);
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // Setting problemi saytı dağıtmasın
+        }
+
+        // Cache-buster: favicon dəyişəndə brauzer yenisini götürsün
+        $rjFaviconUrl = $rjFavicon;
+        if ($rjFaviconPath && is_file($rjFaviconPath)) {
+            $rjFaviconUrl .= (str_contains($rjFavicon, '?') ? '&' : '?') . 'v=' . filemtime($rjFaviconPath);
+        }
+
+        // Formata görə düzgün type
+        $rjFaviconExt = strtolower(pathinfo(parse_url($rjFavicon, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
+        $rjFaviconType = [
+            'ico' => 'image/x-icon', 'png' => 'image/png', 'svg' => 'image/svg+xml',
+            'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'webp' => 'image/webp', 'gif' => 'image/gif',
+        ][$rjFaviconExt] ?? 'image/png';
     @endphp
-    @if($faviconUrl)
-        <link rel="icon" href="{{ $faviconUrl }}">
-    @endif
+    <link rel="icon" type="{{ $rjFaviconType }}" href="{{ $rjFaviconUrl }}">
 
     <style>
         [x-cloak] { display: none !important; }
