@@ -12,7 +12,7 @@ use ZipArchive;
 class UpdateController extends Controller
 {
     private string $repo = 'mr-ruhid/dtf-website';
-    private string $currentVersion = '1.1.1';
+    private string $currentVersion = '1.1.2';
 
     public function check()
     {

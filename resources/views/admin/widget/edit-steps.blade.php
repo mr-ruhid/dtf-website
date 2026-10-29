@@ -244,6 +244,8 @@
 
 <script>
 function stepsEditor(settings) {
+    var storageUrl = "{{ asset('storage') }}";
+
     var defaults = [
         { title: 'Cut', description: 'Your sheet arrives uncut. Snip each design off. Keep extras in a drawer.', link_text: 'See the guide', link_url: '/how-to-press', image: '', image_preview: '' },
         { title: 'Place', description: 'Park it on the garment, print facing down. Cotton, poly, or a blend.', link_text: 'See the guide', link_url: '/how-to-press', image: '', image_preview: '' },
@@ -252,13 +254,21 @@ function stepsEditor(settings) {
     ];
 
     var initial = (settings && settings.items && settings.items.length) ? settings.items.map(function(it) {
+        var img = it.image || '';
+        var preview = it.image_preview || img;
+
+        // Əgər şəkil xarici link deyilsə və bazadan gəlirsə, qarşısına storage URL əlavə et
+        if (preview && !preview.startsWith('http') && !preview.startsWith('data:')) {
+            preview = storageUrl + '/' + preview;
+        }
+
         return {
             title: it.title || '',
             description: it.description || '',
             link_text: it.link_text || '',
             link_url: it.link_url || '',
-            image: it.image || '',
-            image_preview: it.image_preview || it.image || ''
+            image: img,
+            image_preview: preview
         };
     }) : defaults;
 

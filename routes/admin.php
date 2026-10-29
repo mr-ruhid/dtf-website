@@ -237,6 +237,7 @@ Route::prefix('admin')->name('admin.')->middleware('web')->group(function () {
 
         Route::get('settings/update', [SettingController::class, 'update'])->name('settings.update');
         Route::post('settings/update/install', [UpdateController::class, 'install'])->name('settings.update.install');
+        Route::get('settings/update/check', [UpdateController::class, 'check'])->name('settings.update.check');
 
         Route::get('settings/backup', [BackupController::class, 'index'])->name('settings.backup');
         Route::post('settings/backup', [BackupController::class, 'create'])->name('settings.backup.create');
