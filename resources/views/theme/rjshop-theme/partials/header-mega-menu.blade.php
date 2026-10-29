@@ -17,10 +17,6 @@
                             <i class="fa-solid {{ $megaModel->icon }} text-xs"></i>
                         @endif
                         <span>{{ $megaModel->name }}</span>
-                        @if($megaModel->categories->count())
-                            <i class="fa-solid fa-chevron-down text-[9px] transition-transform"
-                               :class="activeModel === {{ $megaModel->id }} ? 'rotate-180' : ''"></i>
-                        @endif
                         <span class="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 transition-all duration-300"
                               :class="activeModel === {{ $megaModel->id }} ? 'w-full' : 'w-0'"></span>
                     </a>
