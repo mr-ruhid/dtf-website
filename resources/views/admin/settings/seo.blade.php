@@ -59,13 +59,9 @@
             @if (!empty($settings['og_image']))
                 <div class="p-4 bg-slate-50 border border-gray-200 rounded-lg flex items-center justify-between">
                     <img src="{{ asset('storage/' . $settings['og_image']) }}" class="h-20 rounded border" alt="OG Image">
-                    <form method="POST" action="{{ route('admin.settings.seo.remove-og') }}">
-                        @csrf
-                        @method('DELETE')
-                        <button class="text-xs text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg transition">
-                            <i class="fa-solid fa-trash text-xs"></i> Remove
-                        </button>
-                    </form>
+                    <button type="submit" form="delete-og-form" class="text-xs text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg transition">
+                        <i class="fa-solid fa-trash text-xs"></i> Remove
+                    </button>
                 </div>
             @endif
 
@@ -80,55 +76,12 @@
 
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
-            <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <i class="fa-solid fa-chart-line text-sm"></i>
-            </div>
-            <div>
-                <h3 class="font-semibold text-gray-800 text-sm">Analytics & Tracking</h3>
-                <p class="text-xs text-gray-500">Third-party analytics and verification</p>
-            </div>
-        </div>
-
-        <div class="p-6 space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Google Analytics ID</label>
-                <input type="text" name="google_analytics_id" value="{{ old('google_analytics_id', $settings['google_analytics_id'] ?? '') }}"
-                       placeholder="G-XXXXXXXXXX"
-                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Google Tag Manager ID</label>
-                <input type="text" name="google_tag_manager_id" value="{{ old('google_tag_manager_id', $settings['google_tag_manager_id'] ?? '') }}"
-                       placeholder="GTM-XXXXXXX"
-                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Facebook Pixel ID</label>
-                <input type="text" name="facebook_pixel_id" value="{{ old('facebook_pixel_id', $settings['facebook_pixel_id'] ?? '') }}"
-                       placeholder="000000000000000"
-                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Google Search Console Verification</label>
-                <input type="text" name="google_verification" value="{{ old('google_verification', $settings['google_verification'] ?? '') }}"
-                       placeholder="Verification meta content value"
-                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                <p class="text-xs text-gray-500 mt-1">Only the content value, not the full meta tag</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
             <div class="w-9 h-9 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
                 <i class="fa-solid fa-robot text-sm"></i>
             </div>
             <div>
                 <h3 class="font-semibold text-gray-800 text-sm">Robots & Indexing</h3>
-                <p class="text-xs text-gray-500">Control search engine crawling</p>
+                <p class="text-xs text-gray-500">Control search engine crawling & sitemap</p>
             </div>
         </div>
 
@@ -147,7 +100,17 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Robots.txt Content</label>
                 <textarea name="robots_txt" rows="6"
                           placeholder="User-agent: *&#10;Allow: /&#10;Disallow: /admin"
-                          class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">{{ old('robots_txt', $settings['robots_txt'] ?? "User-agent: *\nAllow: /\nDisallow: /admin") }}</textarea>
+                          class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">{{ old('robots_txt', $settings['robots_txt'] ?? "User-agent: *\nAllow: /\nDisallow: /admin\nSitemap: " . url('/sitemap.xml')) }}</textarea>
+            </div>
+
+            <div class="p-4 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-indigo-800">Sitemap.xml</p>
+                    <p class="text-xs text-indigo-600">Avtomatik yaradılır və bütün məhsul və bloqları əhatə edir.</p>
+                </div>
+                <a href="{{ url('/sitemap.xml') }}" target="_blank" class="px-4 py-2 bg-white border border-indigo-200 text-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-50 transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> Sitemap-ə bax
+                </a>
             </div>
         </div>
     </div>
@@ -159,6 +122,11 @@
         </button>
     </div>
 
+</form>
+
+<form id="delete-og-form" method="POST" action="{{ route('admin.settings.seo.remove-og') }}" class="hidden">
+    @csrf
+    @method('DELETE')
 </form>
 
 @endsection
