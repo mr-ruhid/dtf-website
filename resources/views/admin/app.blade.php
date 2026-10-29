@@ -1,6 +1,5 @@
 @php
     $faviconSetting = \App\Models\Setting::where('key', 'favicon')->value('value');
-    $rjLogo = asset('storage/icon/favicon.png');
     $rjFavicon = $faviconSetting ? asset('storage/' . $faviconSetting) : asset('storage/icon/favicon.png');
 @endphp
 <!DOCTYPE html>
@@ -229,6 +228,10 @@
     @stack('styles')
 </head>
 <body class="bg-slate-100 text-gray-800 antialiased" x-data="{ sidebarOpen: true, mobileOpen: false }">
+
+    @php
+        $rjLogo = 'https://raw.githubusercontent.com/mr-ruhid/rare-logos-vault/main/logo/cms/rj-shop/rj_shop_lite.svg';
+    @endphp
 
     <div class="flex h-screen overflow-hidden">
 
