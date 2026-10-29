@@ -470,7 +470,7 @@ If this project has been useful to you, consider supporting its continued develo
 
 ## Author
 
-**Ruhid Javadov**
+**Ruhid Javadov - MR-Ruhid**
 
 - GitHub: [@mr-ruhid](https://github.com/mr-ruhid)
 - Website: [ruhidjavadov.site](https://ruhidjavadov.site)
