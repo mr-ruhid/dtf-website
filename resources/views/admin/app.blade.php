@@ -140,42 +140,99 @@
             border: 1px solid rgba(16,185,129,0.3);
         }
 
-        .rj-chat-btn {
-            animation: rj-chat-float 3s ease-in-out infinite;
+        /* ===== RJ AI Tab (ekranın kənarına yapışan AI Chat düyməsi) ===== */
+        .rj-ai{
+            position:fixed; top:32vh; z-index:9999;
+            width:48px; padding:16px 0 14px;
+            display:flex; flex-direction:column; align-items:center; gap:14px;
+            border:0; cursor:pointer; color:#fff; isolation:isolate;
+            background:linear-gradient(160deg,#6366f1 0%,#8b5cf6 35%,#d946ef 65%,#6366f1 100%);
+            background-size:100% 300%;
+            box-shadow:-8px 10px 30px -8px rgba(99,102,241,.8), inset 0 1px 0 rgba(255,255,255,.35);
+            transition:width .35s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease, transform .35s cubic-bezier(.34,1.56,.64,1);
+        }
+        .rj-ai--right{
+            right:0; border-radius:20px 0 0 20px;
+            animation:rj-ai-bg 6s ease-in-out infinite, rj-ai-nudge-r 6s ease-in-out infinite 2s;
+        }
+        .rj-ai--left{
+            left:0; border-radius:0 20px 20px 0;
+            box-shadow:8px 10px 30px -8px rgba(99,102,241,.8), inset 0 1px 0 rgba(255,255,255,.35);
+            animation:rj-ai-bg 6s ease-in-out infinite, rj-ai-nudge-l 6s ease-in-out infinite 2s;
+        }
+        .rj-ai:hover{
+            width:58px; transform:translateX(0);
+            animation:rj-ai-bg 3s ease-in-out infinite;
+            box-shadow:-10px 14px 40px -6px rgba(217,70,239,.85), inset 0 1px 0 rgba(255,255,255,.45);
+        }
+        .rj-ai--left:hover{ box-shadow:10px 14px 40px -6px rgba(217,70,239,.85), inset 0 1px 0 rgba(255,255,255,.45); }
+        .rj-ai:active{ filter:brightness(.92); }
+
+        /* üstdən keçən işıq zolağı */
+        .rj-ai__shine{ position:absolute; inset:0; border-radius:inherit; overflow:hidden; z-index:-1; pointer-events:none; }
+        .rj-ai__shine::before{
+            content:''; position:absolute; left:-20%; width:140%; height:38%; top:-45%;
+            background:linear-gradient(180deg,transparent,rgba(255,255,255,.38),transparent);
+            transform:skewY(-14deg);
+            animation:rj-ai-sweep 3.8s ease-in-out infinite;
         }
 
-        .rj-chat-btn:hover {
-            animation-play-state: paused;
-            transform: scale(1.06);
+        /* orb + radar dalğaları */
+        .rj-ai__orb{
+            position:relative; width:32px; height:32px; border-radius:50%;
+            display:flex; align-items:center; justify-content:center;
+            background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.45);
+            backdrop-filter:blur(6px);
+            font-size:14px;
+        }
+        .rj-ai__orb i{ animation:rj-ai-twinkle 2.6s ease-in-out infinite; }
+        .rj-ai__orb::before,
+        .rj-ai__orb::after{
+            content:''; position:absolute; inset:-1px; border-radius:50%;
+            border:1.5px solid rgba(255,255,255,.7);
+            animation:rj-ai-ripple 2.4s ease-out infinite;
+        }
+        .rj-ai__orb::after{ animation-delay:1.2s; }
+
+        .rj-ai__dot{
+            position:absolute; top:-3px; right:-3px; width:10px; height:10px; border-radius:50%;
+            background:#34d399; border:2px solid #6d28d9;
+            animation:rj-ai-dot 2s ease-in-out infinite;
         }
 
-        .rj-chat-icon {
-            animation: rj-chat-wiggle 4s ease-in-out infinite;
+        .rj-ai__label{
+            writing-mode:vertical-rl; transform:rotate(180deg);
+            font-size:11px; font-weight:800; letter-spacing:.3em; text-transform:uppercase;
+            text-shadow:0 1px 8px rgba(0,0,0,.25);
         }
 
-        .rj-chat-dot {
-            animation: rj-chat-pulse 2s ease-in-out infinite;
-        }
+        @keyframes rj-ai-bg{ 0%,100%{ background-position:0 0; } 50%{ background-position:0 100%; } }
+        @keyframes rj-ai-sweep{ 0%{ top:-45%; } 55%,100%{ top:120%; } }
+        @keyframes rj-ai-ripple{ 0%{ transform:scale(1); opacity:.7; } 100%{ transform:scale(2); opacity:0; } }
+        @keyframes rj-ai-twinkle{ 0%,100%{ transform:scale(1) rotate(0); } 50%{ transform:scale(1.18) rotate(12deg); } }
+        @keyframes rj-ai-dot{ 0%,100%{ box-shadow:0 0 0 0 rgba(52,211,153,.8); } 50%{ box-shadow:0 0 0 7px rgba(52,211,153,0); } }
+        @keyframes rj-ai-nudge-r{ 0%,82%,100%{ transform:translateX(5px); } 88%{ transform:translateX(-4px); } 94%{ transform:translateX(2px); } }
+        @keyframes rj-ai-nudge-l{ 0%,82%,100%{ transform:translateX(-5px); } 88%{ transform:translateX(4px); } 94%{ transform:translateX(-2px); } }
 
-        @keyframes rj-chat-float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-4px); }
+        @media (max-width:640px){
+            .rj-ai{ width:40px; top:40vh; padding:12px 0; }
+            .rj-ai__label{ display:none; }
+            .rj-ai__orb{ width:28px; height:28px; font-size:12px; }
         }
-
-        @keyframes rj-chat-wiggle {
-            0%, 90%, 100% { transform: rotate(0); }
-            93% { transform: rotate(-12deg); }
-            96% { transform: rotate(12deg); }
-        }
-
-        @keyframes rj-chat-pulse {
-            0%, 100% { box-shadow: 0 0 6px rgba(52,211,153,0.9); transform: scale(1); }
-            50% { box-shadow: 0 0 12px rgba(52,211,153,1); transform: scale(1.15); }
+        @media (prefers-reduced-motion:reduce){
+            .rj-ai, .rj-ai *, .rj-ai::before, .rj-ai__orb::before, .rj-ai__orb::after, .rj-ai__shine::before{ animation:none !important; }
         }
     </style>
     @stack('styles')
 </head>
 <body class="bg-slate-100 text-gray-800 antialiased" x-data="{ sidebarOpen: true, mobileOpen: false }">
+
+    @php
+        // Admin panel loqosu (rəngi dəyişdirilmir, yazısı loqonun içindədir).
+        // Lokal istifadə üçün faylı public/images/ qovluğuna yüklə və bunu işlət:
+        // $rjLogo = asset('images/rj_shop_lite.svg');
+        $rjLogo = 'https://raw.githubusercontent.com/mr-ruhid/rare-logos-vault/main/logo/cms/rj-shop/rj_shop_lite.svg';
+    @endphp
 
     <div class="flex h-screen overflow-hidden">
 
@@ -183,14 +240,9 @@
                class="hidden md:flex flex-col sidebar-bg text-slate-400 transition-all duration-300 shrink-0 border-r border-slate-800/50">
 
             <div class="h-16 flex items-center px-5 border-b border-slate-800/50 shrink-0 relative">
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 group">
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition">
-                        RJ
-                    </div>
-                    <div x-show="sidebarOpen" x-transition class="leading-tight">
-                        <p class="text-white font-bold text-sm tracking-tight">RJ SHOP</p>
-                        <p class="text-[10px] text-indigo-400 font-medium tracking-widest uppercase">Admin Lite</p>
-                    </div>
+                <a href="{{ route('admin.dashboard') }}" class="group flex items-center w-full min-w-0" title="RJ SHOP">
+                    <img src="{{ $rjLogo }}" alt="RJ SHOP"
+                         class="h-9 w-auto max-w-full object-contain object-left transition-transform duration-300 group-hover:scale-[1.04]">
                 </a>
             </div>
 
@@ -447,12 +499,8 @@
            class="fixed top-0 left-0 h-full w-[260px] sidebar-bg text-slate-400 z-50 md:hidden overflow-y-auto scroll-thin">
 
         <div class="h-16 flex items-center px-5 border-b border-slate-800/50">
-            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-indigo-500/30">RJ</div>
-                <div class="leading-tight">
-                    <p class="text-white font-bold text-sm">RJSHOP AI</p>
-                    <p class="text-[10px] text-indigo-400 font-medium tracking-widest uppercase">Admin Lite</p>
-                </div>
+            <a href="{{ route('admin.dashboard') }}" class="flex items-center w-full min-w-0" title="RJ SHOP">
+                <img src="{{ $rjLogo }}" alt="RJ SHOP" class="h-9 w-auto max-w-full object-contain object-left">
             </a>
         </div>
 
@@ -587,6 +635,7 @@
         $aiChatPosition = $aiChatSettings['position'] ?? 'bottom-right';
         $aiChatMode = $aiChatSettings['mode'] ?? 'iframe';
         $aiChatLabel = $aiChatSettings['button_label'] ?? 'Chat';
+        $aiChatIsLeft = $aiChatPosition === 'bottom-left';
     @endphp
 
     @if($aiChatWidget && $aiChatEnabled && !request()->routeIs('admin.widgets*'))
@@ -600,16 +649,19 @@
              })"
              x-cloak>
 
+            {{-- Ekranın kənarına yapışan AI Chat tabı --}}
             <button type="button"
                     @click="handleButtonClick()"
                     :title="label"
-                    class="fixed z-[9999] {{ $aiChatPosition === 'bottom-left' ? 'bottom-6 left-6' : 'bottom-6 right-6' }} group flex items-center gap-1.5 h-11 pl-2 pr-3.5 rounded-full bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-600 text-white shadow-[0_6px_24px_-4px_rgba(99,102,241,0.7)] hover:shadow-[0_10px_32px_-4px_rgba(99,102,241,0.9)] transition-all duration-300 border border-white/20 rj-chat-btn"
-                    x-show="!open">
-                <span class="relative flex items-center justify-center w-7 h-7 rounded-full bg-white/15 backdrop-blur-sm">
-                    <i class="fa-solid fa-comment-dots text-xs rj-chat-icon"></i>
-                    <span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 rj-chat-dot"></span>
+                    x-show="!open"
+                    x-transition.opacity
+                    class="rj-ai {{ $aiChatIsLeft ? 'rj-ai--left' : 'rj-ai--right' }}">
+                <span class="rj-ai__shine"></span>
+                <span class="rj-ai__orb">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span class="rj-ai__dot"></span>
                 </span>
-                <span class="text-xs font-bold whitespace-nowrap" x-text="label"></span>
+                <span class="rj-ai__label" x-text="label"></span>
             </button>
 
             <div x-show="open"
@@ -625,7 +677,7 @@
                 <div class="h-14 flex items-center justify-between px-4 border-b border-slate-800/60 shrink-0">
                     <div class="flex items-center gap-2.5">
                         <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                            <i class="fa-solid fa-comment-dots text-white text-xs"></i>
+                            <i class="fa-solid fa-wand-magic-sparkles text-white text-xs"></i>
                         </div>
                         <div class="leading-tight">
                             <p class="text-white text-sm font-bold" x-text="label"></p>
