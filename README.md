@@ -442,7 +442,7 @@ If this project has been useful to you, consider supporting its continued develo
 <div align="center">
 
 <a href="https://kofe.al/@ruhidjavadoff">
-  <img src="https://kofe.al/assets/images/kofeal-logo.svg" height="36" alt="Support on Kofe.al" style="background-color:#ffffff; padding:6px; border-radius:6px;">
+  <img src="https://github.com/mr-ruhid/rare-logos-vault/blob/main/logo/monetization/kofe.al/kofe.al_logo.svg" height="36" alt="Support on Kofe.al" style="background-color:#ffffff; padding:6px; border-radius:6px;">
 </a>
 &nbsp;&nbsp;
 <a href="https://cayvoy.com/donate/ruhid4715">
