@@ -1,8 +1,10 @@
 @php
+    // Sol yuxarıdakı loqo (toxunulmaz)
+    $rjLogo = 'https://raw.githubusercontent.com/mr-ruhid/rare-logos-vault/main/logo/cms/rj-shop/rj_shop_lite.svg';
+
+    // Brauzer tabındakı favicon (əgər Ayarlarda varsa onu, yoxdursa public/icon/favicon.png-i götürür)
     $faviconSetting = \App\Models\Setting::where('key', 'favicon')->value('value');
-    $faviconFile = $faviconSetting ? $faviconSetting : 'icon/favicon.png';
-    $rjFavicon = asset('storage/' . ltrim($faviconFile, '/'));
-    $rjLogo = asset('icon/favicon.png');
+    $rjFavicon = $faviconSetting ? asset('storage/' . ltrim($faviconSetting, '/')) : asset('icon/favicon.png');
 @endphp
 <!DOCTYPE html>
 <html lang="en">
