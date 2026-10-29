@@ -1,0 +1,9 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+<FilesMatch "^\.env|^\.git|^composer\.(json|lock)|^package\.(json|lock)|^artisan|^phpunit\.xml|^web\.config">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
