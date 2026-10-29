@@ -1,3 +1,8 @@
+@php
+    $faviconSetting = \App\Models\Setting::where('key', 'favicon')->value('value');
+    $rjLogo = asset('storage/icon/favicon.png');
+    $rjFavicon = $faviconSetting ? asset('storage/' . $faviconSetting) : asset('storage/icon/favicon.png');
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') - RJ SHOP lite</title>
+    <link rel="icon" type="image/png" href="{{ $rjFavicon }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -140,7 +146,6 @@
             border: 1px solid rgba(16,185,129,0.3);
         }
 
-        /* ===== RJ AI Tab (ekranın kənarına yapışan AI Chat düyməsi) ===== */
         .rj-ai{
             position:fixed; top:32vh; z-index:9999;
             width:48px; padding:16px 0 14px;
@@ -168,7 +173,6 @@
         .rj-ai--left:hover{ box-shadow:10px 14px 40px -6px rgba(217,70,239,.85), inset 0 1px 0 rgba(255,255,255,.45); }
         .rj-ai:active{ filter:brightness(.92); }
 
-        /* üstdən keçən işıq zolağı */
         .rj-ai__shine{ position:absolute; inset:0; border-radius:inherit; overflow:hidden; z-index:-1; pointer-events:none; }
         .rj-ai__shine::before{
             content:''; position:absolute; left:-20%; width:140%; height:38%; top:-45%;
@@ -177,7 +181,6 @@
             animation:rj-ai-sweep 3.8s ease-in-out infinite;
         }
 
-        /* orb + radar dalğaları */
         .rj-ai__orb{
             position:relative; width:32px; height:32px; border-radius:50%;
             display:flex; align-items:center; justify-content:center;
@@ -226,13 +229,6 @@
     @stack('styles')
 </head>
 <body class="bg-slate-100 text-gray-800 antialiased" x-data="{ sidebarOpen: true, mobileOpen: false }">
-
-    @php
-        // Admin panel loqosu (rəngi dəyişdirilmir, yazısı loqonun içindədir).
-        // Lokal istifadə üçün faylı public/images/ qovluğuna yüklə və bunu işlət:
-        // $rjLogo = asset('images/rj_shop_lite.svg');
-        $rjLogo = 'https://raw.githubusercontent.com/mr-ruhid/rare-logos-vault/main/logo/cms/rj-shop/rj_shop_lite.svg';
-    @endphp
 
     <div class="flex h-screen overflow-hidden">
 
@@ -649,7 +645,6 @@
              })"
              x-cloak>
 
-            {{-- Ekranın kənarına yapışan AI Chat tabı --}}
             <button type="button"
                     @click="handleButtonClick()"
                     :title="label"
