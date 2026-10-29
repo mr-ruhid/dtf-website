@@ -223,6 +223,11 @@
                                 class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition">
                             <i class="fa-solid fa-floppy-disk text-xs mr-1"></i> Save Changes
                         </button>
+
+                        <button type="button" onclick="localStorage.removeItem('rj_chat_x'); localStorage.removeItem('rj_chat_y'); alert('Chat düyməsinin mövqeyi sıfırlandı!');" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-5 py-2.5 rounded-lg transition">
+                            <i class="fa-solid fa-arrows-to-dot text-xs mr-1"></i> Reset Button Position
+                        </button>
+
                         <a href="{{ route('admin.widgets.index') }}"
                            class="block text-center text-sm text-gray-600 hover:text-gray-800 py-2">Cancel</a>
                     </div>
