@@ -11,7 +11,10 @@ use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\TrackController;
 use App\Http\Controllers\OrderDownloadController;
 use App\Http\Controllers\GalleryController;
+use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 Route::get('/', [PageController::class, 'home'])->name('page.home');
 Route::get('/about-us', [PageController::class, 'about'])->name('page.about');
