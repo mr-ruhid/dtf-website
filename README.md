@@ -2,7 +2,7 @@
 
 <img src="https://raw.githubusercontent.com/mr-ruhid/rare-logos-vault/main/logo/cms/rj-shop/rj_shop_lite_colorful.png" alt="RJ Shop Lite Logo" height="120" />
 
-# RJ CMS Lite
+
 
 **A lightweight Laravel CMS for print businesses**
 DTF transfers · custom signage · product catalogs · orders · deliveries · support tickets · drag-and-drop homepage widgets
