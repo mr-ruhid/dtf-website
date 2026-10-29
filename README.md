@@ -1,10 +1,13 @@
 <div align="center">
 
+<img src="https://raw.githubusercontent.com/mr-ruhid/rare-logos-vault/main/logo/cms/rj-shop/rj_shop_lite_colorful.png" alt="RJ Shop Lite Logo" height="120" />
+
 # RJ CMS Lite
 
 **A lightweight Laravel CMS for print businesses**
 DTF transfers · custom signage · product catalogs · orders · deliveries · support tickets · drag-and-drop homepage widgets
 
+![Version](https://img.shields.io/badge/version-1.1.2-blue?style=flat-square)
 ![Laravel](https://img.shields.io/badge/Laravel-12.69-FF2D20?style=flat-square&logo=laravel&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
@@ -12,39 +15,9 @@ DTF transfers · custom signage · product catalogs · orders · deliveries · s
 ![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=flat-square&logo=vite&logoColor=white)
 ![License](https://img.shields.io/badge/License-Proprietary-lightgrey?style=flat-square)
 
-[Repository](https://github.com/mr-ruhid/dtf-website) · [Author](https://github.com/mr-ruhid) · [Website](https://ruhidjavadov.site)
+[Installation Guide](INSTALL.md) · [Changelog](CHANGELOG.md) · [Repository](https://github.com/mr-ruhid/dtf-website) · [Author](https://github.com/mr-ruhid)
 
 </div>
-
----
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Environment Variables](#environment-variables)
-- [Running the Project](#running-the-project)
-- [Default Admin Credentials](#default-admin-credentials)
-- [Project Structure](#project-structure)
-- [Widget System](#widget-system)
-- [Admin AI Chat Widget](#admin-ai-chat-widget)
-- [Design Studio (RJFrame)](#design-studio-rjframe)
-- [Frontend Routes](#frontend-routes)
-- [Admin Routes](#admin-routes)
-- [API](#api)
-- [Payments](#payments)
-- [Storage and Backups](#storage-and-backups)
-- [Production Deployment](#production-deployment)
-- [Security Checklist](#security-checklist)
-- [Troubleshooting](#troubleshooting)
-- [Useful Artisan Commands](#useful-artisan-commands)
-- [License](#license)
-- [Credits](#credits)
-- [Support the Project](#support-the-project)
-- [Author](#author)
 
 ---
 
@@ -56,21 +29,12 @@ The homepage is assembled from **widgets**: predefined sections that an admin ca
 
 ---
 
-## Features
+## Documentation
 
-- **Widget-based homepage**: 19 predefined sections, drag-to-reorder, per-widget settings editor
-- **Product catalog**: products, models, categories, attributes, variants, print zones
-- **Design Studio (RJFrame)**: online DTF gang sheet builder with canvas editor, text, shapes and image adjustments
-- **Order management**: cart, checkout, receipts, order tracking, design downloads
-- **Delivery system**: branches, delivery zones, delivery rates
-- **Payments**: pluggable payment gateway registry (manual + extensible)
-- **Support tickets**: threads, attachments, priorities, admin replies
-- **Content**: blog, pages, sliders, menus, gallery, FAQ
-- **Admin AI Chat widget**: embed any AI chat (HF Spaces, DeepAI, Kimi, ...) as iframe or popup, with a server-side proxy
-- **2FA authentication**: email-based verification for admin login
-- **Storage analyzer**: clean up temp files, orphaned uploads and order files
-- **Backup and restore**: manual database backups
-- **API**: order integration endpoint for external systems
+Comprehensive guides have been separated for clarity:
+
+- **[Installation Guide (INSTALL.md)](INSTALL.md)** — Step-by-step setup for local and shared hosting environments, environment variables, and troubleshooting.
+- **[Changelog (CHANGELOG.md)](CHANGELOG.md)** — Full history of features, updates, and bug fixes for all versions.
 
 ---
 
@@ -88,103 +52,6 @@ The homepage is assembled from **widgets**: predefined sections that an admin ca
 
 ---
 
-## Requirements
-
-- PHP >= 8.2
-- Composer >= 2.10
-- Node.js >= 18
-- MySQL 8+ or SQLite
-- PHP extensions: `pdo`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `curl`, `fileinfo`
-
----
-
-## Installation
-
-```bash
-git clone https://github.com/mr-ruhid/dtf-website.git
-cd dtf-website
-
-composer install
-cp .env.example .env
-php artisan key:generate
-npm install
-npm run build
-```
-
-Set your database credentials in `.env`, then run:
-
-```bash
-php artisan migrate --seed
-php artisan storage:link
-```
-
-The seeders create the admin account, the homepage widgets, sliders and other starter data (see [Project Structure](#project-structure)).
-
----
-
-## Environment Variables
-
-```env
-APP_NAME="RJ CMS Lite - All Print site"
-APP_ENV=local
-APP_DEBUG=true
-APP_URL=http://localhost
-
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=rjshop
-DB_USERNAME=root
-DB_PASSWORD=
-
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-
-SESSION_DRIVER=database
-QUEUE_CONNECTION=database
-CACHE_STORE=database
-
-MAIL_MAILER=smtp
-MAIL_FROM_ADDRESS=
-MAIL_HOST=
-MAIL_PORT=
-MAIL_USERNAME=
-MAIL_PASSWORD=
-MAIL_ENCRYPTION=
-```
-
-| Group | Purpose |
-|---|---|
-| `APP_*` | Application name, environment, debug mode and public URL |
-| `DB_*` | Database connection (MySQL or SQLite) |
-| `CLOUDINARY_*` | Video uploads (only video is stored on Cloudinary) |
-| `SESSION_DRIVER`, `QUEUE_CONNECTION`, `CACHE_STORE` | All use the `database` driver by default |
-| `MAIL_*` | SMTP settings. Required for admin 2FA emails and notifications |
-
-> **Note:** Because queue, session and cache use the database, make sure the migrations have been run before starting the app or a queue worker.
-
----
-
-## Running the Project
-
-**Development** (server + queue + logs + Vite in one command):
-
-```bash
-composer dev
-```
-
-**Production build:**
-
-```bash
-npm run build
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-```
-
----
-
 ## Default Admin Credentials
 
 ```text
@@ -193,7 +60,7 @@ Email:    admin@rjshop.com
 Password: admin123
 ```
 
-> **Change these immediately after first login.** The account is created by `AdminSeeder`.
+> Change these immediately after first login. The account is created by `AdminSeeder`.
 
 ---
 
@@ -202,7 +69,7 @@ Password: admin123
 ```text
 app/
 ├── Http/Controllers/Admin/    Admin panel controllers (27)
-├── Http/Controllers/          Frontend controllers (12)
+├── Http/Controllers/          Frontend controllers (13)
 ├── Http/Middleware/           admin, guest
 ├── Models/                    40 Eloquent models
 ├── Payment/Registry/          PaymentGatewayRegistry
@@ -223,11 +90,17 @@ resources/views/
 │   ├── rjshop/
 │   ├── staticpages/
 │   └── widgets/
-└── emails/
+├── emails/
+└── sitemap.blade.php          Sitemap XML template
 
 routes/
 ├── web.php                    Frontend routes
 └── admin.php                  Admin routes (prefix: /admin)
+
+README.md                      Project overview
+INSTALL.md                     Installation guide (local and shared hosting)
+CHANGELOG.md                   Version history
+LICENSE.md                     License terms
 ```
 
 ---
@@ -236,40 +109,16 @@ routes/
 
 Homepage sections are stored in the `widgets` table. Each row holds `key`, `name`, `sort_order`, `is_active` and a JSON `settings` column. Admins reorder widgets by drag-and-drop; the order is saved to `sort_order`.
 
-| Key | Name | Editable |
-|---|---|---|
-| `hero` | Hero Banner | via Sliders |
-| `steps` | How It Works | yes |
-| `build_or_upload` | Build or Upload | yes |
-| `features` | Features | yes |
-| `categories` | Shop by Category | via Services |
-| `featured_products` | Featured Products | via Services |
-| `testimonials` | Testimonials | via Services |
-| `stats` | Statistics | via Services |
-| `info` | Custom Info Section | yes |
-| `slider_mid` | Mid Banner | via Sliders |
-| `blog_preview` | Latest Blog Posts | via Blog |
-| `faq_preview` | FAQ | via FAQs |
-| `newsletter` | Newsletter Subscribe | via Services |
-| `cta` | Call to Action | via Services |
-| `live_chat` | Live Chat | via Services |
-| `sign_hero` | Sign Hero | yes |
-| `special_films_story` | Special Films Story | yes |
-| `special_films_faq` | Special Films FAQ | yes |
-| `admin_ai_chat` | Admin AI Chat | yes |
+Manage widgets at `/admin/widgets`.
 
-Manage widgets at `/admin/widgets`. Widgets marked "yes" have their own editor under `resources/views/admin/widget/`; the others are fed by the module named in the last column.
-
----
-
-## Admin AI Chat Widget
+### Admin AI Chat Widget
 
 Embeds a third-party AI chat inside the admin panel without an API key.
 
-- **Modes**: iframe (slide panel) or popup (new window)
-- **Presets**: Hugging Face Spaces, DeepAI, Kimi
-- **Proxy**: `GET /admin/ai-proxy?url=...` fetches the target site server-side, strips `X-Frame-Options` / CSP headers and replaces frame-breakout code with no-ops
-- **Fallback**: if the iframe stays empty, a message with an "Open in new window" button is shown
+- **Modes:** iframe (slide panel) or popup (new window)
+- **Presets:** Hugging Face Spaces, DeepAI, Kimi
+- **Proxy:** `GET /admin/ai-proxy?url=...` fetches the target site server-side, strips `X-Frame-Options` / CSP headers, and replaces frame-breakout code with no-ops
+- **Fallback:** if the iframe stays empty, a message with an "Open in new window" button is shown
 
 Configure it at `/admin/widgets/admin_ai_chat/edit`.
 
@@ -294,41 +143,15 @@ Route: `/design` · Controller: `DesignController`
 
 ---
 
-## Frontend Routes
+## SEO & Sitemap
 
-| Method | URI | Name | Purpose |
-|---|---|---|---|
-| GET | `/` | `page.home` | Homepage |
-| GET | `/about-us` | `page.about` | About |
-| GET | `/contact-us` | `page.contact` | Contact |
-| GET | `/faq` | `page.faq` | FAQ |
-| GET | `/blog` | `blog.index` | Blog list |
-| GET | `/blog/{slug}` | `blog.show` | Blog post |
-| GET | `/gallery` | `gallery.index` | Gallery |
-| GET | `/design` | `design.index` | DTF gang sheet builder |
-| POST | `/design/temp-upload` | `design.temp-upload` | Temp upload |
-| GET | `/product/{slug}` | `product.show` | Product page |
-| GET | `/model/{slug}/{category?}` | `model.show` | Model page |
-| GET/POST | `/cart/*` | `cart.*` | Cart actions |
-| GET/POST | `/checkout` | `checkout.*` | Checkout |
-| GET/POST | `/track` | `track.*` | Order tracking |
-| GET | `/order/{token}/download/*` | `order.download.*` | Design downloads |
+Dynamic SEO tools managed from `/admin/settings/seo`.
 
----
-
-## Admin Routes
-
-All admin routes are prefixed with `/admin` and protected by the `admin` middleware.
-
-Main sections:
-
-`dashboard` · `profile` · `widgets` · `menus` · `sliders` · `faqs` · `gallery` · `blog` · `pages` · `models` · `categories` · `attributes` · `print-zones` · `products` · `branches` · `delivery-zones` · `delivery-rates` · `orders` · `support` · `payments` · `settings` · `storage` · `services` · `ai-proxy`
-
----
-
-## API
-
-An order integration endpoint is available for external systems. After logging in to the admin panel, open `/admin/orders/api-docs` for the full documentation.
+- **Sitemap:** Automatically generated at `/sitemap.xml`, covering pages, products, models, and blog posts.
+- **Robots.txt:** Dynamically served at `/robots.txt` from the admin settings.
+- **Meta Tags:** Global meta title, description, keywords, and Open Graph image.
+- **Analytics:** Google Analytics, Tag Manager, and Facebook Pixel integration.
+- **Favicon:** Dynamic fallback to `public/icon/favicon.png` if no custom favicon is uploaded.
 
 ---
 
@@ -338,100 +161,9 @@ Payments run through a pluggable gateway registry (`App\Payment\Registry\Payment
 
 ---
 
-## Storage and Backups
-
-- **Storage analyzer** (`/admin/storage`): finds temp files, orphaned uploads and order files that can be cleaned up
-- **Backups**: create manual database backups from the admin panel
-- **Media**: images and files are stored locally (run `php artisan storage:link`); only video uses Cloudinary
-
-Download a backup and keep it off the server before running any cleanup or restore.
-
----
-
-## Production Deployment
-
-1. Set `APP_ENV=production` and `APP_DEBUG=false` in `.env`
-2. Set `APP_URL` to your real HTTPS domain
-3. Configure the database and SMTP (needed for admin 2FA emails)
-4. Install dependencies and build assets:
-
-   ```bash
-   composer install --no-dev --optimize-autoloader
-   npm install && npm run build
-   ```
-
-5. Migrate and link storage:
-
-   ```bash
-   php artisan migrate --force
-   php artisan storage:link
-   ```
-
-6. Cache configuration, routes and views:
-
-   ```bash
-   php artisan config:cache
-   php artisan route:cache
-   php artisan view:cache
-   ```
-
-7. Point the web server document root to `public/`
-8. Run a queue worker (the queue uses the `database` driver) and keep it alive with a process manager such as Supervisor:
-
-   ```bash
-   php artisan queue:work --tries=3
-   ```
-
----
-
-## Security Checklist
-
-- [ ] Change the default admin email and password
-- [ ] `APP_DEBUG=false` in production
-- [ ] HTTPS enabled
-- [ ] Working SMTP so admin 2FA codes are delivered
-- [ ] `.env` is not publicly accessible and not committed
-- [ ] Regular database backups stored off-server
-- [ ] Web root set to `public/` only
-
----
-
-## Troubleshooting
-
-| Problem | Fix |
-|---|---|
-| Changes to `.env` or config are ignored | `php artisan optimize:clear` |
-| Uploaded images return 404 | `php artisan storage:link` |
-| Emails or queued jobs are not processed | Start a worker with `php artisan queue:work` and check `MAIL_*` |
-| Frontend styles or scripts missing | Run `npm run build` (or `npm run dev` during development) |
-| Admin 2FA email never arrives | Verify SMTP credentials and `MAIL_FROM_ADDRESS` |
-| AI chat iframe stays empty | Use the "Open in new window" button; some sites block proxying |
-
----
-
-## Useful Artisan Commands
-
-```bash
-php artisan about                 # overview of the app
-php artisan migrate --seed        # run migrations and seeders
-php artisan storage:link          # link public/storage
-php artisan optimize:clear        # clear all caches
-```
-
----
-
 ## License
 
 RJ CMS Lite is source-available. You may view and modify the code for non-commercial purposes. Commercial use and running it as a live website require prior written permission and a paid license from the author. See [LICENSE.md](LICENSE.md) for details.
-
----
-
-## Credits
-
-- Author: **Ruhid Javadov** ([@mr-ruhid](https://github.com/mr-ruhid))
-- Repository: <https://github.com/mr-ruhid/dtf-website>
-
-The frontend theme (`rjshop-theme`) is a derivative work based on the RJ-Shop theme, rebuilt on top of the RJ CMS Lite system.
 
 ---
 
@@ -455,22 +187,20 @@ If this project has been useful to you, consider supporting its continued develo
 
 </div>
 
-<br>
-
 | Method | Details |
 |---|---|
 | Kofe.al | [@ruhidjavadoff](https://kofe.al/@ruhidjavadoff) |
 | Çayvoy | [ruhid4715](https://cayvoy.com/donate/ruhid4715) |
-| PayPal | [paypal.me/ruhidjavadoff](https://www.paypal.com/paypalme/ruhidjavadoff) · `ruhidjavadoff@gmail.com` |
+| PayPal | [paypal.me/ruhidjavadoff](https://www.paypal.com/paypalme/ruhidjavadoff) · ruhidjavadoff@gmail.com |
 | Crypto (USDT, BNB Smart Chain / BEP20) | `0x9a4AD41762D6B07B8C266b312Cf0dBe31FAd890c` |
 
-> **Crypto:** send only USDT on the **BNB Smart Chain (BEP20)** network. Funds sent on other networks may be lost.
+> **Crypto:** send only USDT on the BNB Smart Chain (BEP20) network. Funds sent on other networks may be lost.
 
 ---
 
 ## Author
 
-**Ruhid Javadov - MR-Ruhid**
+**Ruhid Javadov** — MR-Ruhid
 
 - GitHub: [@mr-ruhid](https://github.com/mr-ruhid)
 - Website: [ruhidjavadov.site](https://ruhidjavadov.site)
