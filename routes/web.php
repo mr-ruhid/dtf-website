@@ -12,9 +12,18 @@ use App\Http\Controllers\TrackController;
 use App\Http\Controllers\OrderDownloadController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\SitemapController;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+
+Route::get('/robots.txt', function () {
+    $robots = Setting::where('key', 'robots_txt')->value('value');
+    if (!$robots) {
+        $robots = "User-agent: *\nAllow: /\nDisallow: /admin";
+    }
+    return response($robots, 200)->header('Content-Type', 'text/plain');
+})->name('robots');
 
 Route::get('/', [PageController::class, 'home'])->name('page.home');
 Route::get('/about-us', [PageController::class, 'about'])->name('page.about');
