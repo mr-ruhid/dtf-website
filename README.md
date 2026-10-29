@@ -446,7 +446,7 @@ If this project has been useful to you, consider supporting its continued develo
 </a>
 &nbsp;&nbsp;
 <a href="https://cayvoy.com/donate/ruhid4715">
-  <img src="https://img.shields.io/badge/Donate-Çayvoy-D97706?style=for-the-badge" alt="Donate via Çayvoy" height="36">
+  <img src="https://github.com/mr-ruhid/rare-logos-vault/blob/main/logo/monetization/cayvoy/cayvoy_logo.svg" alt="Donate via Çayvoy" height="36">
 </a>
 &nbsp;&nbsp;
 <a href="https://www.paypal.com/paypalme/ruhidjavadoff">
